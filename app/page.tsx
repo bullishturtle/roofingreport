@@ -5,9 +5,9 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowRight, CheckCircle, Search, Shield, Zap } from "lucide-react"
 import { HeroSearch } from "@/components/hero-search"
 import { RoofusAssistant } from "@/components/roofus-assistant"
-import { Animated3DCharacters } from "@/components/3d-characters/animated-3d-characters"
 import { ActionBar } from "@/components/action-bar"
 import { MobileActionDrawer } from "@/components/mobile-action-drawer"
+import { AnimatedCharacters } from "@/components/animated-characters"
 
 export default function HomePage() {
   return (
@@ -32,7 +32,7 @@ export default function HomePage() {
       </div>
 
       {/* 3D Animated Characters */}
-      <Animated3DCharacters />
+      <AnimatedCharacters />
 
       {/* Roofus Assistant */}
       <RoofusAssistant />

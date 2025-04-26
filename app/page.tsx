@@ -4,10 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, CheckCircle, Search, Shield, Zap } from "lucide-react"
 import { HeroSearch } from "@/components/hero-search"
-import { RoofusAssistant } from "@/components/roofus-assistant"
-import { ActionBar } from "@/components/action-bar"
-import { MobileActionDrawer } from "@/components/mobile-action-drawer"
-import { AnimatedCharacters } from "@/components/animated-characters"
+import { ClientHomeWrapper } from "@/components/client-home-wrapper"
 
 export default function HomePage() {
   return (
@@ -31,14 +28,8 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* 3D Animated Characters */}
-      <AnimatedCharacters />
-
-      {/* Roofus Assistant */}
-      <RoofusAssistant />
-
-      {/* Mobile Action Drawer */}
-      <MobileActionDrawer />
+      {/* Client-side only components */}
+      <ClientHomeWrapper />
 
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-neon-gold/20 bg-black/50 backdrop-blur-md">
@@ -176,8 +167,33 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Action Bar */}
-        <ActionBar />
+        {/* Action Bar - Dynamically loaded on client */}
+        <div
+          id="action-bar-container"
+          className="w-full py-2 px-4 bg-black/30 backdrop-blur-md border-y border-neon-gold/20 shadow-neon-glow"
+        >
+          {/* Static placeholder for SSR */}
+          <div className="flex items-center gap-2 min-w-max mx-auto max-w-7xl">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-neon-gold/30 text-neon-gold hover:bg-neon-gold/10 shadow-neon-glow"
+              asChild
+            >
+              <Link href="/dashboard/new-report">
+                <Search className="h-4 w-4 mr-2" />
+                <span>Roof Reports</span>
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-neon-gold/30 text-neon-gold hover:bg-neon-gold/10 shadow-neon-glow"
+            >
+              <span>More Tools</span>
+            </Button>
+          </div>
+        </div>
 
         {/* Stats Section */}
         <section className="w-full py-12 md:py-16 lg:py-20 border-y border-neon-gold/20 bg-black/30">

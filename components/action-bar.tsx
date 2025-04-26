@@ -1,15 +1,35 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Search, CloudLightning, Users, FileText, Mail, Code, Zap, Ruler, Phone } from "lucide-react"
 import Link from "next/link"
-import { useMediaQuery } from "@/hooks/use-media-query"
 
 export function ActionBar() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
-  const isMobile = useMediaQuery("(max-width: 768px)")
+  const [isMounted, setIsMounted] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Set mounted state
+  useEffect(() => {
+    setIsMounted(true)
+
+    // Check if mobile without using the hook
+    const checkIfMobile = () => {
+      if (typeof window !== "undefined") {
+        setIsMobile(window.matchMedia("(max-width: 768px)").matches)
+      }
+    }
+
+    checkIfMobile()
+
+    // Add resize listener
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", checkIfMobile)
+      return () => window.removeEventListener("resize", checkIfMobile)
+    }
+  }, [])
 
   const actions = [
     {
@@ -68,6 +88,11 @@ export function ActionBar() {
     },
   ]
 
+  // Don't render during SSR
+  if (!isMounted) {
+    return null
+  }
+
   // For mobile, show fewer actions
   const displayedActions = isMobile ? actions.slice(0, 5) : actions
 
@@ -123,3 +148,5 @@ export function ActionBar() {
     </div>
   )
 }
+
+export default ActionBar

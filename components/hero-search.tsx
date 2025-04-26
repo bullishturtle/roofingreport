@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, Loader2 } from "lucide-react"
@@ -11,6 +11,11 @@ import { motion } from "framer-motion"
 export function HeroSearch() {
   const [address, setAddress] = useState("")
   const [isSearching, setIsSearching] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,8 +27,42 @@ export function HeroSearch() {
     setTimeout(() => {
       // In a real implementation, this would redirect to the report page
       console.log("Searching for address:", address)
-      window.location.href = `/report?address=${encodeURIComponent(address)}`
+      if (typeof window !== "undefined") {
+        window.location.href = `/report?address=${encodeURIComponent(address)}`
+      }
     }, 1500)
+  }
+
+  // Don't use motion during SSR
+  if (!isMounted) {
+    return (
+      <form onSubmit={handleSearch} className="flex w-full max-w-md flex-col gap-2 sm:flex-row">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neon-gold/70" />
+          <Input
+            type="text"
+            placeholder="Enter any property address..."
+            className="pl-10 bg-black/30 border-2 border-neon-gold/30 text-white placeholder:text-white/50 focus:border-neon-gold focus:ring-neon-gold/20"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
+        </div>
+        <Button
+          type="submit"
+          disabled={isSearching || !address.trim()}
+          className="bg-gradient-to-r from-neon-gold to-neon-orange hover:from-neon-orange hover:to-neon-gold text-black border-none shadow-neon-glow"
+        >
+          {isSearching ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Searching...
+            </>
+          ) : (
+            "Get Instant Report"
+          )}
+        </Button>
+      </form>
+    )
   }
 
   return (

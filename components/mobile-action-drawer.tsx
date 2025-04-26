@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
@@ -18,6 +18,11 @@ import { motion } from "framer-motion"
 
 export function MobileActionDrawer() {
   const [open, setOpen] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const actions = [
     {
@@ -76,6 +81,11 @@ export function MobileActionDrawer() {
     },
   ]
 
+  // Don't render during SSR
+  if (!isMounted) {
+    return null
+  }
+
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
@@ -127,3 +137,5 @@ export function MobileActionDrawer() {
     </Drawer>
   )
 }
+
+export default MobileActionDrawer

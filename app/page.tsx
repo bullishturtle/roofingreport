@@ -1,10 +1,10 @@
 import Link from "next/link"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, CheckCircle, Search, Shield, Zap } from "lucide-react"
 import { HeroSearch } from "@/components/hero-search"
 import { ClientHomeWrapper } from "@/components/client-home-wrapper"
+import { InteractiveRoofusWrapper } from "@/components/3d/interactive-roofus-wrapper"
 
 export default function HomePage() {
   return (
@@ -60,6 +60,12 @@ export default function HomePage() {
               className="text-sm font-medium text-white/80 hover:text-neon-gold transition-colors"
             >
               Dashboard
+            </Link>
+            <Link
+              href="/3d-showcase"
+              className="text-sm font-medium text-white/80 hover:text-neon-gold transition-colors"
+            >
+              3D Showcase
             </Link>
           </nav>
           <div className="flex items-center gap-4">
@@ -140,24 +146,30 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="relative mx-auto aspect-video overflow-hidden rounded-xl border-2 border-neon-gold/30 bg-black/30 p-2 shadow-neon-glow lg:order-last">
-                <Image
-                  src="/images/landon-roofus-roof.png"
-                  width={550}
-                  height={550}
-                  alt="RoofFax Dashboard Preview"
-                  className="w-full object-cover rounded-lg"
+                {/* Interactive 3D Roofus model */}
+                <InteractiveRoofusWrapper
+                  onInteract={() => {
+                    // Open Roofus chat assistant when interacting with 3D model
+                    const roofusButton = document.querySelector(".fixed.bottom-6.right-6.z-50 button")
+                    if (roofusButton) {
+                      ;(roofusButton as HTMLButtonElement).click()
+                    }
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex items-end">
                   <div className="w-full">
                     <div className="mb-2 flex items-center justify-between">
                       <Badge variant="outline" className="bg-black/80 backdrop-blur border-neon-gold/30 text-neon-gold">
-                        Live Demo
+                        Interactive 3D
                       </Badge>
                       <Button
                         size="sm"
                         className="gap-1 bg-neon-gold/10 hover:bg-neon-gold/20 backdrop-blur-sm border border-neon-gold/30 text-neon-gold"
+                        asChild
                       >
-                        Try Now <ArrowRight className="h-3 w-3" />
+                        <Link href="/3d-showcase">
+                          View Full 3D <ArrowRight className="h-3 w-3" />
+                        </Link>
                       </Button>
                     </div>
                   </div>

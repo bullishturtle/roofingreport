@@ -7,9 +7,10 @@ import { RecentReportsTable } from "@/components/dashboard/recent-reports-table"
 import { NeighborhoodMap } from "@/components/dashboard/neighborhood-map"
 import { CalendarView } from "@/components/dashboard/calendar-view"
 import { Badge } from "@/components/ui/badge"
-import { BarChart, Download, FileText, Plus, Search, Settings, Users } from "lucide-react"
+import { Download, FileText, Plus, Search, Settings, Users } from "lucide-react"
 import Link from "next/link"
-import { ClientDashboardWrapper } from "@/components/dashboard/client-dashboard-wrapper"
+import { FileUpload } from "@/components/dashboard/file-upload"
+import { WeatherWidget } from "@/components/dashboard/weather-widget"
 
 // Static version of StatsCards for SSR
 function StaticStatsCards() {
@@ -149,6 +150,13 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* New row with Weather Widget and File Upload */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <WeatherWidget />
+            <FileUpload />
+          </div>
+
           <Tabs defaultValue="map" className="w-full">
             <TabsList className="grid w-full grid-cols-3 md:w-auto bg-white/5 border border-white/10">
               <TabsTrigger value="map" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400">
@@ -204,9 +212,9 @@ export default function DashboardPage() {
                 </div>
                 <Button
                   size="sm"
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-none shadow-neon-purple"
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-none"
                 >
-                  <Plus className="mr-2 h-3 w-3" /> Add Event
+                  Add Event
                 </Button>
               </div>
               <CalendarView />
@@ -218,33 +226,24 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-medium text-white">Performance Analytics</h3>
-                  <p className="text-sm text-white/70">Track your team's performance and conversion rates.</p>
+                  <p className="text-sm text-white/70">Track your business performance and growth.</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10">
-                    This Week
-                  </Button>
-                  <Button variant="outline" size="sm" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10">
+                  <Button size="sm" variant="outline" className="border-white/20 text-white hover:bg-white/10">
                     This Month
                   </Button>
-                  <Button variant="outline" size="sm" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10">
-                    This Quarter
+                  <Button size="sm" variant="outline" className="border-white/20 text-white hover:bg-white/10">
+                    Export
                   </Button>
                 </div>
               </div>
-              <div className="h-[300px] flex items-center justify-center border rounded-md bg-white/5 border-white/10">
-                <div className="flex flex-col items-center text-white/50">
-                  <BarChart className="h-10 w-10 mb-2" />
-                  <p>Analytics charts will appear here</p>
-                </div>
+              <div className="h-[300px] flex items-center justify-center text-white/50">
+                Analytics charts will appear here
               </div>
             </TabsContent>
           </Tabs>
         </div>
       </DashboardShell>
-
-      {/* Client-side wrapper for dynamic components */}
-      <ClientDashboardWrapper />
     </>
   )
 }

@@ -8,6 +8,14 @@ import Link from "next/link"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
 export function AnimatedCharacters() {
+  const pathname = usePathname()
+  const isMobile = useMediaQuery("(max-width: 768px)")
+
+  // Return null during server-side rendering or on specific pages
+  if (typeof window === "undefined" || pathname === "/login" || pathname === "/signup") {
+    return null
+  }
+
   const [roofusPosition, setRoofusPosition] = useState({ x: 0, y: 0 })
   const [landonPosition, setLandonPosition] = useState({ x: -100, y: 0 })
   const [isRoofusVisible, setIsRoofusVisible] = useState(false)
@@ -20,23 +28,12 @@ export function AnimatedCharacters() {
   const [showTrustTheFox, setShowTrustTheFox] = useState(false)
   const [roofusAnimation, setRoofusAnimation] = useState<"idle" | "running" | "jumping" | "pointing">("idle")
   const [roofusDirection, setRoofusDirection] = useState<"left" | "right">("right")
-  const [isMounted, setIsMounted] = useState(false)
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null)
-  const pathname = usePathname()
-  const isMobile = useMediaQuery("(max-width: 768px)")
-
-  // Set mounted state
-  useEffect(() => {
-    setIsMounted(true)
-    return () => setIsMounted(false)
-  }, [])
 
   // Random positions within viewport bounds
   const getRandomPosition = () => {
-    if (!isMounted) return { x: 0, y: 0 }
-
-    const maxX = typeof window !== "undefined" ? window.innerWidth - 150 : 500
-    const maxY = typeof window !== "undefined" ? window.innerHeight - 150 : 500
+    const maxX = window.innerWidth - 150
+    const maxY = window.innerHeight - 150
     return {
       x: Math.random() * maxX,
       y: Math.max(100, Math.random() * (maxY - 300)), // Keep characters in upper part of screen
@@ -45,8 +42,6 @@ export function AnimatedCharacters() {
 
   // Reset inactivity timer whenever user moves mouse or types
   const resetInactivityTimer = () => {
-    if (!isMounted) return
-
     if (inactivityTimer.current) {
       clearTimeout(inactivityTimer.current)
     }
@@ -60,8 +55,6 @@ export function AnimatedCharacters() {
 
   // Initialize event listeners and timers
   useEffect(() => {
-    if (!isMounted) return
-
     // Set up event listeners for user activity
     window.addEventListener("mousemove", resetInactivityTimer)
     window.addEventListener("keydown", resetInactivityTimer)
@@ -114,12 +107,10 @@ export function AnimatedCharacters() {
 
       clearInterval(appearanceInterval)
     }
-  }, [isRoofusVisible, userInactive, isMobile, isMounted])
+  }, [isRoofusVisible, userInactive, isMobile])
 
   // Handle user inactivity - Landon whistles for Roofus
   useEffect(() => {
-    if (!isMounted) return
-
     if (userInactive && !isWhistling) {
       setIsWhistling(true)
       setLandonPosition({ x: window.innerWidth - 150, y: 100 })
@@ -150,12 +141,10 @@ export function AnimatedCharacters() {
         }, 2000)
       }, 1000)
     }
-  }, [userInactive, isWhistling, isMounted])
+  }, [userInactive, isWhistling])
 
   // Handle chase animation
   useEffect(() => {
-    if (!isMounted) return
-
     if (isChasing && isRoofusVisible && isLandonVisible) {
       const chaseInterval = setInterval(() => {
         // Move Roofus randomly
@@ -194,12 +183,10 @@ export function AnimatedCharacters() {
 
       return () => clearInterval(chaseInterval)
     }
-  }, [isChasing, isRoofusVisible, isLandonVisible, landonPosition.x, isMounted])
+  }, [isChasing, isRoofusVisible, isLandonVisible, landonPosition.x])
 
   // Random Trust The Fox logo appearance
   useEffect(() => {
-    if (!isMounted) return
-
     const logoInterval = setInterval(() => {
       if (Math.random() > 0.8 && !showTrustTheFox) {
         setShowTrustTheFox(true)
@@ -208,12 +195,10 @@ export function AnimatedCharacters() {
     }, 45000)
 
     return () => clearInterval(logoInterval)
-  }, [showTrustTheFox, isMounted])
+  }, [showTrustTheFox])
 
   // Random Roofus animations
   useEffect(() => {
-    if (!isMounted) return
-
     if (isRoofusVisible && !isChasing) {
       const animationInterval = setInterval(() => {
         const animations = ["idle", "pointing", "jumping"] as const
@@ -227,17 +212,7 @@ export function AnimatedCharacters() {
 
       return () => clearInterval(animationInterval)
     }
-  }, [isRoofusVisible, isChasing, isMounted])
-
-  // Don't show on certain pages
-  if (pathname === "/login" || pathname === "/signup") {
-    return null
-  }
-
-  // Don't render anything during SSR
-  if (!isMounted) {
-    return null
-  }
+  }, [isRoofusVisible, isChasing])
 
   // Adjust size for mobile
   const characterSize = isMobile ? 80 : 120
@@ -401,5 +376,3 @@ export function AnimatedCharacters() {
     </>
   )
 }
-
-export default AnimatedCharacters

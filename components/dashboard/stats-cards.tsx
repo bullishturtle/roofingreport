@@ -1,29 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowUpRight, Building, FileText, Home, Users } from "lucide-react"
 import { motion } from "framer-motion"
 
 export function StatsCards() {
-  const [isMounted, setIsMounted] = useState(false)
-
-  useEffect(() => {
-    setIsMounted(true)
-
-    // Find and replace the static stats cards
-    const staticCards = document.querySelector('[data-replace-with-dynamic="true"]')
-    if (staticCards && staticCards.parentNode) {
-      // Replace with dynamic content when ready
-      // This is just a placeholder - the actual replacement happens in the component render
-    }
-  }, [])
-
-  // Don't render anything during SSR
-  if (!isMounted) {
-    return null
-  }
-
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -104,5 +85,3 @@ export function StatsCards() {
     </div>
   )
 }
-
-export default StatsCards

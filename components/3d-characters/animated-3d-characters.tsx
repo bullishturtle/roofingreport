@@ -3,15 +3,19 @@
 import { useState, useEffect, useRef, Suspense } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Physics, useBox, usePlane } from "@react-three/cannon"
-import { OrbitControls, PerspectiveCamera, Html } from "@react-three/drei"
-import type * as THREE from "three"
+import { OrbitControls, useGLTF, useAnimations, PerspectiveCamera, Html } from "@react-three/drei"
+import type * as THREE from "three" // Import THREE
 import { usePathname } from "next/navigation"
 import { useMediaQuery } from "@/hooks/use-media-query"
+
+// Character models
+const ROOFUS_MODEL_URL = "/models/roofus-character.glb"
+const LANDON_MODEL_URL = "/models/landon-character.glb"
 
 // Animation states
 type AnimationState = "idle" | "running" | "jumping" | "pointing" | "waving" | "climbing"
 
-// Character controller for Roofus - using primitive shapes instead of GLB models
+// Character controller for Roofus
 function RoofusCharacter({
   position = [0, 0, 0],
   animation = "idle",
@@ -24,6 +28,8 @@ function RoofusCharacter({
   onInteract?: () => void
 }) {
   const group = useRef<THREE.Group>(null)
+  const { scene, animations } = useGLTF(ROOFUS_MODEL_URL)
+  const { actions, names } = useAnimations(animations, group)
   const [physicsRef, physicsApi] = useBox(() => ({
     mass: 1,
     position,
@@ -38,31 +44,17 @@ function RoofusCharacter({
 
   // Handle animation changes
   useEffect(() => {
-    // Simple animation handling
-    if (animation === "running") {
-      const interval = setInterval(() => {
-        if (group.current) {
-          group.current.position.y = group.current.position.y + 0.1
-          setTimeout(() => {
-            if (group.current) {
-              group.current.position.y = group.current.position.y - 0.1
-            }
-          }, 150)
-        }
-      }, 300)
+    // Reset all animations
+    names.forEach((name) => actions[name]?.stop())
 
-      return () => clearInterval(interval)
+    // Play the current animation
+    if (actions[animation]) {
+      actions[animation]?.reset().play()
+    } else {
+      // Fallback to idle if animation doesn't exist
+      actions["idle"]?.reset().play()
     }
-
-    if (animation === "jumping" && group.current) {
-      group.current.position.y += 0.5
-      setTimeout(() => {
-        if (group.current) {
-          group.current.position.y -= 0.5
-        }
-      }, 500)
-    }
-  }, [animation])
+  }, [actions, animation, names])
 
   // Handle direction changes
   useEffect(() => {
@@ -75,65 +67,19 @@ function RoofusCharacter({
   useFrame(() => {
     if (group.current && physicsRef.current) {
       const physicsPosition = physicsRef.current.position
-      group.current.position.set(physicsPosition.x, physicsPosition.y, physicsPosition.z)
+      group.current.position.set(physicsPosition.x, physicsPosition.y - 0.5, physicsPosition.z)
     }
   })
 
   return (
     <group ref={group}>
       <mesh ref={physicsRef} name="roofus" visible={false} />
-
-      {/* Fox character made with primitive shapes */}
-      <group scale={[0.5, 0.5, 0.5]}>
-        {/* Body */}
-        <mesh position={[0, 0.5, 0]}>
-          <sphereGeometry args={[0.8, 16, 16]} />
-          <meshStandardMaterial color="#FF8C00" />
-        </mesh>
-
-        {/* Head */}
-        <mesh position={[0, 1.2, 0.4]}>
-          <sphereGeometry args={[0.5, 16, 16]} />
-          <meshStandardMaterial color="#FF8C00" />
-        </mesh>
-
-        {/* Ears */}
-        <mesh position={[0.3, 1.6, 0.4]} rotation={[0, 0, 0.3]}>
-          <coneGeometry args={[0.2, 0.5, 16]} />
-          <meshStandardMaterial color="#FF8C00" />
-        </mesh>
-        <mesh position={[-0.3, 1.6, 0.4]} rotation={[0, 0, -0.3]}>
-          <coneGeometry args={[0.2, 0.5, 16]} />
-          <meshStandardMaterial color="#FF8C00" />
-        </mesh>
-
-        {/* Snout */}
-        <mesh position={[0, 1.1, 0.8]}>
-          <coneGeometry args={[0.2, 0.4, 16]} rotation={[Math.PI / 2, 0, 0]} />
-          <meshStandardMaterial color="#FFD700" />
-        </mesh>
-
-        {/* Eyes */}
-        <mesh position={[0.2, 1.3, 0.7]}>
-          <sphereGeometry args={[0.1, 16, 16]} />
-          <meshStandardMaterial color="black" />
-        </mesh>
-        <mesh position={[-0.2, 1.3, 0.7]}>
-          <sphereGeometry args={[0.1, 16, 16]} />
-          <meshStandardMaterial color="black" />
-        </mesh>
-
-        {/* Tail */}
-        <mesh position={[0, 0.3, -0.8]} rotation={[0.5, 0, 0]}>
-          <cylinderGeometry args={[0.1, 0.3, 1, 16]} />
-          <meshStandardMaterial color="#FF8C00" />
-        </mesh>
-      </group>
+      <primitive object={scene.clone()} scale={[0.5, 0.5, 0.5]} />
     </group>
   )
 }
 
-// Character controller for Landon - using primitive shapes instead of GLB models
+// Character controller for Landon
 function LandonCharacter({
   position = [0, 0, 0],
   animation = "idle",
@@ -144,6 +90,8 @@ function LandonCharacter({
   onInteract?: () => void
 }) {
   const group = useRef<THREE.Group>(null)
+  const { scene, animations } = useGLTF(LANDON_MODEL_URL)
+  const { actions, names } = useAnimations(animations, group)
   const [physicsRef, physicsApi] = useBox(() => ({
     mass: 1,
     position,
@@ -158,94 +106,30 @@ function LandonCharacter({
 
   // Handle animation changes
   useEffect(() => {
-    // Simple animation handling
-    if (animation === "running") {
-      const interval = setInterval(() => {
-        if (group.current) {
-          group.current.position.y = group.current.position.y + 0.1
-          setTimeout(() => {
-            if (group.current) {
-              group.current.position.y = group.current.position.y - 0.1
-            }
-          }, 150)
-        }
-      }, 300)
+    // Reset all animations
+    names.forEach((name) => actions[name]?.stop())
 
-      return () => clearInterval(interval)
+    // Play the current animation
+    if (actions[animation]) {
+      actions[animation]?.reset().play()
+    } else {
+      // Fallback to idle if animation doesn't exist
+      actions["idle"]?.reset().play()
     }
-
-    if (animation === "jumping" && group.current) {
-      group.current.position.y += 0.5
-      setTimeout(() => {
-        if (group.current) {
-          group.current.position.y -= 0.5
-        }
-      }, 500)
-    }
-  }, [animation])
+  }, [actions, animation, names])
 
   // Update physics body position to match animation
   useFrame(() => {
     if (group.current && physicsRef.current) {
       const physicsPosition = physicsRef.current.position
-      group.current.position.set(physicsPosition.x, physicsPosition.y, physicsPosition.z)
+      group.current.position.set(physicsPosition.x, physicsPosition.y - 0.5, physicsPosition.z)
     }
   })
 
   return (
     <group ref={group}>
       <mesh ref={physicsRef} name="landon" visible={false} />
-
-      {/* Human character made with primitive shapes */}
-      <group scale={[0.5, 0.5, 0.5]}>
-        {/* Body */}
-        <mesh position={[0, 0, 0]}>
-          <boxGeometry args={[1, 2, 0.5]} />
-          <meshStandardMaterial color="#3B82F6" />
-        </mesh>
-
-        {/* Head */}
-        <mesh position={[0, 1.5, 0]}>
-          <sphereGeometry args={[0.5, 16, 16]} />
-          <meshStandardMaterial color="#F5DEB3" />
-        </mesh>
-
-        {/* Hair */}
-        <mesh position={[0, 1.7, 0]}>
-          <boxGeometry args={[0.6, 0.2, 0.6]} />
-          <meshStandardMaterial color="#8B4513" />
-        </mesh>
-
-        {/* Eyes */}
-        <mesh position={[0.2, 1.5, 0.3]}>
-          <sphereGeometry args={[0.1, 16, 16]} />
-          <meshStandardMaterial color="black" />
-        </mesh>
-        <mesh position={[-0.2, 1.5, 0.3]}>
-          <sphereGeometry args={[0.1, 16, 16]} />
-          <meshStandardMaterial color="black" />
-        </mesh>
-
-        {/* Arms */}
-        <mesh position={[0.7, 0.5, 0]} rotation={[0, 0, -0.2]}>
-          <boxGeometry args={[0.3, 1.5, 0.3]} />
-          <meshStandardMaterial color="#3B82F6" />
-        </mesh>
-        <mesh position={[-0.7, 0.5, 0]} rotation={[0, 0, 0.2]}>
-          <boxGeometry args={[0.3, 1.5, 0.3]} />
-          <meshStandardMaterial color="#3B82F6" />
-        </mesh>
-
-        {/* Legs */}
-        <mesh position={[0.3, -1.2, 0]}>
-          <boxGeometry args={[0.4, 1.5, 0.4]} />
-          <meshStandardMaterial color="#1F2937" />
-        </mesh>
-        <mesh position={[-0.3, -1.2, 0]}>
-          <boxGeometry args={[0.4, 1.5, 0.4]} />
-          <meshStandardMaterial color="#1F2937" />
-        </mesh>
-      </group>
+      <primitive object={scene.clone()} scale={[0.5, 0.5, 0.5]} />
     </group>
   )
 }
@@ -310,12 +194,6 @@ function Environment3D() {
 
 // Main component
 export function Animated3DCharacters() {
-  const pathname = usePathname()
-  const isMobile = useMediaQuery("(max-width: 768px)")
-
-  // Don't show on certain pages
-  const shouldRender = !(pathname === "/login" || pathname === "/signup")
-
   const [roofusPosition, setRoofusPosition] = useState<[number, number, number]>([2, 0, 0])
   const [landonPosition, setLandonPosition] = useState<[number, number, number]>([0, 0, 0])
   const [roofusAnimation, setRoofusAnimation] = useState<AnimationState>("idle")
@@ -326,6 +204,14 @@ export function Animated3DCharacters() {
   const [isChasing, setIsChasing] = useState(false)
   const [userInactive, setUserInactive] = useState(false)
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null)
+  const pathname = usePathname()
+  const isMobile = useMediaQuery("(max-width: 768px)")
+  const [isRoofusVisible, setIsRoofusVisible] = useState(true)
+  const [windowAvailable, setWindowAvailable] = useState(false)
+
+  useEffect(() => {
+    setWindowAvailable(true)
+  }, [])
 
   // Reset inactivity timer whenever user moves mouse or types
   const resetInactivityTimer = () => {
@@ -342,6 +228,8 @@ export function Animated3DCharacters() {
 
   // Initialize event listeners and timers
   useEffect(() => {
+    if (!windowAvailable) return
+
     // Set up event listeners for user activity
     window.addEventListener("mousemove", resetInactivityTimer)
     window.addEventListener("keydown", resetInactivityTimer)
@@ -397,6 +285,8 @@ export function Animated3DCharacters() {
     }, 10000)
 
     return () => {
+      if (!windowAvailable) return
+
       window.removeEventListener("mousemove", resetInactivityTimer)
       window.removeEventListener("keydown", resetInactivityTimer)
       window.removeEventListener("click", resetInactivityTimer)
@@ -410,7 +300,7 @@ export function Animated3DCharacters() {
 
       clearTimeout(chaseTimer)
     }
-  }, [landonPosition])
+  }, [windowAvailable, isRoofusVisible, userInactive, isMobile, landonPosition])
 
   // Handle character interaction
   const handleInteraction = () => {
@@ -424,8 +314,8 @@ export function Animated3DCharacters() {
     }
   }
 
-  // Add this check to prevent server-side rendering
-  if (typeof window === "undefined" || !shouldRender) {
+  // Don't show on certain pages
+  if (pathname === "/login" || pathname === "/signup") {
     return null
   }
 
@@ -460,3 +350,7 @@ export function Animated3DCharacters() {
     </div>
   )
 }
+
+// Preload models
+useGLTF.preload(ROOFUS_MODEL_URL)
+useGLTF.preload(LANDON_MODEL_URL)

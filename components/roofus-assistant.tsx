@@ -11,10 +11,11 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 
 export function RoofusAssistant() {
-  const [isClient, setIsClient] = useState(false)
+  // At the beginning of the component function
+  const [windowAvailable, setWindowAvailable] = useState(false)
 
   useEffect(() => {
-    setIsClient(true)
+    setWindowAvailable(true)
   }, [])
 
   const [isOpen, setIsOpen] = useState(false)
@@ -61,6 +62,8 @@ export function RoofusAssistant() {
 
   // Spaceship animation
   useEffect(() => {
+    if (!windowAvailable) return
+
     const spaceshipInterval = setInterval(() => {
       const shouldShow = Math.random() > 0.7
       if (shouldShow) {
@@ -75,7 +78,7 @@ export function RoofusAssistant() {
     }, 20000)
 
     return () => clearInterval(spaceshipInterval)
-  }, [spaceshipDirection])
+  }, [windowAvailable, spaceshipDirection])
 
   // Auto-scroll to bottom of messages
   useEffect(() => {
@@ -120,8 +123,6 @@ export function RoofusAssistant() {
       setIsTyping(false)
     }, 1500)
   }
-
-  if (!isClient) return null
 
   return (
     <>

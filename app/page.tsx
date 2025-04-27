@@ -1,19 +1,31 @@
 import Link from "next/link"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, CheckCircle, Search, Shield, Zap } from "lucide-react"
-import PageClientWrapper from "@/components/client-wrappers/page-client-wrapper"
-import HeroSearchClientWrapper from "@/components/client-wrappers/hero-search-client-wrapper"
+import { StaticHeroSearch } from "@/components/static-hero-search"
+import Script from "next/script"
 
 export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-black to-blue-950 relative overflow-hidden">
-      {/* Static placeholder for stars - will be replaced by client component */}
-      <div className="fixed inset-0 pointer-events-none z-0">{/* Client-side stars will be rendered here */}</div>
-
-      {/* Client components */}
-      <PageClientWrapper />
+      {/* Animated stars background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        {Array.from({ length: 100 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute h-1 w-1 rounded-full bg-white animate-pulse"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              opacity: Math.random() * 0.7 + 0.3,
+              animationDuration: `${Math.random() * 3 + 2}s`,
+              animationDelay: `${Math.random() * 2}s`,
+              width: `${Math.random() * 2 + 1}px`,
+              height: `${Math.random() * 2 + 1}px`,
+            }}
+          />
+        ))}
+      </div>
 
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-neon-gold/20 bg-black/50 backdrop-blur-md">
@@ -44,6 +56,12 @@ export default function HomePage() {
               className="text-sm font-medium text-white/80 hover:text-neon-gold transition-colors"
             >
               Dashboard
+            </Link>
+            <Link
+              href="/3d-showcase"
+              className="text-sm font-medium text-white/80 hover:text-neon-gold transition-colors"
+            >
+              3D Showcase
             </Link>
           </nav>
           <div className="flex items-center gap-4">
@@ -92,7 +110,7 @@ export default function HomePage() {
                     lookups, proposals, and instant outreach together—guided by Roofus, built for closers.
                   </p>
                 </div>
-                <HeroSearchClientWrapper />
+                <StaticHeroSearch />
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
                   <Button
                     size="lg"
@@ -124,24 +142,27 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="relative mx-auto aspect-video overflow-hidden rounded-xl border-2 border-neon-gold/30 bg-black/30 p-2 shadow-neon-glow lg:order-last">
-                <Image
-                  src="/images/landon-roofus-roof.png"
-                  width={550}
-                  height={550}
-                  alt="RoofFax Dashboard Preview"
-                  className="w-full object-cover rounded-lg"
-                />
+                {/* Static 3D model placeholder */}
+                <div id="model-container" className="w-full h-full flex items-center justify-center bg-black/50">
+                  <div className="text-neon-gold text-center">
+                    <div className="mb-2">Interactive 3D Model</div>
+                    <div className="text-xs text-white/50">Enable JavaScript to view</div>
+                  </div>
+                </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex items-end">
                   <div className="w-full">
                     <div className="mb-2 flex items-center justify-between">
                       <Badge variant="outline" className="bg-black/80 backdrop-blur border-neon-gold/30 text-neon-gold">
-                        Live Demo
+                        Interactive 3D
                       </Badge>
                       <Button
                         size="sm"
                         className="gap-1 bg-neon-gold/10 hover:bg-neon-gold/20 backdrop-blur-sm border border-neon-gold/30 text-neon-gold"
+                        asChild
                       >
-                        Try Now <ArrowRight className="h-3 w-3" />
+                        <Link href="/3d-showcase">
+                          View Full 3D <ArrowRight className="h-3 w-3" />
+                        </Link>
                       </Button>
                     </div>
                   </div>
@@ -150,6 +171,33 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* Action Bar - Static version */}
+        <div
+          id="action-bar-container"
+          className="w-full py-2 px-4 bg-black/30 backdrop-blur-md border-y border-neon-gold/20 shadow-neon-glow"
+        >
+          <div className="flex items-center gap-2 min-w-max mx-auto max-w-7xl">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-neon-gold/30 text-neon-gold hover:bg-neon-gold/10 shadow-neon-glow"
+              asChild
+            >
+              <Link href="/dashboard/new-report">
+                <Search className="h-4 w-4 mr-2" />
+                <span>Roof Reports</span>
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-neon-gold/30 text-neon-gold hover:bg-neon-gold/10 shadow-neon-glow"
+            >
+              <span>More Tools</span>
+            </Button>
+          </div>
+        </div>
 
         {/* Stats Section */}
         <section className="w-full py-12 md:py-16 lg:py-20 border-y border-neon-gold/20 bg-black/30">
@@ -305,9 +353,15 @@ export default function HomePage() {
               Terms
             </Link>
           </div>
-          <p className="text-sm text-white/50">&copy; 2023 RoofFax. All rights reserved.</p>
+          <p className="text-sm text-white/50">&copy; {new Date().getFullYear()} RoofFax. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Client-side components will be loaded via script */}
+      <div id="client-components-mount-point"></div>
+
+      {/* Load client-side script */}
+      <Script src="/client-components.js" strategy="afterInteractive" />
     </div>
   )
 }

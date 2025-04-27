@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@hookform/resolvers": "^3.9.1",
+    "@hookform/resolvers": "latest",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
     "@radix-ui/react-aspect-ratio": "1.1.1",
@@ -50,14 +50,14 @@
     "react": "^19",
     "react-day-picker": "8.10.1",
     "react-dom": "^19",
-    "react-hook-form": "^7.54.1",
+    "react-hook-form": "latest",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.0",
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "latest",
-    "zod": "^3.24.1",
+    "zod": "latest",
     "@emotion/is-prop-valid": "latest",
     "expo": "latest",
     "expo-asset": "latest",
@@ -67,8 +67,11 @@
     "three": "latest",
     "@react-three/fiber": "latest",
     "framer-motion": "latest",
-    "@react-three/cannon": "latest",
-    "@react-three/drei": "latest"
+    "@react-three/drei": "latest",
+    "nodemailer": "latest",
+    "resend": "latest",
+    "react-dropzone": "latest",
+    "axios": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

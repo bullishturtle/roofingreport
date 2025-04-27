@@ -11,13 +11,6 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 
 export function RoofusAssistant() {
-  // At the beginning of the component function
-  const [windowAvailable, setWindowAvailable] = useState(false)
-
-  useEffect(() => {
-    setWindowAvailable(true)
-  }, [])
-
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<{ text: string; sender: "user" | "roofus" }[]>([
     {
@@ -32,6 +25,7 @@ export function RoofusAssistant() {
   const [showSpaceship, setShowSpaceship] = useState(false)
   const [spaceshipPosition, setSpaceshipPosition] = useState({ x: 0, y: 0 })
   const [spaceshipDirection, setSpaceshipDirection] = useState(1) // 1 for right, -1 for left
+  const [isMounted, setIsMounted] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -43,32 +37,43 @@ export function RoofusAssistant() {
     "Need a proposal for a client? I can draft one for you!",
   ]
 
+  // Set mounted state to handle SSR
   useEffect(() => {
+    setIsMounted(true)
+    return () => setIsMounted(false)
+  }, [])
+
+  useEffect(() => {
+    if (!isMounted) return
+
     const tipTimer = setTimeout(() => {
       setShowTip(true)
     }, 15000)
 
     return () => clearTimeout(tipTimer)
-  }, [])
+  }, [isMounted])
 
   useEffect(() => {
-    if (showTip) {
-      const interval = setInterval(() => {
-        setTipIndex((prev) => (prev + 1) % tips.length)
-      }, 8000)
-      return () => clearInterval(interval)
-    }
-  }, [showTip, tips.length])
+    if (!isMounted || !showTip) return
+
+    const interval = setInterval(() => {
+      setTipIndex((prev) => (prev + 1) % tips.length)
+    }, 8000)
+    return () => clearInterval(interval)
+  }, [showTip, tips.length, isMounted])
 
   // Spaceship animation
   useEffect(() => {
-    if (!windowAvailable) return
+    if (!isMounted) return
 
     const spaceshipInterval = setInterval(() => {
       const shouldShow = Math.random() > 0.7
       if (shouldShow) {
-        const startX = spaceshipDirection > 0 ? -100 : window.innerWidth + 100
-        const y = Math.random() * (window.innerHeight * 0.7)
+        const windowWidth = typeof window !== "undefined" ? window.innerWidth : 1000
+        const windowHeight = typeof window !== "undefined" ? window.innerHeight : 800
+
+        const startX = spaceshipDirection > 0 ? -100 : windowWidth + 100
+        const y = Math.random() * (windowHeight * 0.7)
         setSpaceshipPosition({ x: startX, y })
         setShowSpaceship(true)
 
@@ -78,12 +83,14 @@ export function RoofusAssistant() {
     }, 20000)
 
     return () => clearInterval(spaceshipInterval)
-  }, [windowAvailable, spaceshipDirection])
+  }, [spaceshipDirection, isMounted])
 
   // Auto-scroll to bottom of messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+    if (isMounted) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }
+  }, [messages, isMounted])
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault()
@@ -124,6 +131,11 @@ export function RoofusAssistant() {
     }, 1500)
   }
 
+  // Don't render anything during SSR
+  if (!isMounted) {
+    return null
+  }
+
   return (
     <>
       {/* Animated stars background */}
@@ -133,8 +145,8 @@ export function RoofusAssistant() {
             key={i}
             className="absolute h-1 w-1 rounded-full bg-white"
             initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
+              x: Math.random() * (typeof window !== "undefined" ? window.innerWidth : 1000),
+              y: Math.random() * (typeof window !== "undefined" ? window.innerHeight : 800),
               opacity: Math.random() * 0.7 + 0.3,
             }}
             animate={{
@@ -164,7 +176,7 @@ export function RoofusAssistant() {
               rotate: spaceshipDirection > 0 ? 0 : 180,
             }}
             animate={{
-              x: spaceshipDirection > 0 ? window.innerWidth + 100 : -100,
+              x: spaceshipDirection > 0 ? (typeof window !== "undefined" ? window.innerWidth : 1000) + 100 : -100,
               y: spaceshipPosition.y + Math.sin(Date.now() / 1000) * 50,
             }}
             exit={{ opacity: 0 }}
@@ -387,3 +399,5 @@ export function RoofusAssistant() {
     </>
   )
 }
+
+export default RoofusAssistant

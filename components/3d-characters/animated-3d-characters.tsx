@@ -1,10 +1,12 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect, useRef, Suspense } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Physics, useBox, usePlane } from "@react-three/cannon"
 import { OrbitControls, useGLTF, useAnimations, PerspectiveCamera, Html } from "@react-three/drei"
-import type * as THREE from "three" // Import THREE
+import * as THREE from "three"
 import { usePathname } from "next/navigation"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
@@ -28,8 +30,23 @@ function RoofusCharacter({
   onInteract?: () => void
 }) {
   const group = useRef<THREE.Group>(null)
-  const { scene, animations } = useGLTF(ROOFUS_MODEL_URL)
-  const { actions, names } = useAnimations(animations, group)
+  const [modelLoaded, setModelLoaded] = useState(false)
+  const [modelError, setModelError] = useState(false)
+  const result = useGLTF(ROOFUS_MODEL_URL)
+  const scene = useRef<THREE.Group>(new THREE.Group())
+  const animations = useRef<any[]>([])
+  const actions = useRef<Record<string, any>>({})
+  const names = useRef<string[]>([])
+  const animResult = useAnimations(animations.current, group)
+  actions.current = animResult.actions
+  names.current = animResult.names
+
+  useEffect(() => {
+    scene.current = result.scene
+    animations.current = result.animations
+    setModelLoaded(true)
+  }, [result])
+
   const [physicsRef, physicsApi] = useBox(() => ({
     mass: 1,
     position,
@@ -44,17 +61,19 @@ function RoofusCharacter({
 
   // Handle animation changes
   useEffect(() => {
+    if (!modelLoaded || modelError) return
+
     // Reset all animations
-    names.forEach((name) => actions[name]?.stop())
+    names.current.forEach((name) => actions.current[name]?.stop())
 
     // Play the current animation
-    if (actions[animation]) {
-      actions[animation]?.reset().play()
+    if (actions.current[animation]) {
+      actions.current[animation]?.reset().play()
     } else {
       // Fallback to idle if animation doesn't exist
-      actions["idle"]?.reset().play()
+      actions.current["idle"]?.reset().play()
     }
-  }, [actions, animation, names])
+  }, [animation, modelLoaded, modelError])
 
   // Handle direction changes
   useEffect(() => {
@@ -71,10 +90,19 @@ function RoofusCharacter({
     }
   })
 
+  if (modelError) {
+    return (
+      <mesh ref={physicsRef} name="roofus" position={position}>
+        <boxGeometry args={[0.5, 1, 0.5]} />
+        <meshStandardMaterial color="#FFD700" opacity={0.5} transparent />
+      </mesh>
+    )
+  }
+
   return (
     <group ref={group}>
       <mesh ref={physicsRef} name="roofus" visible={false} />
-      <primitive object={scene.clone()} scale={[0.5, 0.5, 0.5]} />
+      {modelLoaded && <primitive object={scene.current.clone()} scale={[0.5, 0.5, 0.5]} />}
     </group>
   )
 }
@@ -90,8 +118,24 @@ function LandonCharacter({
   onInteract?: () => void
 }) {
   const group = useRef<THREE.Group>(null)
-  const { scene, animations } = useGLTF(LANDON_MODEL_URL)
-  const { actions, names } = useAnimations(animations, group)
+  const [modelLoaded, setModelLoaded] = useState(false)
+  const [modelError, setModelError] = useState(false)
+
+  const result = useGLTF(LANDON_MODEL_URL)
+  const scene = useRef<THREE.Group>(new THREE.Group())
+  const animations = useRef<any[]>([])
+  const actions = useRef<Record<string, any>>({})
+  const names = useRef<string[]>([])
+  const animResult = useAnimations(animations.current, group)
+  actions.current = animResult.actions
+  names.current = animResult.names
+
+  useEffect(() => {
+    scene.current = result.scene
+    animations.current = result.animations
+    setModelLoaded(true)
+  }, [result])
+
   const [physicsRef, physicsApi] = useBox(() => ({
     mass: 1,
     position,
@@ -106,17 +150,19 @@ function LandonCharacter({
 
   // Handle animation changes
   useEffect(() => {
+    if (!modelLoaded || modelError) return
+
     // Reset all animations
-    names.forEach((name) => actions[name]?.stop())
+    names.current.forEach((name) => actions.current[name]?.stop())
 
     // Play the current animation
-    if (actions[animation]) {
-      actions[animation]?.reset().play()
+    if (actions.current[animation]) {
+      actions.current[animation]?.reset().play()
     } else {
       // Fallback to idle if animation doesn't exist
-      actions["idle"]?.reset().play()
+      actions.current["idle"]?.reset().play()
     }
-  }, [actions, animation, names])
+  }, [animation, modelLoaded, modelError])
 
   // Update physics body position to match animation
   useFrame(() => {
@@ -126,10 +172,19 @@ function LandonCharacter({
     }
   })
 
+  if (modelError) {
+    return (
+      <mesh ref={physicsRef} name="landon" position={position}>
+        <boxGeometry args={[0.5, 1, 0.5]} />
+        <meshStandardMaterial color="#3B82F6" opacity={0.5} transparent />
+      </mesh>
+    )
+  }
+
   return (
     <group ref={group}>
       <mesh ref={physicsRef} name="landon" visible={false} />
-      <primitive object={scene.clone()} scale={[0.5, 0.5, 0.5]} />
+      {modelLoaded && <primitive object={scene.current.clone()} scale={[0.5, 0.5, 0.5]} />}
     </group>
   )
 }
@@ -192,6 +247,32 @@ function Environment3D() {
   )
 }
 
+// Error boundary component for 3D rendering
+function ErrorBoundary({ children }: { children: React.ReactNode }) {
+  const [hasError, setHasError] = useState(false)
+
+  useEffect(() => {
+    const handleError = () => {
+      setHasError(true)
+    }
+
+    window.addEventListener("error", handleError)
+    return () => window.removeEventListener("error", handleError)
+  }, [])
+
+  if (hasError) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-10">
+        <div className="bg-black/50 backdrop-blur-md p-4 rounded-lg border border-red-500/50 text-white">
+          <p>3D rendering is not available</p>
+        </div>
+      </div>
+    )
+  }
+
+  return <>{children}</>
+}
+
 // Main component
 export function Animated3DCharacters() {
   const [roofusPosition, setRoofusPosition] = useState<[number, number, number]>([2, 0, 0])
@@ -201,17 +282,22 @@ export function Animated3DCharacters() {
   const [roofusDirection, setRoofusDirection] = useState<"left" | "right">("right")
   const [showSpeechBubble, setShowSpeechBubble] = useState(false)
   const [speechText, setSpeechText] = useState("")
+  const isMobile = useMediaQuery("(max-width: 768px)")
   const [isChasing, setIsChasing] = useState(false)
   const [userInactive, setUserInactive] = useState(false)
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null)
   const pathname = usePathname()
-  const isMobile = useMediaQuery("(max-width: 768px)")
   const [isRoofusVisible, setIsRoofusVisible] = useState(true)
   const [windowAvailable, setWindowAvailable] = useState(false)
+  const [hasRenderingError, setHasRenderingError] = useState(false)
 
   useEffect(() => {
     setWindowAvailable(true)
   }, [])
+
+  useEffect(() => {
+    setIsChasing(isMobile ? false : true)
+  }, [isMobile])
 
   // Reset inactivity timer whenever user moves mouse or types
   const resetInactivityTimer = () => {
@@ -228,7 +314,7 @@ export function Animated3DCharacters() {
 
   // Initialize event listeners and timers
   useEffect(() => {
-    if (!windowAvailable) return
+    if (!windowAvailable || isMobile) return
 
     // Set up event listeners for user activity
     window.addEventListener("mousemove", resetInactivityTimer)
@@ -319,38 +405,47 @@ export function Animated3DCharacters() {
     return null
   }
 
+  // Handle rendering errors
+  if (hasRenderingError) {
+    return null
+  }
+
   return (
     <div className="fixed inset-0 pointer-events-none z-10">
-      <Canvas shadows>
+      <ErrorBoundary>
         <Suspense fallback={null}>
-          <Physics>
-            <PerspectiveCamera makeDefault position={[0, 5, 10]} />
-            <Environment3D />
+          <Canvas shadows onError={() => setHasRenderingError(true)}>
+            <Suspense fallback={null}>
+              <Physics>
+                <PerspectiveCamera makeDefault position={[0, 5, 10]} />
+                <Environment3D />
 
-            <RoofusCharacter
-              position={roofusPosition}
-              animation={roofusAnimation}
-              direction={roofusDirection}
-              onInteract={handleInteraction}
-            />
+                <RoofusCharacter
+                  position={roofusPosition}
+                  animation={roofusAnimation}
+                  direction={roofusDirection}
+                  onInteract={handleInteraction}
+                />
 
-            <LandonCharacter position={landonPosition} animation={landonAnimation} onInteract={handleInteraction} />
+                <LandonCharacter position={landonPosition} animation={landonAnimation} onInteract={handleInteraction} />
 
-            {showSpeechBubble && (
-              <SpeechBubble
-                text={speechText}
-                position={[roofusPosition[0], roofusPosition[1] + 2, roofusPosition[2]]}
-              />
-            )}
+                {showSpeechBubble && (
+                  <SpeechBubble
+                    text={speechText}
+                    position={[roofusPosition[0], roofusPosition[1] + 2, roofusPosition[2]]}
+                  />
+                )}
 
-            <OrbitControls enableZoom={false} enablePan={false} />
-          </Physics>
+                <OrbitControls enableZoom={false} enablePan={false} />
+              </Physics>
+            </Suspense>
+          </Canvas>
         </Suspense>
-      </Canvas>
+      </ErrorBoundary>
     </div>
   )
 }
 
-// Preload models
-useGLTF.preload(ROOFUS_MODEL_URL)
-useGLTF.preload(LANDON_MODEL_URL)
+// Don't preload models - let them load on demand with error handling
+// useGLTF.preload(ROOFUS_MODEL_URL)
+// useGLTF.preload(LANDON_MODEL_URL)

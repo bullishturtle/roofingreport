@@ -9,14 +9,13 @@ import { CalendarView } from "@/components/dashboard/calendar-view"
 import { Badge } from "@/components/ui/badge"
 import { BarChart, Download, FileText, Plus, Search, Settings, Users } from "lucide-react"
 import Link from "next/link"
-import RoofusAssistantDashboardWrapper from "@/components/client-wrappers/roofus-assistant-dashboard-wrapper"
-import StatsCardsWrapper from "@/components/client-wrappers/stats-cards-wrapper"
+import DashboardClientWrapper from "@/components/client-wrappers/dashboard-client-wrapper"
 
 export default function DashboardPage() {
   return (
     <DashboardShell>
-      {/* Roofus Assistant */}
-      <RoofusAssistantDashboardWrapper />
+      {/* Client components */}
+      <DashboardClientWrapper />
 
       <DashboardHeader heading="Dashboard" text="Manage your reports, leads, and projects all in one place.">
         <Button
@@ -29,7 +28,6 @@ export default function DashboardPage() {
         </Button>
       </DashboardHeader>
       <div className="grid gap-4 md:gap-8">
-        <StatsCardsWrapper />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
           <Card className="lg:col-span-5 border-white/10 bg-white/5 backdrop-blur-sm">
             <CardHeader>

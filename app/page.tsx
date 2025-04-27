@@ -3,42 +3,17 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, CheckCircle, Search, Shield, Zap } from "lucide-react"
-import RoofusAssistantWrapper from "@/components/client-wrappers/roofus-assistant-wrapper"
-import Animated3DCharactersWrapper from "@/components/client-wrappers/animated-3d-characters-wrapper"
-import ActionBarWrapper from "@/components/client-wrappers/action-bar-wrapper"
-import MobileActionDrawerWrapper from "@/components/client-wrappers/mobile-action-drawer-wrapper"
-import HeroSearchWrapper from "@/components/client-wrappers/hero-search-wrapper"
+import PageClientWrapper from "@/components/client-wrappers/page-client-wrapper"
+import HeroSearchClientWrapper from "@/components/client-wrappers/hero-search-client-wrapper"
 
 export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-black to-blue-950 relative overflow-hidden">
-      {/* Animated stars background */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        {Array.from({ length: 100 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute h-1 w-1 rounded-full bg-white animate-pulse"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              opacity: Math.random() * 0.7 + 0.3,
-              animationDuration: `${Math.random() * 3 + 2}s`,
-              animationDelay: `${Math.random() * 2}s`,
-              width: `${Math.random() * 2 + 1}px`,
-              height: `${Math.random() * 2 + 1}px`,
-            }}
-          />
-        ))}
-      </div>
+      {/* Static placeholder for stars - will be replaced by client component */}
+      <div className="fixed inset-0 pointer-events-none z-0">{/* Client-side stars will be rendered here */}</div>
 
-      {/* 3D Animated Characters */}
-      <Animated3DCharactersWrapper />
-
-      {/* Roofus Assistant */}
-      <RoofusAssistantWrapper />
-
-      {/* Mobile Action Drawer */}
-      <MobileActionDrawerWrapper />
+      {/* Client components */}
+      <PageClientWrapper />
 
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-neon-gold/20 bg-black/50 backdrop-blur-md">
@@ -117,7 +92,7 @@ export default function HomePage() {
                     lookups, proposals, and instant outreach together—guided by Roofus, built for closers.
                   </p>
                 </div>
-                <HeroSearchWrapper />
+                <HeroSearchClientWrapper />
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
                   <Button
                     size="lg"
@@ -175,9 +150,6 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-
-        {/* Action Bar */}
-        <ActionBarWrapper />
 
         {/* Stats Section */}
         <section className="w-full py-12 md:py-16 lg:py-20 border-y border-neon-gold/20 bg-black/30">
@@ -333,7 +305,7 @@ export default function HomePage() {
               Terms
             </Link>
           </div>
-          <p className="text-sm text-white/50">&copy; {new Date().getFullYear()} RoofFax. All rights reserved.</p>
+          <p className="text-sm text-white/50">&copy; 2023 RoofFax. All rights reserved.</p>
         </div>
       </footer>
     </div>

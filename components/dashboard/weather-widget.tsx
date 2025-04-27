@@ -31,17 +31,32 @@ export function WeatherWidget() {
     try {
       // Fetch current weather
       const currentResponse = await axios.get(`/api/weather?location=${encodeURIComponent(location)}`)
-      setWeatherData(currentResponse.data)
+      if (currentResponse.data && currentResponse.data.location) {
+        setWeatherData(currentResponse.data)
+      } else {
+        console.error("Invalid weather data format:", currentResponse.data)
+        setWeatherData(null)
+      }
 
       // Fetch forecast if on forecast tab
       if (activeTab === "forecast") {
         const forecastResponse = await axios.get(
           `/api/weather?location=${encodeURIComponent(location)}&forecast=true&days=5`,
         )
-        setForecastData(forecastResponse.data)
+        if (forecastResponse.data && forecastResponse.data.location) {
+          setForecastData(forecastResponse.data)
+        } else {
+          console.error("Invalid forecast data format:", forecastResponse.data)
+          setForecastData(null)
+        }
       }
     } catch (error) {
       console.error("Error fetching weather data:", error)
+      // Set default values to prevent undefined errors
+      setWeatherData(null)
+      if (activeTab === "forecast") {
+        setForecastData(null)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -138,7 +153,7 @@ export function WeatherWidget() {
               <div className="flex justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
               </div>
-            ) : weatherData ? (
+            ) : weatherData && weatherData.location && weatherData.current ? (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -197,7 +212,7 @@ export function WeatherWidget() {
               <div className="flex justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
               </div>
-            ) : forecastData?.forecast ? (
+            ) : forecastData?.forecast && forecastData.location ? (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                 <div className="grid gap-2">
                   {forecastData.forecast.forecastday.slice(0, 5).map((day, index) => (

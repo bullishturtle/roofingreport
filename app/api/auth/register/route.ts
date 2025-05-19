@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { hash } from "bcrypt"
+import { hash } from "bcryptjs"
 import prisma from "@/lib/db"
 import * as z from "zod"
 

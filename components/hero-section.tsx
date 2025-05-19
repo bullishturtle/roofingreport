@@ -2,13 +2,12 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { AddressSearchForm } from "@/components/address-search-form"
 import { useUser } from "@/contexts/user-context"
 import { LoginModal } from "@/components/auth/login-modal"
-import { useToast } from "@/components/ui/toast"
+import { useToast } from "@/components/ui/use-toast"
 import { TrustStatsBar } from "@/components/trust-stats-bar"
-import { useResponsive } from "@/hooks/use-mobile"
-import Image from "next/image"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 export function HeroSection() {
@@ -16,9 +15,8 @@ export function HeroSection() {
   const { user } = useUser()
   const [loginModalOpen, setLoginModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { showToast } = useToast()
-  const { isMobile } = useIsMobile()
-  const { isMobile: wasMobile } = useResponsive()
+  const { toast } = useToast()
+  const isMobile = useIsMobile()
 
   const handleAddressSubmit = async (address: string) => {
     try {
@@ -43,7 +41,11 @@ export function HeroSection() {
         // or redirect to a report generation page
 
         // For now, we'll show a success message and simulate routing
-        showToast("Report request received", "We're generating your report now.", "success")
+        toast({
+          title: "Report request received",
+          description: "We're generating your report now.",
+          variant: "default",
+        })
 
         // Delayed redirect to simulate processing
         setTimeout(() => {
@@ -52,7 +54,11 @@ export function HeroSection() {
       }
     } catch (error) {
       console.error("Error submitting address:", error)
-      showToast("Error", "We couldn't process your request. Please try again.", "error")
+      toast({
+        title: "Error",
+        description: "We couldn't process your request. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -81,7 +87,56 @@ export function HeroSection() {
               <div className="mt-8 max-w-md mx-auto lg:mx-0">
                 <AddressSearchForm onSubmit={handleAddressSubmit} isSubmitting={isSubmitting} buttonText="Get Report" />
               </div>
+
+              <div className="mt-6 flex flex-wrap justify-center lg:justify-start gap-4">
+                <button
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-3 rounded-md transition-colors duration-200"
+                  onClick={() => router.push("/register")}
+                >
+                  Start Free Trial
+                </button>
+                <button
+                  className="border border-gray-300 hover:bg-gray-100 text-gray-700 px-5 py-3 rounded-md transition-colors duration-200"
+                  onClick={handleSeeHowItWorks}
+                >
+                  See How It Works
+                </button>
+              </div>
+
+              <div className="mt-6 flex flex-wrap justify-center lg:justify-start gap-4 text-sm text-gray-600">
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span>No Credit Card Required</span>
+                </div>
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span>Instant Reports</span>
+                </div>
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span>Cancel Anytime</span>
+                </div>
+              </div>
             </div>
+
             <div className="relative flex justify-center lg:justify-end">
               <div className="relative w-full max-w-md lg:max-w-full">
                 <Image

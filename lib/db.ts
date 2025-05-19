@@ -1,30 +1,43 @@
-import { neon } from "@neondatabase/serverless"
+import { neon, neonConfig } from "@neondatabase/serverless"
+import { Pool } from "@neondatabase/serverless"
 
-// Create a SQL client with the database URL from environment variables
-const sql = neon(process.env.DATABASE_URL!)
+// Configure neon to use WebSockets in edge environments
+neonConfig.fetchConnectionCache = true
 
-// Add logging in development mode
-const executeQuery = async (query: string, params: any[] = []) => {
+// Get database URL from environment variables
+const DATABASE_URL = process.env.DATABASE_URL
+
+if (!DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is not set")
+}
+
+// Create a SQL query executor using neon
+export const sql = neon(DATABASE_URL)
+
+// Create a connection pool for more complex operations
+let pool: Pool
+
+export function getPool() {
+  if (!pool) {
+    pool = new Pool({ connectionString: DATABASE_URL })
+  }
+  return pool
+}
+
+// Helper function to execute queries with better error handling and logging
+export async function executeQuery(queryText: string, params: any[] = []) {
   try {
-    if (process.env.NODE_ENV !== "production") {
-      console.log("🔍 Executing SQL query:", query)
-      if (params.length > 0) {
-        console.log("With params:", params)
-      }
-    }
-
-    const result = await sql(query, params)
-
-    if (process.env.NODE_ENV !== "production") {
-      console.log("✅ Query result:", result)
-    }
-
+    console.log(`Executing query: ${queryText.slice(0, 100)}${queryText.length > 100 ? "..." : ""}`)
+    const start = Date.now()
+    const result = await sql(queryText, params)
+    const duration = Date.now() - start
+    console.log(`Query executed in ${duration}ms`)
     return result
   } catch (error) {
-    console.error("❌ Database query error:", error)
+    console.error("Database query error:", error)
     throw error
   }
 }
 
-export { executeQuery }
+// Export sql as default for compatibility with existing code
 export default sql

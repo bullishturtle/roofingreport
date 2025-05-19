@@ -114,3 +114,6 @@ export async function sendEmail({ to, subject, html, attachments = [] }: EmailOp
 }
 
 export default sendEmail
+
+// Re-export from email-service for backward compatibility
+export { type, EmailContent } from "./email-service"

@@ -6,50 +6,88 @@ import { useState } from "react"
 import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useIsMobile } from "@/hooks/use-mobile"
+import { LoadingSpinner } from "@/components/loading-spinner"
 
-export function AddressSearchForm() {
+interface AddressSearchFormProps {
+  onSubmit: (address: string) => void
+  isSubmitting?: boolean
+  buttonText?: string
+  className?: string
+}
+
+export function AddressSearchForm({
+  onSubmit,
+  isSubmitting = false,
+  buttonText = "Search",
+  className = "",
+}: AddressSearchFormProps) {
   const [address, setAddress] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const isMobile = useIsMobile()
+  const [error, setError] = useState("")
+  const [isFocused, setIsFocused] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!address.trim()) return
 
-    setIsLoading(true)
+    // Validate address
+    if (!address.trim()) {
+      setError("Please enter an address")
+      return
+    }
 
-    // Simulate API call
-    console.log(`Searching for address: ${address}`)
-
-    // Show success message or redirect
-    setTimeout(() => {
-      setIsLoading(false)
-      alert(`Report requested for: ${address}`)
-      setAddress("")
-    }, 1500)
+    setError("")
+    onSubmit(address)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row w-full gap-2 sm:gap-0">
-      <div className="relative flex-grow">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-        <Input
-          type="text"
-          placeholder="Enter your property address"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          className="pl-10 pr-4 py-2 h-12 rounded-lg sm:rounded-r-none border-gray-300 focus:border-blue-500 focus:ring-blue-500 w-full"
-          required
-        />
+    <form onSubmit={handleSubmit} className={`w-full ${className}`} aria-label="Property address search form">
+      <div className="relative">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-grow">
+            <Search
+              className={`absolute left-3 top-1/2 transform -translate-y-1/2 transition-colors duration-200 ${
+                isFocused ? "text-blue-500" : "text-gray-400"
+              }`}
+              size={20}
+            />
+            <Input
+              type="text"
+              placeholder="Enter your property address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              className="pl-10 py-3 w-full border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200"
+              disabled={isSubmitting}
+              aria-label="Property address"
+              aria-required="true"
+              aria-invalid={!!error}
+              aria-describedby={error ? "address-error" : undefined}
+            />
+          </div>
+          <Button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 transition-colors duration-200 text-base font-medium"
+            disabled={isSubmitting}
+            aria-busy={isSubmitting}
+          >
+            {isSubmitting ? (
+              <span className="flex items-center justify-center">
+                <LoadingSpinner className="mr-2" />
+                <span className="sm:inline">Processing...</span>
+              </span>
+            ) : (
+              buttonText
+            )}
+          </Button>
+        </div>
+        {error && (
+          <p className="text-red-500 text-sm mt-1" id="address-error" role="alert">
+            {error}
+          </p>
+        )}
       </div>
-      <Button
-        type="submit"
-        disabled={isLoading || !address.trim()}
-        className="h-12 px-6 font-medium rounded-lg sm:rounded-l-none bg-blue-600 hover:bg-blue-700 transition-colors"
-      >
-        {isLoading ? "Searching..." : "Get Report"}
-      </Button>
     </form>
   )
 }
+
+export default AddressSearchForm

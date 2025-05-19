@@ -3,10 +3,8 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Facebook, Linkedin, Mail, Phone } from "lucide-react"
-import { useIsMobile } from "@/hooks/use-mobile"
 
 export function Footer() {
-  const isMobile = useIsMobile()
   const currentYear = new Date().getFullYear()
 
   return (
@@ -128,3 +126,5 @@ export function Footer() {
     </footer>
   )
 }
+
+export default Footer

@@ -137,7 +137,7 @@ export default function ReportPage() {
       } else {
         toast({
           title: "Error",
-          description: result.message,
+          description: result.message || "Failed to send email. Please try again.",
           variant: "destructive",
           duration: 5000,
         })
@@ -223,7 +223,7 @@ export default function ReportPage() {
             <AlertTriangle className="mx-auto h-12 w-12 text-red-500 mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Report Error</h2>
             <p className="text-gray-600 mb-6">{error}</p>
-            <Button onClick={() => router.push("/")} className="bg-orange-500 hover:bg-orange-600 text-white">
+            <Button onClick={() => router.push("/")} className="bg-blue-600 hover:bg-blue-700 text-white">
               Return Home
             </Button>
           </div>
@@ -333,7 +333,7 @@ export default function ReportPage() {
                   <Download className="mr-2 h-4 w-4" />
                   Download PDF
                 </Button>
-                <Button onClick={handleEmailDialogOpen} className="bg-orange-500 hover:bg-orange-600 text-white">
+                <Button onClick={handleEmailDialogOpen} className="bg-blue-600 hover:bg-blue-700 text-white">
                   <Mail className="mr-2 h-4 w-4" />
                   Email Report
                 </Button>
@@ -404,7 +404,7 @@ export default function ReportPage() {
               type="submit"
               onClick={handleSendEmail}
               disabled={isSendingEmail}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               {isSendingEmail ? (
                 <>

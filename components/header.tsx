@@ -1,23 +1,37 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
+import { useUser } from "@/contexts/user-context"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const isMobile = useIsMobile()
+  const { user, status, logout } = useUser()
+  const [scrolled, setScrolled] = useState(false)
+
+  // Handle scroll effect for header
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10)
+    }
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white shadow-sm">
+    <header
+      className={`sticky top-0 z-50 w-full transition-all duration-200 ${scrolled ? "bg-white shadow-md" : "bg-white"}`}
+    >
       <div className="container mx-auto px-4 py-3 md:py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -44,14 +58,29 @@ export function Header() {
               Contact
             </Link>
             <div className="flex items-center space-x-3">
-              <Link href="/login">
-                <Button variant="outline" className="font-medium">
-                  Log in
-                </Button>
-              </Link>
-              <Link href="/register">
-                <Button className="font-medium">Sign up</Button>
-              </Link>
+              {status === "authenticated" ? (
+                <div className="flex items-center space-x-3">
+                  <Link href="/dashboard">
+                    <Button variant="outline" className="font-medium">
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Button variant="outline" className="font-medium" onClick={() => logout()}>
+                    Log out
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <Button variant="outline" className="font-medium">
+                      Log in
+                    </Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button className="font-medium">Sign up</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </nav>
 
@@ -96,14 +125,36 @@ export function Header() {
               Contact
             </Link>
             <div className="flex flex-col space-y-3 pt-2">
-              <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="outline" className="w-full font-medium">
-                  Log in
-                </Button>
-              </Link>
-              <Link href="/register" onClick={() => setIsMenuOpen(false)}>
-                <Button className="w-full font-medium">Sign up</Button>
-              </Link>
+              {status === "authenticated" ? (
+                <>
+                  <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="outline" className="w-full font-medium">
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    className="w-full font-medium"
+                    onClick={() => {
+                      logout()
+                      setIsMenuOpen(false)
+                    }}
+                  >
+                    Log out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="outline" className="w-full font-medium">
+                      Log in
+                    </Button>
+                  </Link>
+                  <Link href="/register" onClick={() => setIsMenuOpen(false)}>
+                    <Button className="w-full font-medium">Sign up</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </nav>
         </div>
@@ -111,3 +162,5 @@ export function Header() {
     </header>
   )
 }
+
+export default Header

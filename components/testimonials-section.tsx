@@ -1,78 +1,76 @@
-import Image from "next/image"
-import { Star } from "lucide-react"
-
-export default function TestimonialsSection() {
-  const testimonials = [
-    {
-      name: "Sarah Johnson",
-      role: "Homeowner",
-      image: "/woman-portrait.png",
-      content:
-        "TheRoofFax report saved me thousands of dollars by identifying issues before they became major problems. The detailed analysis helped me negotiate with contractors effectively.",
-      rating: 5,
-    },
-    {
-      name: "Michael Rodriguez",
-      role: "Roofing Contractor",
-      image: "/thoughtful-man-portrait.png",
-      content:
-        "As a contractor, TheRoofFax reports help me provide more accurate quotes and identify issues that might not be visible during a standard inspection. It's become an essential tool for my business.",
-      rating: 5,
-    },
-    {
-      name: "Jennifer Williams",
-      role: "Real Estate Agent",
-      image: "/woman-portrait.png",
-      content:
-        "I recommend TheRoofFax to all my clients before purchasing a home. It provides peace of mind and helps avoid unexpected expenses after closing.",
-      rating: 4,
-    },
-  ]
-
+export function TestimonialsSection() {
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="bg-black py-16 md:py-24">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900">What Our Customers Say</h2>
-          <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-            Thousands of homeowners and professionals trust TheRoofFax for accurate roof assessments
+        <div className="mb-12 text-center">
+          <h2 className="mb-4 text-3xl font-bold text-white md:text-4xl">
+            Trusted by <span className="text-yellow-500">Thousands</span> of Professionals
+          </h2>
+          <p className="mx-auto max-w-2xl text-gray-400">
+            See what roofing contractors and homeowners are saying about RoofFax.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {testimonials.map((testimonial, index) => (
-            <div key={index} className="bg-white p-6 rounded-lg shadow-md">
-              <div className="flex items-center mb-4">
-                <div className="relative w-12 h-12 rounded-full overflow-hidden mr-4">
-                  <Image
-                    src={testimonial.image || "/placeholder.svg"}
-                    alt={testimonial.name}
-                    fill
-                    style={{ objectFit: "cover" }}
-                  />
-                </div>
-                <div>
-                  <h3 className="font-semibold">{testimonial.name}</h3>
-                  <p className="text-sm text-gray-600">{testimonial.role}</p>
-                </div>
-              </div>
-
-              <div className="flex mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-5 w-5 ${
-                      i < testimonial.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
-                    }`}
-                  />
-                ))}
-              </div>
-
-              <p className="text-gray-700">{testimonial.content}</p>
-            </div>
-          ))}
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <TestimonialCard
+            quote="RoofFax has completely transformed our business. We've increased our close rate by 35% since implementing it."
+            author="Michael Johnson"
+            role="Owner, Johnson Roofing"
+            image="/images/testimonial-1.jpg"
+          />
+          <TestimonialCard
+            quote="The accuracy of the measurements and the professional reports give us a huge advantage over competitors."
+            author="Sarah Williams"
+            role="Sales Manager, Elite Roofing"
+            image="/images/testimonial-2.jpg"
+          />
+          <TestimonialCard
+            quote="As a homeowner, RoofFax gave me confidence that I was getting a fair price for my roof replacement."
+            author="David Thompson"
+            role="Homeowner"
+            image="/images/testimonial-3.jpg"
+          />
         </div>
       </div>
     </section>
   )
 }
+
+interface TestimonialCardProps {
+  quote: string
+  author: string
+  role: string
+  image: string
+}
+
+function TestimonialCard({ quote, author, role, image }: TestimonialCardProps) {
+  return (
+    <div className="rounded-lg border border-gray-800 bg-gray-900 p-6">
+      <div className="mb-4 text-yellow-500">
+        <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M14.017 18L14.017 10.609C14.017 4.905 17.748 1.039 23 0L23.995 2.151C21.563 3.068 20 5.789 20 8H24V18H14.017ZM0 18V10.609C0 4.905 3.748 1.039 9 0L9.996 2.151C7.563 3.068 6 5.789 6 8H9.983L9.983 18L0 18Z" />
+        </svg>
+      </div>
+      <p className="mb-4 text-gray-300">{quote}</p>
+      <div className="flex items-center">
+        <div className="mr-4 h-12 w-12 overflow-hidden rounded-full bg-gray-700">
+          <img
+            src={image || "/placeholder.svg"}
+            alt={author}
+            className="h-full w-full object-cover"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement
+              target.src = "https://via.placeholder.com/48"
+            }}
+          />
+        </div>
+        <div>
+          <div className="font-medium text-white">{author}</div>
+          <div className="text-sm text-gray-400">{role}</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default TestimonialsSection

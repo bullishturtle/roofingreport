@@ -1,48 +1,97 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { useUser } from "@/contexts/user-context"
-import Header from "@/components/header"
-import Footer from "@/components/footer"
-import ReportPreview from "@/components/report-preview"
-import LoadingSpinner from "@/components/ui/loading-spinner"
+import { useState, useEffect } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
+import { ErrorBoundary } from "@/components/error-boundary"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
+import { LoadingSpinner } from "@/components/loading-spinner"
 import { Button } from "@/components/ui/button"
-import { Download, Share2, Printer } from "lucide-react"
-import RoofusAssistant from "@/components/roofus-assistant"
+import { useUser } from "@/contexts/user-context"
+import { logUserAction, logError } from "@/lib/utils"
+import { AlertTriangle } from "lucide-react"
 
 export default function ReportPage() {
-  const { user, status } = useUser()
+  const searchParams = useSearchParams()
   const router = useRouter()
-  const [address, setAddress] = useState<string | null>(null)
+  const { user } = useUser()
   const [isLoading, setIsLoading] = useState(true)
+  const [reportData, setReportData] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const address = searchParams.get('address')
 
   useEffect(() => {
-    // Check if user is authenticated
-    if (status === "unauthenticated") {
-      router.push("/login")
-      return
-    }
-
-    // Get address from sessionStorage
-    const storedAddress = sessionStorage.getItem("rooffax_search_address")
-    if (storedAddress) {
-      setAddress(storedAddress)
-    } else {
-      // If no address is found, redirect to home
-      router.push("/")
-      return
-    }
-
-    // Simulate loading
-    const timer = setTimeout(() => {
+    if (!address) {
+      setError('No address provided')
       setIsLoading(false)
-    }, 1500)
+      return
+    }
 
-    return () => clearTimeout(timer)
-  }, [status, router])
+    async function fetchReportData() {
+      try {
+        logUserAction('Fetching report data', { address })
+        
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        // Mock report data
+        const mockReportData = {
+          address,
+          reportDate: new Date().toLocaleDateString(),
+          roofAge: '8-10 years',
+          condition: 'Good',
+          estimatedLifespan: '15-20 years',
+          materials: 'Asphalt Shingles',
+          squareFootage: '2,400 sq ft',
+          slope: '6:12',
+          issues: [
+            'Minor granule loss in some areas',
+            'Two damaged shingles on south side',
+            'Flashing around chimney needs inspection'
+          ],
+          recommendations: [
+            'Schedule professional inspection within 6 months',
+            'Monitor south side for further damage',
+            'Consider gutter cleaning and maintenance'
+          ],
+          images: [
+            '/placeholder.svg?key=o5c2g',
+            '/placeholder.svg?key=922cw',
+            '/placeholder.svg?key=yqlg1'
+          ]
+        }
+        
+        setReportData(mockReportData)
+        logUserAction('Report data loaded', { address })
+      } catch (error) {
+        const err = error as Error
+        logError(err, 'Fetching report data')
+        setError('Failed to load report data. Please try again.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
 
-  if (status === "loading" || isLoading) {
+    fetchReportData()
+  }, [address])
+
+  const handleDownload = () => {
+    logUserAction('Download report clicked', { address })
+    alert('Report download started. Your PDF will be ready shortly.')
+  }
+
+  const handleEmail = () => {
+    logUserAction('Email report clicked', { address })
+    alert('Report has been emailed to your registered email address.')
+  }
+
+  const handleShare = () => {
+    logUserAction('Share report clicked', { address })
+    alert('Share link copied to clipboard!')
+  }
+
+  if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col">
         <Header />
@@ -50,6 +99,7 @@ export default function ReportPage() {
           <div className="text-center">
             <LoadingSpinner size="lg" className="mx-auto mb-4" />
             <p className="text-gray-600">Generating your roof report...</p>
+            <p className="text-sm text-gray-500 mt-2">This may take a few moments</p>
           </div>
         </main>
         <Footer />
@@ -57,41 +107,35 @@ export default function ReportPage() {
     )
   }
 
-  if (!address) {
-    return null // Will redirect in useEffect
+  if (error) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto p-6">
+            <AlertTriangle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Report Error</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <Button 
+              onClick={() => router.push('/')}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              Return Home
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header />
-      <main className="flex-1 bg-gray-50 py-8">
-        <div className="container mx-auto px-4">
-          <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">Your Roof Report</h1>
-              <p className="text-gray-600">Comprehensive analysis for {address}</p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <Download size={16} />
-                <span>Download</span>
-              </Button>
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <Share2 size={16} />
-                <span>Share</span>
-              </Button>
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <Printer size={16} />
-                <span>Print</span>
-              </Button>
-            </div>
-          </div>
-
-          <ReportPreview address={address} />
-        </div>
-      </main>
-      <Footer />
-      <RoofusAssistant />
-    </div>
-  )
-}
+    <ErrorBoundary>
+      <div className="flex min-h-screen flex-col">
+        <Header />
+        <main className="flex-1 bg-gray-50 py-8">
+          <div className="container mx-auto px-4">
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              {/* Report Header */}
+              <div className="bg-navy-800 text-white p-6">
+\

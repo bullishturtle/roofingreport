@@ -1,78 +1,83 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useState, type FormEvent } from "react"
 import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useRouter } from "next/navigation"
-import { useUser } from "@/contexts/user-context"
-import LoadingSpinner from "@/components/ui/loading-spinner"
-import { useToast } from "@/components/ui/use-toast"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface AddressSearchFormProps {
-  variant?: "default" | "hero"
-  onSubmitWithoutAuth?: () => void
+  onSubmit: (address: string) => void
+  isSubmitting?: boolean
+  buttonText?: string
+  className?: string
 }
 
-export function AddressSearchForm({ variant = "default", onSubmitWithoutAuth }: AddressSearchFormProps) {
+export function AddressSearchForm({
+  onSubmit,
+  isSubmitting = false,
+  buttonText = "Search",
+  className = "",
+}: AddressSearchFormProps) {
   const [address, setAddress] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
-  const { user } = useUser()
-  const { toast } = useToast()
+  const [error, setError] = useState("")
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
 
+    // Validate address
     if (!address.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid address",
-        variant: "destructive",
-      })
+      setError("Please enter an address")
       return
     }
 
-    // If user is not logged in and we have a callback for that case
-    if (!user && onSubmitWithoutAuth) {
-      onSubmitWithoutAuth()
-      return
-    }
-
-    setIsLoading(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    // Store the address in sessionStorage for the report page
-    sessionStorage.setItem("rooffax_search_address", address)
-
-    setIsLoading(false)
-    router.push("/report")
+    setError("")
+    onSubmit(address)
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`w-full ${variant === "hero" ? "max-w-2xl" : "max-w-md"}`}>
-      <div className="relative flex items-center">
-        <div className="absolute left-3 text-gray-400">
-          <Search size={20} />
-        </div>
-        <Input
-          type="text"
-          placeholder="Enter your address"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          className={`pl-10 pr-24 py-6 ${variant === "hero" ? "text-lg h-14" : ""}`}
-          disabled={isLoading}
-        />
-        <div className="absolute right-1">
-          <Button type="submit" size={variant === "hero" ? "lg" : "default"} disabled={isLoading}>
-            {isLoading ? <LoadingSpinner size="sm" /> : "Get Report"}
+    <form onSubmit={handleSubmit} className={`w-full ${className}`} aria-label="Property address search form">
+      <div className="relative">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Input
+              type="text"
+              placeholder="Enter your property address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className="pl-10 py-6 w-full bg-gray-800 border-gray-700 text-white"
+              disabled={isSubmitting}
+              aria-label="Property address"
+              aria-required="true"
+              aria-invalid={!!error}
+              aria-describedby={error ? "address-error" : undefined}
+            />
+          </div>
+          <Button
+            type="submit"
+            className="bg-yellow-500 hover:bg-yellow-600 text-black py-6 px-6 transition-colors duration-200"
+            disabled={isSubmitting}
+            aria-busy={isSubmitting}
+          >
+            {isSubmitting ? (
+              <span className="flex items-center">
+                <LoadingSpinner className="mr-2" />
+                Processing...
+              </span>
+            ) : (
+              buttonText
+            )}
           </Button>
         </div>
+        {error && (
+          <p className="text-red-500 text-sm mt-1" id="address-error" role="alert">
+            {error}
+          </p>
+        )}
       </div>
     </form>
   )
 }
+
+export default AddressSearchForm

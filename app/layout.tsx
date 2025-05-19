@@ -1,18 +1,49 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { UserProvider } from "@/contexts/user-context"
-import { Toaster } from "@/components/ui/toaster"
-import { ThemeProvider } from "@/components/theme-provider"
-import { RoofusProvider } from "@/contexts/roofus-context"
-
-const inter = Inter({ subsets: ["latin"] })
+import ClientLayout from "./client"
 
 export const metadata: Metadata = {
-  title: "RoofFax Report - The World's Smartest Roof & Property Report",
-  description: "Get detailed reports on roof conditions, damage assessments, and repair recommendations.",
-    generator: 'v0.dev'
+  title: "RoofFax - The World's Smartest Roof & Property Report",
+  description:
+    "Get instant, AI-powered roof reports with accurate measurements, condition assessments, and recommendations for homeowners and roofing professionals.",
+  keywords:
+    "roof report, roof inspection, roof damage, roof assessment, roof measurement, roofing contractors, AI roof analysis",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://rooffax.com",
+    title: "RoofFax - The World's Smartest Roof & Property Report",
+    description:
+      "Get instant, AI-powered roof reports with accurate measurements, condition assessments, and recommendations.",
+    siteName: "RoofFax",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "RoofFax - AI-Powered Roof Reports",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RoofFax - The World's Smartest Roof & Property Report",
+    description:
+      "Get instant, AI-powered roof reports with accurate measurements, condition assessments, and recommendations.",
+    images: ["/twitter-image.jpg"],
+  },
+  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
+  robots: "index, follow",
+  applicationName: "RoofFax",
+  generator: "Next.js",
+  authors: [{ name: "RoofFax Team" }],
+  formatDetection: {
+    telephone: true,
+    date: true,
+    address: true,
+    email: true,
+    url: true,
+  },
 }
 
 export default function RootLayout({
@@ -20,18 +51,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <html lang="en">
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light">
-          <UserProvider>
-            <RoofusProvider>
-              {children}
-              <Toaster />
-            </RoofusProvider>
-          </UserProvider>
-        </ThemeProvider>
-      </body>
-    </html>
-  )
+  return <ClientLayout children={children} />
 }
+
+
+import './globals.css'

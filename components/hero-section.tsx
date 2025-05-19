@@ -1,84 +1,174 @@
 "use client"
 
 import { useState } from "react"
-import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { AddressSearchForm } from "@/components/address-search-form"
 import { useUser } from "@/contexts/user-context"
-import RegisterModal from "@/components/auth/register-modal"
-import { AnimatedCharacters } from "@/components/animated-characters"
+import { LoginModal } from "@/components/auth/login-modal"
+import { useToast } from "@/components/ui/toast"
+import { TrustStatsBar } from "@/components/trust-stats-bar"
 
-export default function HeroSection() {
+export function HeroSection() {
+  const router = useRouter()
   const { user } = useUser()
-  const [registerModalOpen, setRegisterModalOpen] = useState(false)
+  const [loginModalOpen, setLoginModalOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { showToast } = useToast()
 
-  const handleAddressSubmitWithoutAuth = () => {
-    setRegisterModalOpen(true)
+  const handleAddressSubmit = async (address: string) => {
+    try {
+      setIsSubmitting(true)
+      console.log("Address submitted:", address)
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+
+      // Log for future CRM integration
+      console.log("[CRM INTEGRATION] Lead captured:", {
+        address,
+        timestamp: new Date().toISOString(),
+        source: "hero_form",
+        user: user ? { id: user.id, email: user.email } : "anonymous",
+      })
+
+      if (!user) {
+        setLoginModalOpen(true)
+      } else {
+        // In production, this would make an API call to get the report
+        // or redirect to a report generation page
+
+        // For now, we'll show a success message and simulate routing
+        showToast("Report request received", "We're generating your report now.", "success")
+
+        // Delayed redirect to simulate processing
+        setTimeout(() => {
+          router.push("/report?address=" + encodeURIComponent(address))
+        }, 1000)
+      }
+    } catch (error) {
+      console.error("Error submitting address:", error)
+      showToast("Error", "We couldn't process your request. Please try again.", "error")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleSeeHowItWorks = () => {
+    const howItWorksSection = document.getElementById("how-it-works")
+    if (howItWorksSection) {
+      howItWorksSection.scrollIntoView({ behavior: "smooth" })
+    }
   }
 
   return (
-    <section className="bg-gradient-to-b from-blue-50 to-white py-16 md:py-24">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">Know Your Roof's Story</h1>
-            <p className="text-lg text-gray-700">
-              Get comprehensive roof reports with damage assessment, repair recommendations, and more.
-            </p>
+    <>
+      <section className="relative bg-black py-16 md:py-24" aria-labelledby="hero-heading">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-4">
+            <span className="inline-block bg-yellow-500/20 text-yellow-500 px-4 py-1 rounded-full text-sm font-medium">
+              The World's Smartest Roof & Property Report
+            </span>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <h1 id="hero-heading" className="text-4xl md:text-5xl font-bold text-white leading-tight">
+                <span className="text-yellow-500">Trusted by Homeowners.</span>
+                <br />
+                Built for Pros.
+              </h1>
+              <p className="text-lg text-gray-300">
+                At RoofFax, we're redefining how homeowners and roofing professionals assess, verify, and act on roof
+                and property data. Our mission is simple: deliver truth, transparency, and technology in an industry
+                often clouded by confusion and outdated methods.
+              </p>
 
-            <AddressSearchForm onSubmitWithoutAuth={handleAddressSubmitWithoutAuth} />
+              <div className="bg-gray-900/50 border border-gray-800 p-6 rounded-lg">
+                <AddressSearchForm onSubmit={handleAddressSubmit} isSubmitting={isSubmitting} buttonText="Get Report" />
+              </div>
 
-            <div className="flex flex-wrap gap-4 mt-8">
-              <div className="flex items-center space-x-2">
-                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span className="text-sm text-gray-600">Instant Reports</span>
+              <div className="flex flex-wrap gap-6 items-center">
+                <button
+                  className="bg-yellow-500 hover:bg-yellow-400 text-black font-medium px-6 py-3 rounded-md transition-colors duration-200"
+                  onClick={() => window.open("/signup", "_self")}
+                  aria-label="Start your free trial"
+                >
+                  Start Free Trial
+                </button>
+                <button
+                  className="border border-gray-700 hover:bg-gray-800 text-white px-6 py-3 rounded-md transition-colors duration-200"
+                  onClick={handleSeeHowItWorks}
+                  aria-label="Learn how RoofFax works"
+                >
+                  See How It Works
+                </button>
               </div>
-              <div className="flex items-center space-x-2">
-                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span className="text-sm text-gray-600">Damage Assessment</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span className="text-sm text-gray-600">Repair Estimates</span>
+
+              <div className="flex flex-wrap gap-8 pt-4">
+                <div className="flex items-center">
+                  <svg
+                    className="w-5 h-5 text-yellow-500 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    aria-hidden="true"
+                  >
+                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
+                  </svg>
+                  <span className="ml-1 text-gray-300">No Credit Card Required</span>
+                </div>
+                <div className="flex items-center">
+                  <svg
+                    className="w-5 h-5 text-yellow-500 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    aria-hidden="true"
+                  >
+                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
+                  </svg>
+                  <span className="ml-1 text-gray-300">Instant Reports</span>
+                </div>
+                <div className="flex items-center">
+                  <svg
+                    className="w-5 h-5 text-yellow-500 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    aria-hidden="true"
+                  >
+                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
+                  </svg>
+                  <span className="ml-1 text-gray-300">Cancel Anytime</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="relative h-[400px] lg:h-[500px]">
-            <div className="relative w-full h-full">
-              <Image
-                src="/roof-aerial-view.png"
-                alt="Roof Aerial View"
-                fill
-                style={{ objectFit: "cover" }}
-                className="rounded-lg shadow-lg"
-              />
-              <div className="absolute -bottom-10 -right-10">
-                <AnimatedCharacters variant="clipboard" size="lg" />
+            <div className="relative">
+              <div className="relative h-[400px] md:h-[500px] w-full border border-gray-800 rounded-lg overflow-hidden bg-gray-900/50">
+                {/* In production, this would be a real 3D viewer or image */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-yellow-500 mb-2">Interactive 3D Model</div>
+                    <div className="text-gray-400 text-sm">Enable JavaScript to view</div>
+                  </div>
+                </div>
+
+                {/* This is a placeholder for the actual 3D component */}
+                {/* TODO: Replace with actual 3D viewer component */}
+
+                {/* Add accessibility description for screen readers */}
+                <div className="sr-only">
+                  An interactive 3D model of a roof showing measurements, slopes, and potential damage areas
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <RegisterModal isOpen={registerModalOpen} onClose={() => setRegisterModalOpen(false)} />
-    </section>
+        <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
+      </section>
+
+      {/* Trust stats bar below hero */}
+      <TrustStatsBar />
+    </>
   )
 }
+
+export default HeroSection

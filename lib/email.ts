@@ -1,28 +1,33 @@
 import nodemailer from "nodemailer"
+import { logError } from "@/lib/utils"
 
+// Email service configuration types
+interface EmailConfig {
+  host: string
+  port: number
+  secure: boolean
+  auth: {
+    user: string
+    pass: string
+  }
+  from: string
+}
+
+// Email content interface
 interface EmailOptions {
   to: string
   subject: string
   html: string
+  attachments?: Array<{
+    filename: string
+    content: Buffer | string
+    contentType?: string
+  }>
 }
 
-// Create a development transporter for testing
-// In production, you would use your actual SMTP credentials
-const createDevTransport = () => {
-  return nodemailer.createTransport({
-    host: "smtp.ethereal.email",
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.EMAIL_USER || "ethereal.user@ethereal.email",
-      pass: process.env.EMAIL_PASSWORD || "ethereal_pass",
-    },
-  })
-}
-
-// Create a production transporter
-const createProdTransport = () => {
-  return nodemailer.createTransport({
+// Get email configuration from environment variables
+function getEmailConfig(): EmailConfig {
+  return {
     host: process.env.EMAIL_SERVER || "",
     port: Number(process.env.EMAIL_PORT) || 587,
     secure: process.env.EMAIL_SECURE === "true",
@@ -30,42 +35,81 @@ const createProdTransport = () => {
       user: process.env.EMAIL_USER || "",
       pass: process.env.EMAIL_PASSWORD || "",
     },
+    from: process.env.EMAIL_FROM || "RoofFax <noreply@rooffax.report>",
+  }
+}
+
+// Create a development transporter for testing
+function createDevTransport() {
+  console.log("📧 Creating development email transport")
+  return nodemailer.createTransport({
+    host: "smtp.ethereal.email",
+    port: 587,
+    secure: false,
+    auth: {
+      user: "ethereal.user@ethereal.email",
+      pass: "ethereal_pass",
+    },
   })
 }
 
-export async function sendEmail({ to, subject, html }: EmailOptions): Promise<void> {
+// Create a production transporter
+function createProdTransport(config: EmailConfig) {
+  console.log("📧 Creating production email transport")
+  return nodemailer.createTransport({
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
+    auth: config.auth,
+  })
+}
+
+// Send an email
+export async function sendEmail({ to, subject, html, attachments = [] }: EmailOptions): Promise<void> {
   try {
-    // Use development transport in development, production transport in production
-    const transport = process.env.NODE_ENV === "production" ? createProdTransport() : createDevTransport()
+    const isProduction = process.env.NODE_ENV === "production"
+    const config = getEmailConfig()
+
+    // Validate configuration in production
+    if (isProduction) {
+      if (!config.host || !config.auth.user || !config.auth.pass) {
+        throw new Error("Email configuration is incomplete. Check environment variables.")
+      }
+    }
+
+    // Create appropriate transport
+    const transport = isProduction ? createProdTransport(config) : createDevTransport()
 
     // Log email details in development
-    if (process.env.NODE_ENV !== "production") {
+    if (!isProduction) {
       console.log("📧 Sending email:")
       console.log(`To: ${to}`)
       console.log(`Subject: ${subject}`)
-      console.log("HTML content available but not logged for brevity")
+      console.log(`Attachments: ${attachments.length}`)
     }
 
     // Send the email
     const info = await transport.sendMail({
-      from: process.env.EMAIL_FROM || "RoofFax <noreply@rooffax.com>",
+      from: config.from,
       to,
       subject,
       html,
+      attachments,
     })
 
-    // Log success in development
-    if (process.env.NODE_ENV !== "production") {
+    // Log success
+    if (!isProduction) {
       console.log("📧 Email sent successfully!")
-      console.log("Preview URL:", nodemailer.getTestMessageUrl(info))
+      if (typeof nodemailer.getTestMessageUrl === "function" && info) {
+        console.log("Preview URL:", nodemailer.getTestMessageUrl(info))
+      }
     }
   } catch (error) {
-    console.error("Failed to send email:", error)
-    // In production, you might want to log this to a monitoring service
-    if (process.env.NODE_ENV === "production") {
-      // TODO: Log to monitoring service
-    }
-    throw new Error("Failed to send email")
+    const err = error as Error
+    logError(err, "Email sending failed")
+
+    // Re-throw the error for the caller to handle
+    throw new Error(`Failed to send email: ${err.message}`)
   }
 }
 

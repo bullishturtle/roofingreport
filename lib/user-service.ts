@@ -1,8 +1,8 @@
 import { hash, compare } from "bcryptjs"
 import { randomBytes } from "crypto"
-import sql from "./lib/db"
-import { sendEmail } from "./lib/email"
-import { getWelcomeEmailTemplate } from "./lib/email-templates"
+import sql from "@/lib/db"
+import { sendEmail } from "@/lib/email"
+import { getWelcomeEmailTemplate } from "@/lib/email-templates"
 import type { User, UserType } from "@/contexts/user-context"
 
 export interface UserCreateInput {

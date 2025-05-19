@@ -1,20 +1,23 @@
 import { HeroSection } from "@/components/hero-section"
-import { FeaturesSection } from "@/components/features-section"
+import { TrustStatsBar } from "@/components/trust-stats-bar"
 import { HowItWorksSection } from "@/components/how-it-works-section"
-import { TestimonialsSection } from "@/components/testimonials-section"
-import { PricingSection } from "@/components/pricing-section"
+import { FeaturesSection } from "@/components/features-section"
 import { CTASection } from "@/components/cta-section"
-import { TrustStats } from "@/components/trust-stats"
+import type { Metadata } from "next"
 
-export default function HomePage() {
+export const metadata: Metadata = {
+  title: "RoofFax.Report - Comprehensive Roof Analysis & Reports",
+  description:
+    "Get detailed roof condition reports, damage assessments, and repair estimates for your property in minutes.",
+}
+
+export default function Home() {
   return (
     <>
       <HeroSection />
-      <TrustStats />
-      <FeaturesSection />
+      <TrustStatsBar />
       <HowItWorksSection />
-      <TestimonialsSection />
-      <PricingSection />
+      <FeaturesSection />
       <CTASection />
     </>
   )

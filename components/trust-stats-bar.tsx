@@ -1,26 +1,56 @@
+"use client"
+
+import { useIsMobile } from "@/hooks/use-mobile"
+import { cn } from "@/lib/utils"
+import { Home, CheckCircle, Shield, Award } from "lucide-react"
+
 export function TrustStatsBar() {
+  const isMobile = useIsMobile()
+
+  const stats = [
+    {
+      icon: Home,
+      value: "50,000+",
+      label: "Roofs Analyzed",
+    },
+    {
+      icon: CheckCircle,
+      value: "99.8%",
+      label: "Accuracy Rate",
+    },
+    {
+      icon: Shield,
+      value: "100%",
+      label: "Secure & Private",
+    },
+    {
+      icon: Award,
+      value: "#1",
+      label: "Trusted Roof Report",
+    },
+  ]
+
   return (
-    <section className="py-10 bg-gradient-to-r from-gray-900 to-gray-800">
+    <section className="bg-white py-8 md:py-12 border-y border-gray-100">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-          <div className="p-4">
-            <div className="text-yellow-500 text-2xl md:text-3xl font-bold mb-2">$3M+</div>
-            <div className="text-gray-300 text-sm">In Insurance Claims Reviewed</div>
-          </div>
+        <h2 className="text-center text-2xl font-bold text-gray-900 mb-8">Trusted by Homeowners & Professionals</h2>
 
-          <div className="p-4 border-t md:border-t-0 md:border-l md:border-r border-gray-700">
-            <div className="text-yellow-500 text-2xl md:text-3xl font-bold mb-2">97%</div>
-            <div className="text-gray-300 text-sm">Customer Satisfaction Rate</div>
-          </div>
-
-          <div className="p-4 border-t md:border-t-0 border-gray-700">
-            <div className="text-yellow-500 text-2xl md:text-3xl font-bold mb-2">24,000+</div>
-            <div className="text-gray-300 text-sm">Properties Assessed</div>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-4">
+          {stats.map((stat, index) => (
+            <div
+              key={index}
+              className={cn(
+                "flex flex-col items-center text-center p-4",
+                index < stats.length - 1 && "border-r border-gray-100 last:border-r-0",
+              )}
+            >
+              <stat.icon className="h-8 w-8 text-blue-600 mb-2" />
+              <span className="text-2xl md:text-3xl font-bold text-gray-900">{stat.value}</span>
+              <span className="text-sm md:text-base text-gray-600">{stat.label}</span>
+            </div>
+          ))}
         </div>
       </div>
     </section>
   )
 }
-
-export default TrustStatsBar

@@ -7,6 +7,9 @@ import { useUser } from "@/contexts/user-context"
 import { LoginModal } from "@/components/auth/login-modal"
 import { useToast } from "@/components/ui/toast"
 import { TrustStatsBar } from "@/components/trust-stats-bar"
+import { useResponsive } from "@/hooks/use-mobile"
+import Image from "next/image"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 export function HeroSection() {
   const router = useRouter()
@@ -14,6 +17,8 @@ export function HeroSection() {
   const [loginModalOpen, setLoginModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { showToast } = useToast()
+  const { isMobile } = useIsMobile()
+  const { isMobile: wasMobile } = useResponsive()
 
   const handleAddressSubmit = async (address: string) => {
     try {
@@ -62,111 +67,51 @@ export function HeroSection() {
 
   return (
     <>
-      <section className="relative bg-black py-16 md:py-24" aria-labelledby="hero-heading">
+      <section className="relative bg-gradient-to-b from-blue-50 to-white py-12 md:py-20">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-4">
-            <span className="inline-block bg-yellow-500/20 text-yellow-500 px-4 py-1 rounded-full text-sm font-medium">
-              The World's Smartest Roof & Property Report
-            </span>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <h1 id="hero-heading" className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                <span className="text-yellow-500">Trusted by Homeowners.</span>
-                <br />
-                Built for Pros.
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div className="text-center lg:text-left">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
+                Get Your Comprehensive Roof Report in Minutes
               </h1>
-              <p className="text-lg text-gray-300">
-                At RoofFax, we're redefining how homeowners and roofing professionals assess, verify, and act on roof
-                and property data. Our mission is simple: deliver truth, transparency, and technology in an industry
-                often clouded by confusion and outdated methods.
+              <p className="mt-4 text-lg md:text-xl text-gray-700 max-w-xl mx-auto lg:mx-0">
+                RoofFax provides detailed roof condition reports, damage assessments, and repair estimates for
+                homeowners, buyers, and real estate professionals.
               </p>
-
-              <div className="bg-gray-900/50 border border-gray-800 p-6 rounded-lg">
+              <div className="mt-8 max-w-md mx-auto lg:mx-0">
                 <AddressSearchForm onSubmit={handleAddressSubmit} isSubmitting={isSubmitting} buttonText="Get Report" />
               </div>
-
-              <div className="flex flex-wrap gap-6 items-center">
-                <button
-                  className="bg-yellow-500 hover:bg-yellow-400 text-black font-medium px-6 py-3 rounded-md transition-colors duration-200"
-                  onClick={() => window.open("/signup", "_self")}
-                  aria-label="Start your free trial"
-                >
-                  Start Free Trial
-                </button>
-                <button
-                  className="border border-gray-700 hover:bg-gray-800 text-white px-6 py-3 rounded-md transition-colors duration-200"
-                  onClick={handleSeeHowItWorks}
-                  aria-label="Learn how RoofFax works"
-                >
-                  See How It Works
-                </button>
-              </div>
-
-              <div className="flex flex-wrap gap-8 pt-4">
-                <div className="flex items-center">
-                  <svg
-                    className="w-5 h-5 text-yellow-500 mr-2"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                    aria-hidden="true"
-                  >
-                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
-                  </svg>
-                  <span className="ml-1 text-gray-300">No Credit Card Required</span>
-                </div>
-                <div className="flex items-center">
-                  <svg
-                    className="w-5 h-5 text-yellow-500 mr-2"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                    aria-hidden="true"
-                  >
-                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
-                  </svg>
-                  <span className="ml-1 text-gray-300">Instant Reports</span>
-                </div>
-                <div className="flex items-center">
-                  <svg
-                    className="w-5 h-5 text-yellow-500 mr-2"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                    aria-hidden="true"
-                  >
-                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
-                  </svg>
-                  <span className="ml-1 text-gray-300">Cancel Anytime</span>
-                </div>
-              </div>
             </div>
-
-            <div className="relative">
-              <div className="relative h-[400px] md:h-[500px] w-full border border-gray-800 rounded-lg overflow-hidden bg-gray-900/50">
-                {/* In production, this would be a real 3D viewer or image */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-yellow-500 mb-2">Interactive 3D Model</div>
-                    <div className="text-gray-400 text-sm">Enable JavaScript to view</div>
-                  </div>
-                </div>
-
-                {/* This is a placeholder for the actual 3D component */}
-                {/* TODO: Replace with actual 3D viewer component */}
-
-                {/* Add accessibility description for screen readers */}
-                <div className="sr-only">
-                  An interactive 3D model of a roof showing measurements, slopes, and potential damage areas
+            <div className="relative flex justify-center lg:justify-end">
+              <div className="relative w-full max-w-md lg:max-w-full">
+                <Image
+                  src="/images/roofus.png"
+                  alt="Roofus the RoofFax mascot"
+                  width={500}
+                  height={500}
+                  className="object-contain"
+                  priority
+                />
+                <div className="absolute -bottom-4 left-0 right-0 text-center lg:text-right">
+                  <p className="inline-block bg-white text-blue-600 font-medium px-4 py-2 rounded-full shadow-md">
+                    Meet Roofus, your roof inspection guide!
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
+        {/* Background decorative elements */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 opacity-10">
+          <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-blue-200 rounded-full filter blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-blue-200 rounded-full filter blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
+        </div>
       </section>
 
       {/* Trust stats bar below hero */}
       <TrustStatsBar />
+      <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
     </>
   )
 }

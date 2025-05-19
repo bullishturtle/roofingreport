@@ -2,35 +2,33 @@
 
 import { useState } from "react"
 import { FileText } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { cn } from "@/lib/utils"
 
 export function PreviewReportButton() {
-  const [isVisible, setIsVisible] = useState(true)
+  const [isOpen, setIsOpen] = useState(false)
+  const isMobile = useIsMobile()
 
-  // Hide button when user scrolls past a certain point
-  // This would be connected to scroll events in a full implementation
-
-  // Handle click to open report preview modal/redirect
-  const handlePreviewClick = () => {
-    // This would open a modal or redirect in production
-    console.log("Opening report preview")
-    window.open("/sample-report", "_blank")
-
-    // For demo purposes, we'll just log and alert
-    alert("Opening sample report preview (this would show a real report in production)")
+  const handleClick = () => {
+    setIsOpen(true)
+    // In a real implementation, this would open a modal or navigate to a preview page
+    alert("This would open a sample report preview")
+    setIsOpen(false)
   }
 
-  if (!isVisible) return null
-
   return (
-    <button
-      onClick={handlePreviewClick}
-      className="fixed bottom-6 left-6 z-40 bg-yellow-500 hover:bg-yellow-400 text-black font-medium rounded-full p-4 shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center"
-      aria-label="Preview a RoofFax Report"
-    >
-      <FileText className="h-5 w-5 mr-2" />
-      <span>Preview a Report</span>
-    </button>
+    <div className={cn("fixed z-40 transition-all duration-300", isMobile ? "bottom-4 right-4" : "bottom-6 right-6")}>
+      <Button
+        onClick={handleClick}
+        className={cn(
+          "rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white",
+          isMobile ? "h-12 px-4" : "h-14 px-6",
+        )}
+      >
+        <FileText className="mr-2" size={isMobile ? 16 : 20} />
+        <span className={isMobile ? "text-sm" : "text-base"}>Preview a Report</span>
+      </Button>
+    </div>
   )
 }
-
-export default PreviewReportButton

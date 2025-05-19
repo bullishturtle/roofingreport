@@ -1,58 +1,42 @@
 import type React from "react"
 import type { Metadata } from "next"
-import ClientLayout from "./client"
+import { Inter } from "next/font/google"
+import "./globals.css"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
+import { PreviewReportButton } from "@/components/preview-report-button"
+import { AskRoofusButton } from "@/components/ask-roofus-button"
+import { UserProvider } from "@/contexts/user-context"
+import { ErrorBoundary } from "@/components/error-boundary"
+
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "RoofFax - The World's Smartest Roof & Property Report",
+  title: "RoofFax.Report - Comprehensive Roof Analysis & Reports",
   description:
-    "Get instant, AI-powered roof reports with accurate measurements, condition assessments, and recommendations for homeowners and roofing professionals.",
-  keywords:
-    "roof report, roof inspection, roof damage, roof assessment, roof measurement, roofing contractors, AI roof analysis",
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: "https://rooffax.com",
-    title: "RoofFax - The World's Smartest Roof & Property Report",
-    description:
-      "Get instant, AI-powered roof reports with accurate measurements, condition assessments, and recommendations.",
-    siteName: "RoofFax",
-    images: [
-      {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "RoofFax - AI-Powered Roof Reports",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "RoofFax - The World's Smartest Roof & Property Report",
-    description:
-      "Get instant, AI-powered roof reports with accurate measurements, condition assessments, and recommendations.",
-    images: ["/twitter-image.jpg"],
-  },
-  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
-  robots: "index, follow",
-  applicationName: "RoofFax",
-  generator: "Next.js",
-  authors: [{ name: "RoofFax Team" }],
-  formatDetection: {
-    telephone: true,
-    date: true,
-    address: true,
-    email: true,
-    url: true,
-  },
+    "Get detailed roof condition reports, damage assessments, and repair estimates for your property in minutes.",
+  keywords: "roof report, roof inspection, roof damage, roof assessment, roof analysis, roof condition",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
-  return <ClientLayout children={children} />
+}>) {
+  return (
+    <html lang="en" className="scroll-smooth">
+      <body className={`${inter.className} min-h-screen flex flex-col`}>
+        <ErrorBoundary>
+          <UserProvider>
+            <Header />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+            <PreviewReportButton />
+            <AskRoofusButton />
+          </UserProvider>
+        </ErrorBoundary>
+      </body>
+    </html>
+  )
 }
-
-
-import './globals.css'

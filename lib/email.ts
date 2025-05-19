@@ -15,14 +15,22 @@ interface EmailConfig {
 
 // Email content interface
 interface EmailOptions {
-  to: string
+  to: string | string[]
   subject: string
   html: string
+  text?: string
   attachments?: Array<{
     filename: string
     content: Buffer | string
     contentType?: string
   }>
+}
+
+// Email content type for backward compatibility
+export interface EmailContent {
+  subject: string
+  html: string
+  text?: string
 }
 
 // Get email configuration from environment variables
@@ -65,7 +73,7 @@ function createProdTransport(config: EmailConfig) {
 }
 
 // Send an email
-export async function sendEmail({ to, subject, html, attachments = [] }: EmailOptions): Promise<void> {
+export async function sendEmail({ to, subject, html, text, attachments = [] }: EmailOptions): Promise<void> {
   try {
     const isProduction = process.env.NODE_ENV === "production"
     const config = getEmailConfig()
@@ -83,7 +91,7 @@ export async function sendEmail({ to, subject, html, attachments = [] }: EmailOp
     // Log email details in development
     if (!isProduction) {
       console.log("📧 Sending email:")
-      console.log(`To: ${to}`)
+      console.log(`To: ${Array.isArray(to) ? to.join(", ") : to}`)
       console.log(`Subject: ${subject}`)
       console.log(`Attachments: ${attachments.length}`)
     }
@@ -94,6 +102,7 @@ export async function sendEmail({ to, subject, html, attachments = [] }: EmailOp
       to,
       subject,
       html,
+      text: text || html.replace(/<[^>]*>/g, ""), // Strip HTML tags for text version if not provided
       attachments,
     })
 
@@ -114,6 +123,3 @@ export async function sendEmail({ to, subject, html, attachments = [] }: EmailOp
 }
 
 export default sendEmail
-
-// Re-export from email-service for backward compatibility
-export { type, EmailContent } from "./email-service"

@@ -109,3 +109,42 @@ export async function emailReport(reportId: string, to: string, name: string, me
     }
   }
 }
+
+// Add the missing export for sendReportEmail
+export async function sendReportEmail(reportId: string, email: string, name: string, message?: string) {
+  try {
+    const reportResult = await getReport(reportId)
+
+    if (!reportResult.success) {
+      return reportResult
+    }
+
+    const report = reportResult.report
+    const fullAddress = `${report.address}, ${report.city}, ${report.state} ${report.zip}`
+
+    await sendEmail({
+      to: email,
+      subject: `RoofFax Report for ${fullAddress}`,
+      html: getReportEmailTemplate({
+        recipientName: name,
+        address: fullAddress,
+        roofAge: report.roofAge,
+        roofType: report.roofType,
+        roofCondition: report.roofCondition,
+        estimatedLife: report.estimatedRemainingLife,
+        issues: report.reportData?.issues || [],
+        recommendations: report.reportData?.recommendations || [],
+        message: message || "",
+        reportUrl: `${process.env.NEXT_PUBLIC_APP_URL}/report?id=${reportId}`,
+      }),
+    })
+
+    return { success: true, message: "Report email sent successfully" }
+  } catch (error) {
+    console.error("Error sending report email:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to send report email",
+    }
+  }
+}

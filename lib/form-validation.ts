@@ -23,7 +23,7 @@ export const validationRules = {
   phoneNumber: (message = "Please enter a valid phone number"): ValidationRule => ({
     test: (value) => {
       if (!value) return true // Optional field passes if empty
-      return /^(\+\d{1,2}\s)?$$?\d{3}$$?[\s.-]?\d{3}[\s.-]?\d{4}$/.test(value)
+      return /^(\+\d{1,2}\s)?(($$\d{3}$$)|\d{3})[\s.-]?\d{3}[\s.-]?\d{4}$/.test(value)
     },
     message,
   }),

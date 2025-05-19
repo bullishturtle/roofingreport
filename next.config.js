@@ -15,12 +15,9 @@ const nextConfig = {
         hostname: "**.cloudinary.com",
       },
     ],
-    unoptimized: true,
   },
   experimental: {
-    serverActions: {
-      allowedOrigins: ["localhost:3000", "rooffax.com", "*.vercel.app"],
-    },
+    serverActions: true,
   },
 }
 

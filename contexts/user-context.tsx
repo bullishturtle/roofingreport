@@ -1,144 +1,157 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import {
-  getCurrentUser,
-  login as loginAction,
-  register as registerAction,
-  logout as logoutAction,
-  setUserType as setUserTypeAction,
-} from "@/actions/auth-actions"
 
-export type UserType = "Homeowner" | "Pro" | null
+export type UserType = "homeowner" | "pro" | null
+export type UserStatus = "loading" | "authenticated" | "unauthenticated"
 
-export interface User {
+interface User {
   id: string
   name: string
   email: string
   userType: UserType
-  createdAt: Date
-  lastLogin: Date
-  emailVerified: boolean
+  createdAt: string
+  lastLogin: string
 }
 
 interface UserContextType {
   user: User | null
+  status: UserStatus
+  login: (email: string, password: string) => Promise<{ success: boolean; message: string }>
+  register: (name: string, email: string, password: string) => Promise<{ success: boolean; message: string }>
+  logout: () => void
+  setUserType: (type: UserType) => void
   isLoading: boolean
-  isAuthenticated: boolean
-  login: (email: string, password: string) => Promise<{ success: boolean; needsVerification?: boolean; error?: string }>
-  register: (
-    name: string,
-    email: string,
-    password: string,
-    userType: UserType,
-  ) => Promise<{ success: boolean; message?: string; error?: string }>
-  logout: () => Promise<void>
-  setUserType: (type: UserType) => Promise<void>
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [status, setStatus] = useState<UserStatus>("loading")
+  const [isLoading, setIsLoading] = useState(false)
 
-  // Check for current user on mount
+  // Check for existing session on mount
   useEffect(() => {
-    const fetchUser = async () => {
-      setIsLoading(true)
+    const checkSession = async () => {
       try {
-        const { success, user } = await getCurrentUser()
-        if (success && user) {
-          // Convert string dates to Date objects
-          user.createdAt = new Date(user.createdAt)
-          user.lastLogin = new Date(user.lastLogin)
-          setUser(user)
+        // In a real app, this would be an API call to check the session
+        const storedUser = localStorage.getItem("roofFaxUser")
+
+        if (storedUser) {
+          const userData = JSON.parse(storedUser)
+          console.log("Session restored:", userData)
+          setUser(userData)
+          setStatus("authenticated")
+        } else {
+          setStatus("unauthenticated")
         }
       } catch (error) {
-        console.error("Failed to fetch user:", error)
-      } finally {
-        setIsLoading(false)
+        console.error("Error checking session:", error)
+        setStatus("unauthenticated")
       }
     }
 
-    fetchUser()
+    checkSession()
   }, [])
 
   const login = async (email: string, password: string) => {
     setIsLoading(true)
+    console.log("Login attempt:", { email })
 
     try {
-      const result = await loginAction(email, password)
+      // Simulate API call delay
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      if (result.success && result.user) {
-        // Convert string dates to Date objects
-        result.user.createdAt = new Date(result.user.createdAt)
-        result.user.lastLogin = new Date(result.user.lastLogin)
-
-        setUser(result.user)
-      }
-
-      return result
-    } catch (error: any) {
-      console.error("Login failed:", error)
-      return { success: false, error: error.message }
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const register = async (name: string, email: string, password: string, userType: UserType) => {
-    setIsLoading(true)
-
-    try {
-      const result = await registerAction(name, email, password, userType)
-      return result
-    } catch (error: any) {
-      console.error("Registration failed:", error)
-      return { success: false, error: error.message }
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const logout = async () => {
-    try {
-      await logoutAction()
-      setUser(null)
-    } catch (error) {
-      console.error("Logout failed:", error)
-    }
-  }
-
-  const setUserType = async (type: UserType) => {
-    if (user) {
-      try {
-        const { success, error } = await setUserTypeAction(type)
-
-        if (!success) {
-          throw new Error(error || "Failed to update user type")
+      // Mock validation - in a real app, this would be an API call
+      if (email && password) {
+        // For demo purposes, any valid email/password combination works
+        const mockUser: User = {
+          id: `user-${Date.now()}`,
+          name: email.split("@")[0],
+          email,
+          userType: null, // User type will be set separately
+          createdAt: new Date().toISOString(),
+          lastLogin: new Date().toISOString(),
         }
 
-        setUser({ ...user, userType: type })
-      } catch (error) {
-        console.error("Failed to update user type:", error)
-        throw error
+        setUser(mockUser)
+        setStatus("authenticated")
+        localStorage.setItem("roofFaxUser", JSON.stringify(mockUser))
+
+        console.log("Login successful:", mockUser)
+        setIsLoading(false)
+        return { success: true, message: "Login successful" }
       }
+
+      console.log("Login failed: Invalid credentials")
+      setIsLoading(false)
+      return { success: false, message: "Invalid email or password" }
+    } catch (error) {
+      console.error("Login error:", error)
+      setIsLoading(false)
+      return { success: false, message: "An error occurred during login" }
+    }
+  }
+
+  const register = async (name: string, email: string, password: string) => {
+    setIsLoading(true)
+    console.log("Registration attempt:", { name, email })
+
+    try {
+      // Simulate API call delay
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      // Mock validation - in a real app, this would be an API call
+      if (name && email && password) {
+        const mockUser: User = {
+          id: `user-${Date.now()}`,
+          name,
+          email,
+          userType: null, // User type will be set separately
+          createdAt: new Date().toISOString(),
+          lastLogin: new Date().toISOString(),
+        }
+
+        setUser(mockUser)
+        setStatus("authenticated")
+        localStorage.setItem("roofFaxUser", JSON.stringify(mockUser))
+
+        console.log("Registration successful:", mockUser)
+        setIsLoading(false)
+        return { success: true, message: "Registration successful" }
+      }
+
+      console.log("Registration failed: Invalid data")
+      setIsLoading(false)
+      return { success: false, message: "Please fill in all required fields" }
+    } catch (error) {
+      console.error("Registration error:", error)
+      setIsLoading(false)
+      return { success: false, message: "An error occurred during registration" }
+    }
+  }
+
+  const logout = () => {
+    console.log("Logging out user:", user?.email)
+    setUser(null)
+    setStatus("unauthenticated")
+    localStorage.removeItem("roofFaxUser")
+  }
+
+  const setUserType = (type: UserType) => {
+    if (user) {
+      const updatedUser = { ...user, userType: type }
+      setUser(updatedUser)
+      localStorage.setItem("roofFaxUser", JSON.stringify(updatedUser))
+      console.log("User type set:", type)
+    } else {
+      console.log("Cannot set user type: No user logged in")
     }
   }
 
   return (
-    <UserContext.Provider
-      value={{
-        user,
-        isLoading,
-        isAuthenticated: !!user,
-        login,
-        register,
-        logout,
-        setUserType,
-      }}
-    >
+    <UserContext.Provider value={{ user, status, login, register, logout, setUserType, isLoading }}>
       {children}
     </UserContext.Provider>
   )

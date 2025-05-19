@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { LogOut, User, Mail, Calendar, Home, Briefcase, ExternalLink } from "lucide-react"
 import { useToast } from "@/components/ui/toast"
+import { useRouter } from "next/navigation"
 
 export function UserDashboard() {
   const { user, logout } = useUser()
   const { showToast } = useToast()
+  const router = useRouter()
 
   if (!user) return null
 
@@ -22,15 +24,23 @@ export function UserDashboard() {
     }).format(date)
   }
 
-  const handleLogout = () => {
-    logout()
-    showToast("You have been logged out", "info")
+  const handleLogout = async () => {
+    try {
+      await logout()
+      showToast("You have been logged out", "info")
+      router.push("/")
+    } catch (error) {
+      console.error("Logout failed:", error)
+      showToast("Failed to log out", "error")
+    }
   }
 
   const handlePortalRedirect = () => {
     if (user.userType === "Homeowner") {
+      console.log("🏠 Redirecting to homeowner portal (coming soon)")
       showToast("Homeowner portal coming soon!", "info")
     } else if (user.userType === "Pro") {
+      console.log("🔧 Redirecting to pro portal (coming soon)")
       showToast("Pro portal coming soon!", "info")
     }
   }

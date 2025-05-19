@@ -8,8 +8,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/components/ui/toast"
 import { resetPassword } from "@/actions/auth-actions"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 const formSchema = z
   .object({
@@ -27,7 +28,7 @@ interface ResetPasswordFormProps {
 
 export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const router = useRouter()
-  const { toast } = useToast()
+  const { showToast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -40,30 +41,22 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
+    console.log(`🔑 Reset password attempt with token: ${token.substring(0, 10)}...`)
 
     try {
       const result = await resetPassword(token, values.password)
 
       if (result.success) {
-        toast({
-          title: "Success",
-          description: result.message,
-          variant: "default",
-        })
+        console.log(`✅ Password reset successful`)
+        showToast("Success", "success", result.message)
         router.push("/login")
       } else {
-        toast({
-          title: "Error",
-          description: result.error || "Something went wrong. Please try again.",
-          variant: "destructive",
-        })
+        console.error(`❌ Reset password failed: ${result.error}`)
+        showToast("Error", "error", result.error || "Something went wrong. Please try again.")
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      })
+      console.error("❌ Unexpected reset password error:", error)
+      showToast("Error", "error", "An unexpected error occurred. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -109,8 +102,15 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-600" disabled={isLoading}>
-            {isLoading ? "Resetting..." : "Reset Password"}
+          <Button type="submit" className="w-full bg-yellow-500 hover:bg-yellow-600" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <LoadingSpinner size="sm" className="mr-2" />
+                Resetting...
+              </>
+            ) : (
+              "Reset Password"
+            )}
           </Button>
         </form>
       </Form>

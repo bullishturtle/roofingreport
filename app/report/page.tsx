@@ -1,257 +1,141 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
+import { ErrorBoundary } from "@/components/error-boundary"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
+import { LoadingSpinner } from "@/components/loading-spinner"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import {
-  ArrowLeft,
-  Calendar,
-  CloudLightning,
-  Download,
-  FileText,
-  Home,
-  Info,
-  Layers,
-  MessageSquare,
-  Share2,
-} from "lucide-react"
-import Link from "next/link"
-import Image from "next/image"
-import { RoofMeasurements } from "@/components/report/roof-measurements"
-import { PropertyDetails } from "@/components/report/property-details"
-import { RoofCondition } from "@/components/report/roof-condition"
-import { ReportActions } from "@/components/report/report-actions"
+import { useUser } from "@/contexts/user-context"
+import { logUserAction, logError } from "@/lib/utils"
+import { AlertTriangle } from "lucide-react"
 
 export default function ReportPage() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const { user } = useUser()
+  const [isLoading, setIsLoading] = useState(true)
+  const [reportData, setReportData] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const address = searchParams.get('address')
+
+  useEffect(() => {
+    if (!address) {
+      setError('No address provided')
+      setIsLoading(false)
+      return
+    }
+
+    async function fetchReportData() {
+      try {
+        logUserAction('Fetching report data', { address })
+        
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        // Mock report data
+        const mockReportData = {
+          address,
+          reportDate: new Date().toLocaleDateString(),
+          roofAge: '8-10 years',
+          condition: 'Good',
+          estimatedLifespan: '15-20 years',
+          materials: 'Asphalt Shingles',
+          squareFootage: '2,400 sq ft',
+          slope: '6:12',
+          issues: [
+            'Minor granule loss in some areas',
+            'Two damaged shingles on south side',
+            'Flashing around chimney needs inspection'
+          ],
+          recommendations: [
+            'Schedule professional inspection within 6 months',
+            'Monitor south side for further damage',
+            'Consider gutter cleaning and maintenance'
+          ],
+          images: [
+            '/placeholder.svg?key=o5c2g',
+            '/placeholder.svg?key=922cw',
+            '/placeholder.svg?key=yqlg1'
+          ]
+        }
+        
+        setReportData(mockReportData)
+        logUserAction('Report data loaded', { address })
+      } catch (error) {
+        const err = error as Error
+        logError(err, 'Fetching report data')
+        setError('Failed to load report data. Please try again.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchReportData()
+  }, [address])
+
+  const handleDownload = () => {
+    logUserAction('Download report clicked', { address })
+    alert('Report download started. Your PDF will be ready shortly.')
+  }
+
+  const handleEmail = () => {
+    logUserAction('Email report clicked', { address })
+    alert('Report has been emailed to your registered email address.')
+  }
+
+  const handleShare = () => {
+    logUserAction('Share report clicked', { address })
+    alert('Share link copied to clipboard!')
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <LoadingSpinner size="lg" className="mx-auto mb-4" />
+            <p className="text-gray-600">Generating your roof report...</p>
+            <p className="text-sm text-gray-500 mt-2">This may take a few moments</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto p-6">
+            <AlertTriangle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Report Error</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <Button 
+              onClick={() => router.push('/')}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              Return Home
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/dashboard">
-                <ArrowLeft className="h-4 w-4" />
-                <span className="sr-only">Back to Dashboard</span>
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-lg font-bold">Roof Report: 123 Main St, Anytown, USA</h1>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Report ID: REP-1234</span>
-                <span>•</span>
-                <span>Generated: April 15, 2023</span>
-                <Badge variant="outline" className="ml-2 bg-green-500/10 text-green-500 border-green-500/20">
-                  Completed
-                </Badge>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-1">
-              <Share2 className="h-4 w-4" /> Share
-            </Button>
-            <Button variant="outline" size="sm" className="gap-1">
-              <Download className="h-4 w-4" /> Download PDF
-            </Button>
-            <Button size="sm" className="gap-1">
-              <FileText className="h-4 w-4" /> Create Proposal
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <main className="flex-1 container py-6">
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="md:col-span-2 space-y-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Property Overview</CardTitle>
-                <CardDescription>Satellite imagery and 3D visualization of the property.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="aspect-video overflow-hidden rounded-md border bg-muted">
-                  <Image
-                    src="/placeholder.svg?height=450&width=800"
-                    width={800}
-                    height={450}
-                    alt="Property Satellite View"
-                    className="w-full object-cover"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div className="aspect-video overflow-hidden rounded-md border bg-muted">
-                    <Image
-                      src="/placeholder.svg?height=200&width=400"
-                      width={400}
-                      height={200}
-                      alt="Property 3D Model"
-                      className="w-full object-cover"
-                    />
-                  </div>
-                  <div className="aspect-video overflow-hidden rounded-md border bg-muted">
-                    <Image
-                      src="/placeholder.svg?height=200&width=400"
-                      width={400}
-                      height={200}
-                      alt="Property Heat Map"
-                      className="w-full object-cover"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Tabs defaultValue="measurements" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="measurements">Measurements</TabsTrigger>
-                <TabsTrigger value="condition">Condition</TabsTrigger>
-                <TabsTrigger value="details">Property Details</TabsTrigger>
-                <TabsTrigger value="history">History</TabsTrigger>
-              </TabsList>
-              <TabsContent value="measurements">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Roof Measurements</CardTitle>
-                    <CardDescription>Detailed measurements of the roof structure.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <RoofMeasurements />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              <TabsContent value="condition">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Roof Condition Assessment</CardTitle>
-                    <CardDescription>AI-powered analysis of the roof's current condition.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <RoofCondition />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              <TabsContent value="details">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Property Details</CardTitle>
-                    <CardDescription>Information about the property and its characteristics.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <PropertyDetails />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              <TabsContent value="history">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Property History</CardTitle>
-                    <CardDescription>Historical data about the property and previous roof work.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-start gap-4 border-l-2 border-primary pl-4 pt-2">
-                        <Calendar className="h-5 w-5 text-primary mt-0.5" />
-                        <div>
-                          <h4 className="font-medium">Property Built</h4>
-                          <p className="text-sm text-muted-foreground">1998</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-4 border-l-2 border-primary pl-4 pt-2">
-                        <Layers className="h-5 w-5 text-primary mt-0.5" />
-                        <div>
-                          <h4 className="font-medium">Roof Installed</h4>
-                          <p className="text-sm text-muted-foreground">2010 - Asphalt Shingles</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-4 border-l-2 border-primary pl-4 pt-2">
-                        <CloudLightning className="h-5 w-5 text-primary mt-0.5" />
-                        <div>
-                          <h4 className="font-medium">Storm Damage</h4>
-                          <p className="text-sm text-muted-foreground">March 2022 - Hail Storm</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-4 border-l-2 border-primary pl-4 pt-2">
-                        <Home className="h-5 w-5 text-primary mt-0.5" />
-                        <div>
-                          <h4 className="font-medium">Last Inspection</h4>
-                          <p className="text-sm text-muted-foreground">June 2022 - Minor Repairs</p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          <div className="space-y-6">
-            <ReportActions />
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
-                  <Info className="h-4 w-4" /> AI Insights
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4 text-sm">
-                  <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-md">
-                    <h4 className="font-medium text-amber-600 mb-1">Potential Issues Detected</h4>
-                    <p className="text-muted-foreground">
-                      Signs of granule loss and minor wind damage on the south-facing slope.
-                    </p>
-                  </div>
-                  <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
-                    <h4 className="font-medium text-blue-600 mb-1">Code Compliance</h4>
-                    <p className="text-muted-foreground">
-                      Current roof may not meet updated 2023 wind resistance codes for your area.
-                    </p>
-                  </div>
-                  <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-md">
-                    <h4 className="font-medium text-green-600 mb-1">Recommendation</h4>
-                    <p className="text-muted-foreground">
-                      Consider scheduling an in-person inspection to assess potential storm damage claim.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full gap-1">
-                  <MessageSquare className="h-4 w-4" /> Ask AI Assistant
-                </Button>
-              </CardFooter>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Similar Properties</CardTitle>
-                <CardDescription>Recent roof work on similar properties in the area.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex gap-3">
-                      <div className="h-14 w-14 rounded-md overflow-hidden flex-shrink-0">
-                        <Image
-                          src={`/placeholder.svg?height=56&width=56&text=Property ${i}`}
-                          width={56}
-                          height={56}
-                          alt={`Similar Property ${i}`}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-medium">{100 + i * 100} Oak St, Anytown</h4>
-                        <p className="text-xs text-muted-foreground">Roof Replacement - March 2023</p>
-                        <p className="text-xs text-primary mt-1">View Report</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </main>
-    </div>
-  )
-}
+    <ErrorBoundary>
+      <div className="flex min-h-screen flex-col">
+        <Header />
+        <main className="flex-1 bg-gray-50 py-8">
+          <div className="container mx-auto px-4">
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              {/* Report Header */}
+              <div className="bg-navy-800 text-white p-6">
+\

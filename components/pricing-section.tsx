@@ -1,107 +1,124 @@
 import { Check } from "lucide-react"
-import { Button } from "@/components/ui/button"
 
-export function PricingSection() {
-  const plans = [
-    {
-      name: "Basic",
-      price: "$29",
-      description: "Perfect for homeowners",
-      features: [
-        "Roof condition assessment",
-        "Damage detection",
-        "Basic repair recommendations",
-        "PDF report",
-        "30-day access",
-      ],
-      cta: "Get Started",
-      popular: false,
-    },
-    {
-      name: "Premium",
-      price: "$49",
-      description: "Ideal for real estate professionals",
-      features: [
-        "Everything in Basic",
-        "Detailed measurements",
-        "Historical data analysis",
-        "Repair cost estimates",
-        "90-day access",
-        "Priority support",
-      ],
-      cta: "Get Premium",
-      popular: true,
-    },
-    {
-      name: "Enterprise",
-      price: "Custom",
-      description: "For property managers & businesses",
-      features: [
-        "Everything in Premium",
-        "Multiple property management",
-        "API access",
-        "Custom reporting",
-        "Dedicated account manager",
-        "1-year access",
-      ],
-      cta: "Contact Us",
-      popular: false,
-    },
-  ]
-
+export default function PricingSection() {
   return (
-    <section className="py-16 bg-gray-50" id="pricing">
+    <section id="pricing" className="bg-gray-900 py-16 md:py-24">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Simple, Transparent Pricing</h2>
-          <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-            Choose the plan that's right for you. No hidden fees or long-term commitments.
+        <div className="mb-12 text-center">
+          <h2 className="mb-4 text-3xl font-bold text-white md:text-4xl">
+            Simple, <span className="text-yellow-500">Transparent</span> Pricing
+          </h2>
+          <p className="mx-auto max-w-2xl text-gray-400">
+            Choose the plan that works best for your business. No hidden fees, no long-term contracts.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {plans.map((plan, index) => (
-            <div
-              key={index}
-              className={`bg-white rounded-lg border ${
-                plan.popular ? "border-blue-500" : "border-gray-200"
-              } overflow-hidden transition-all hover:shadow-lg`}
-            >
-              {plan.popular && (
-                <div className="bg-blue-500 text-white text-center py-2 text-sm font-medium">Most Popular</div>
-              )}
+        <div className="grid gap-8 md:grid-cols-3">
+          <PricingCard
+            title="Starter"
+            price={49}
+            period="per month"
+            description="Perfect for small contractors just getting started."
+            features={["10 reports per month", "Basic measurements", "PDF exports", "Email support"]}
+            buttonText="Get Started"
+            buttonVariant="outline"
+          />
 
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                <div className="flex items-baseline mb-4">
-                  <span className="text-3xl font-bold text-gray-900">{plan.price}</span>
-                  {plan.price !== "Custom" && <span className="text-gray-600 ml-1">/report</span>}
-                </div>
-                <p className="text-gray-600 mb-6">{plan.description}</p>
+          <PricingCard
+            title="Professional"
+            price={99}
+            period="per month"
+            description="Ideal for growing roofing companies."
+            features={[
+              "50 reports per month",
+              "Advanced measurements",
+              "Damage detection",
+              "CRM integration",
+              "Priority support",
+            ]}
+            buttonText="Get Started"
+            buttonVariant="primary"
+            popular
+          />
 
-                <ul className="space-y-3 mb-6">
-                  {plan.features.map((feature, i) => (
-                    <li key={i} className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-700">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Button
-                  className={`w-full ${
-                    plan.popular
-                      ? "bg-blue-600 hover:bg-blue-700 text-white"
-                      : "bg-gray-100 hover:bg-gray-200 text-gray-900"
-                  }`}
-                >
-                  {plan.cta}
-                </Button>
-              </div>
-            </div>
-          ))}
+          <PricingCard
+            title="Enterprise"
+            price={249}
+            period="per month"
+            description="For established companies with multiple teams."
+            features={[
+              "Unlimited reports",
+              "Full feature access",
+              "API access",
+              "Custom branding",
+              "Dedicated account manager",
+              "24/7 phone support",
+            ]}
+            buttonText="Contact Sales"
+            buttonVariant="outline"
+          />
         </div>
       </div>
     </section>
+  )
+}
+
+interface PricingCardProps {
+  title: string
+  price: number
+  period: string
+  description: string
+  features: string[]
+  buttonText: string
+  buttonVariant: "primary" | "outline"
+  popular?: boolean
+}
+
+function PricingCard({
+  title,
+  price,
+  period,
+  description,
+  features,
+  buttonText,
+  buttonVariant,
+  popular,
+}: PricingCardProps) {
+  return (
+    <div className={`relative rounded-lg border ${popular ? "border-yellow-500" : "border-gray-800"} bg-gray-900 p-6`}>
+      {popular && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-yellow-500 px-3 py-1 text-xs font-medium text-black">
+          Most Popular
+        </div>
+      )}
+
+      <div className="mb-4 text-xl font-bold text-white">{title}</div>
+
+      <div className="mb-4">
+        <span className="text-4xl font-bold text-white">${price}</span>
+        <span className="text-gray-400"> {period}</span>
+      </div>
+
+      <p className="mb-6 text-gray-400">{description}</p>
+
+      <ul className="mb-6 space-y-3">
+        {features.map((feature, index) => (
+          <li key={index} className="flex items-center">
+            <Check className="mr-2 h-5 w-5 text-yellow-500" />
+            <span className="text-gray-300">{feature}</span>
+          </li>
+        ))}
+      </ul>
+
+      <button
+        className={`w-full rounded-md ${
+          buttonVariant === "primary"
+            ? "bg-yellow-500 text-black hover:bg-yellow-400"
+            : "border border-gray-700 text-white hover:bg-gray-800"
+        } py-2 font-medium`}
+      >
+        {buttonText}
+      </button>
+    </div>
   )
 }

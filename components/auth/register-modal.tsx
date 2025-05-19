@@ -3,38 +3,36 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Loader2 } from "lucide-react"
-import { useUser, type UserType } from "@/contexts/user-context"
-import { useToast } from "@/components/ui/toast"
+import { LoadingSpinner } from "@/components/loading-spinner"
+import { useUser } from "@/contexts/user-context"
+import { UserTypeSelection } from "@/components/user-type-selection"
 
 interface RegisterModalProps {
   isOpen: boolean
   onClose: () => void
-  onLoginClick: () => void
-  initialUserType?: UserType
+  onLoginClick?: () => void
 }
 
-export function RegisterModal({ isOpen, onClose, onLoginClick, initialUserType }: RegisterModalProps) {
+export function RegisterModal({ isOpen, onClose, onLoginClick }: RegisterModalProps) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [userType, setUserType] = useState<UserType>(initialUserType || null)
+  const [userType, setUserType] = useState<"homeowner" | "contractor">("homeowner")
   const [errors, setErrors] = useState<{
     name?: string
     email?: string
     password?: string
     confirmPassword?: string
-    userType?: string
   }>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { register } = useUser()
 
-  const { register, isLoading } = useUser()
-  const { showToast } = useToast()
+  if (!isOpen) return null
 
   const validateForm = () => {
     const newErrors: {
@@ -42,7 +40,6 @@ export function RegisterModal({ isOpen, onClose, onLoginClick, initialUserType }
       email?: string
       password?: string
       confirmPassword?: string
-      userType?: string
     } = {}
 
     if (!name) {
@@ -51,8 +48,8 @@ export function RegisterModal({ isOpen, onClose, onLoginClick, initialUserType }
 
     if (!email) {
       newErrors.email = "Email is required"
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = "Please enter a valid email"
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = "Email is invalid"
     }
 
     if (!password) {
@@ -67,10 +64,6 @@ export function RegisterModal({ isOpen, onClose, onLoginClick, initialUserType }
       newErrors.confirmPassword = "Passwords do not match"
     }
 
-    if (!userType) {
-      newErrors.userType = "Please select an account type"
-    }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -78,162 +71,127 @@ export function RegisterModal({ isOpen, onClose, onLoginClick, initialUserType }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!validateForm() || !userType) return
+    if (!validateForm()) return
 
     try {
-      await register(name, email, password, userType)
-      showToast("Account created successfully!", "success")
-      onClose()
+      setIsSubmitting(true)
+      const success = await register(name, email, password, userType)
+
+      if (success) {
+        onClose()
+        console.log("Registration successful")
+      } else {
+        setErrors({ email: "Registration failed. Please try again." })
+      }
     } catch (error) {
-      showToast("Registration failed. Please try again.", "error")
+      console.error("Registration error:", error)
+      setErrors({ email: "An error occurred. Please try again." })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] bg-gray-900 border border-yellow-500/20">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-white">Create your account</DialogTitle>
-          <DialogDescription className="text-gray-400">
-            Join RoofFax to access smart roof reports and tools
-          </DialogDescription>
-        </DialogHeader>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+      <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 text-gray-500 hover:text-gray-700"
+          aria-label="Close"
+        >
+          <X size={24} />
+        </button>
 
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+        <div className="mb-6 text-center">
+          <h2 className="text-2xl font-bold text-gray-900">Create an Account</h2>
+          <p className="mt-2 text-gray-600">Sign up to get your roof report</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-white">
-              Full Name
-            </Label>
+            <Label htmlFor="name">Full Name</Label>
             <Input
               id="name"
+              type="text"
+              placeholder="Enter your name"
               value={name}
-              onChange={(e) => {
-                setName(e.target.value)
-                if (errors.name) setErrors({ ...errors, name: undefined })
-              }}
-              placeholder="John Smith"
-              className={`bg-gray-800 border-gray-700 text-white ${
-                errors.name ? "border-red-500" : "focus:border-yellow-500"
-              }`}
+              onChange={(e) => setName(e.target.value)}
+              disabled={isSubmitting}
+              className={errors.name ? "border-red-500" : ""}
             />
-            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+            {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-white">
-              Email
-            </Label>
+            <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
+              placeholder="Enter your email"
               value={email}
-              onChange={(e) => {
-                setEmail(e.target.value)
-                if (errors.email) setErrors({ ...errors, email: undefined })
-              }}
-              placeholder="you@example.com"
-              className={`bg-gray-800 border-gray-700 text-white ${
-                errors.email ? "border-red-500" : "focus:border-yellow-500"
-              }`}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isSubmitting}
+              className={errors.email ? "border-red-500" : ""}
             />
-            {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+            {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-white">
-              Password
-            </Label>
+            <Label htmlFor="password">Password</Label>
             <Input
               id="password"
               type="password"
+              placeholder="Create a password"
               value={password}
-              onChange={(e) => {
-                setPassword(e.target.value)
-                if (errors.password) setErrors({ ...errors, password: undefined })
-              }}
-              placeholder="••••••••"
-              className={`bg-gray-800 border-gray-700 text-white ${
-                errors.password ? "border-red-500" : "focus:border-yellow-500"
-              }`}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isSubmitting}
+              className={errors.password ? "border-red-500" : ""}
             />
-            {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
+            {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword" className="text-white">
-              Confirm Password
-            </Label>
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
             <Input
               id="confirmPassword"
               type="password"
+              placeholder="Confirm your password"
               value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value)
-                if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: undefined })
-              }}
-              placeholder="••••••••"
-              className={`bg-gray-800 border-gray-700 text-white ${
-                errors.confirmPassword ? "border-red-500" : "focus:border-yellow-500"
-              }`}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={isSubmitting}
+              className={errors.confirmPassword ? "border-red-500" : ""}
             />
-            {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
+            {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label className="text-white">I am a:</Label>
-            <RadioGroup
-              value={userType || ""}
-              onValueChange={(value) => {
-                setUserType(value as UserType)
-                if (errors.userType) setErrors({ ...errors, userType: undefined })
-              }}
-              className="flex space-x-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Homeowner" id="homeowner" className="border-yellow-500 text-yellow-500" />
-                <Label htmlFor="homeowner" className="text-white">
-                  Homeowner
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Pro" id="pro" className="border-yellow-500 text-yellow-500" />
-                <Label htmlFor="pro" className="text-white">
-                  Roofing Pro
-                </Label>
-              </div>
-            </RadioGroup>
-            {errors.userType && <p className="text-red-500 text-sm">{errors.userType}</p>}
+            <Label>I am a:</Label>
+            <UserTypeSelection selectedType={userType} onSelect={setUserType} disabled={isSubmitting} />
           </div>
 
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-medium"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating Account...
-              </>
+          <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600 text-white" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <span className="flex items-center justify-center">
+                <LoadingSpinner className="mr-2" />
+                Creating account...
+              </span>
             ) : (
               "Create Account"
             )}
           </Button>
+        </form>
 
-          <div className="text-center text-gray-400">
-            <p>
+        {onLoginClick && (
+          <div className="mt-6 text-center">
+            <p className="text-gray-600">
               Already have an account?{" "}
-              <button
-                type="button"
-                onClick={onLoginClick}
-                className="text-yellow-500 hover:text-yellow-400 hover:underline"
-              >
+              <button onClick={onLoginClick} className="text-orange-600 hover:text-orange-800">
                 Log in
               </button>
             </p>
           </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        )}
+      </div>
+    </div>
   )
 }

@@ -1,55 +1,47 @@
 "use client"
 
-import type React from "react"
+import { Component, type ErrorInfo, type ReactNode } from "react"
 
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { AlertTriangle } from "lucide-react"
-
-interface ErrorBoundaryProps {
-  children: React.ReactNode
-  fallback?: React.ReactNode
+interface Props {
+  children?: ReactNode
+  fallback?: ReactNode
 }
 
-export function ErrorBoundary({ children, fallback }: ErrorBoundaryProps) {
-  const [hasError, setHasError] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
+interface State {
+  hasError: boolean
+}
 
-  useEffect(() => {
-    const errorHandler = (error: ErrorEvent) => {
-      console.error("Error caught by error boundary:", error)
-      setError(error.error)
-      setHasError(true)
-    }
-
-    window.addEventListener("error", errorHandler)
-    return () => window.removeEventListener("error", errorHandler)
-  }, [])
-
-  if (hasError) {
-    return (
-      fallback || (
-        <div className="flex flex-col items-center justify-center p-6 rounded-lg border border-red-500/30 bg-red-500/10 text-white">
-          <AlertTriangle className="h-10 w-10 text-red-500 mb-4" />
-          <h3 className="text-xl font-bold mb-2">Something went wrong</h3>
-          <p className="text-white/70 mb-4 text-center max-w-md">
-            {error?.message || "An unexpected error occurred. Our team has been notified."}
-          </p>
-          <Button
-            variant="outline"
-            className="border-red-500/30 text-red-400 hover:bg-red-500/10"
-            onClick={() => {
-              setHasError(false)
-              setError(null)
-              window.location.reload()
-            }}
-          >
-            Try Again
-          </Button>
-        </div>
-      )
-    )
+export class ErrorBoundary extends Component<Props, State> {
+  public state: State = {
+    hasError: false,
   }
 
-  return <>{children}</>
+  public static getDerivedStateFromError(_: Error): State {
+    return { hasError: true }
+  }
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("ErrorBoundary caught an error:", error, errorInfo)
+  }
+
+  public render() {
+    if (this.state.hasError) {
+      return (
+        this.props.fallback || (
+          <div className="flex min-h-screen flex-col items-center justify-center p-4 text-center">
+            <h2 className="mb-2 text-2xl font-bold">Oops, something went wrong</h2>
+            <p className="mb-4">We apologize for the inconvenience. Please try refreshing the page.</p>
+            <button
+              className="rounded bg-yellow-500 px-4 py-2 font-semibold text-black hover:bg-yellow-600"
+              onClick={() => this.setState({ hasError: false })}
+            >
+              Try again
+            </button>
+          </div>
+        )
+      )
+    }
+
+    return this.props.children
+  }
 }

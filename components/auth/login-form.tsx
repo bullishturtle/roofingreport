@@ -5,14 +5,15 @@ import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { useUser } from "@/contexts/user-context"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/components/ui/toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -22,7 +23,9 @@ const formSchema = z.object({
 export function LoginForm() {
   const { login } = useUser()
   const router = useRouter()
-  const { toast } = useToast()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard"
+  const { showToast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [verificationNeeded, setVerificationNeeded] = useState(false)
   const [userEmail, setUserEmail] = useState("")
@@ -40,31 +43,24 @@ export function LoginForm() {
     setVerificationNeeded(false)
 
     try {
+      console.log(`🔑 Login attempt for ${values.email}`)
       const result = await login(values.email, values.password)
 
       if (result.success) {
-        toast({
-          title: "Login successful",
-          description: "Welcome back!",
-          variant: "default",
-        })
-        router.push("/dashboard")
+        console.log(`✅ Login successful for ${values.email}`)
+        showToast("Login successful", "success", "Welcome back!")
+        router.push(callbackUrl)
       } else if (result.needsVerification) {
+        console.log(`⚠️ Email verification needed for ${values.email}`)
         setVerificationNeeded(true)
         setUserEmail(values.email)
       } else {
-        toast({
-          title: "Login failed",
-          description: result.error || "Invalid email or password",
-          variant: "destructive",
-        })
+        console.error(`❌ Login failed for ${values.email}: ${result.error}`)
+        showToast("Login failed", "error", result.error || "Invalid email or password")
       }
     } catch (error) {
-      toast({
-        title: "Login failed",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      })
+      console.error("❌ Unexpected login error:", error)
+      showToast("Login failed", "error", "An unexpected error occurred")
     } finally {
       setIsLoading(false)
     }
@@ -109,7 +105,7 @@ export function LoginForm() {
               <FormItem>
                 <div className="flex items-center justify-between">
                   <FormLabel>Password</FormLabel>
-                  <Link href="/forgot-password" className="text-sm text-amber-500 hover:text-amber-400">
+                  <Link href="/forgot-password" className="text-sm text-yellow-500 hover:text-yellow-400">
                     Forgot password?
                   </Link>
                 </div>
@@ -121,14 +117,21 @@ export function LoginForm() {
             )}
           />
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Logging in..." : "Log in"}
+            {isLoading ? (
+              <>
+                <LoadingSpinner size="sm" className="mr-2" />
+                Logging in...
+              </>
+            ) : (
+              "Log in"
+            )}
           </Button>
         </form>
       </Form>
 
       <div className="text-center text-sm">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="text-amber-600 hover:text-amber-500">
+        <Link href="/register" className="text-yellow-600 hover:text-yellow-500">
           Sign up
         </Link>
       </div>

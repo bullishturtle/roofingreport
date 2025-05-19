@@ -5,13 +5,15 @@ import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { useUser } from "@/contexts/user-context"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/components/ui/toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -24,10 +26,14 @@ const formSchema = z.object({
 
 export function RegisterForm() {
   const { register } = useUser()
-  const { toast } = useToast()
+  const { showToast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [registrationSuccess, setRegistrationSuccess] = useState(false)
   const [userEmail, setUserEmail] = useState("")
+
+  // Get user type from URL if available
+  const searchParams = useSearchParams()
+  const userTypeParam = searchParams?.get("userType") as "Homeowner" | "Pro" | null
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -35,33 +41,29 @@ export function RegisterForm() {
       name: "",
       email: "",
       password: "",
-      userType: undefined,
+      userType: userTypeParam || undefined,
     },
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
+    console.log(`📝 Registration attempt for ${values.email} as ${values.userType}`)
 
     try {
       const result = await register(values.name, values.email, values.password, values.userType)
 
       if (result.success) {
+        console.log(`✅ Registration successful for ${values.email}`)
         setRegistrationSuccess(true)
         setUserEmail(values.email)
         form.reset()
       } else {
-        toast({
-          title: "Registration failed",
-          description: result.error || "An error occurred during registration",
-          variant: "destructive",
-        })
+        console.error(`❌ Registration failed for ${values.email}: ${result.error}`)
+        showToast("Registration failed", "error", result.error || "An error occurred during registration")
       }
     } catch (error) {
-      toast({
-        title: "Registration failed",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      })
+      console.error("❌ Unexpected registration error:", error)
+      showToast("Registration failed", "error", "An unexpected error occurred")
     } finally {
       setIsLoading(false)
     }
@@ -83,7 +85,7 @@ export function RegisterForm() {
             Didn&apos;t receive the email?{" "}
             <Link
               href={`/resend-verification?email=${encodeURIComponent(userEmail)}`}
-              className="text-amber-600 hover:text-amber-500"
+              className="text-yellow-600 hover:text-yellow-500"
             >
               Resend verification email
             </Link>
@@ -151,7 +153,7 @@ export function RegisterForm() {
                     type="button"
                     variant={field.value === "Homeowner" ? "default" : "outline"}
                     onClick={() => form.setValue("userType", "Homeowner")}
-                    className={field.value === "Homeowner" ? "border-2 border-amber-500" : ""}
+                    className={field.value === "Homeowner" ? "border-2 border-yellow-500" : ""}
                   >
                     Homeowner
                   </Button>
@@ -159,7 +161,7 @@ export function RegisterForm() {
                     type="button"
                     variant={field.value === "Pro" ? "default" : "outline"}
                     onClick={() => form.setValue("userType", "Pro")}
-                    className={field.value === "Pro" ? "border-2 border-amber-500" : ""}
+                    className={field.value === "Pro" ? "border-2 border-yellow-500" : ""}
                   >
                     Roofing Pro
                   </Button>
@@ -169,14 +171,21 @@ export function RegisterForm() {
             )}
           />
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creating account..." : "Create account"}
+            {isLoading ? (
+              <>
+                <LoadingSpinner size="sm" className="mr-2" />
+                Creating account...
+              </>
+            ) : (
+              "Create account"
+            )}
           </Button>
         </form>
       </Form>
 
       <div className="text-center text-sm">
         Already have an account?{" "}
-        <Link href="/login" className="text-amber-600 hover:text-amber-500">
+        <Link href="/login" className="text-yellow-600 hover:text-yellow-500">
           Log in
         </Link>
       </div>

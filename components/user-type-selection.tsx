@@ -1,86 +1,48 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { Home, Briefcase } from "lucide-react"
-import { useUser, type UserType } from "@/contexts/user-context"
-import { LoginModal } from "@/components/auth/login-modal"
-import { RegisterModal } from "@/components/auth/register-modal"
 
-export function UserTypeSelection() {
-  const [selectedType, setSelectedType] = useState<UserType>(null)
-  const [showLoginModal, setShowLoginModal] = useState(false)
-  const [showRegisterModal, setShowRegisterModal] = useState(false)
-  const { isAuthenticated, user, setUserType } = useUser()
+interface UserTypeSelectionProps {
+  selectedType: "homeowner" | "contractor"
+  onSelect: (type: "homeowner" | "contractor") => void
+  disabled?: boolean
+}
 
-  const handleTypeSelection = (type: UserType) => {
-    setSelectedType(type)
-
-    if (isAuthenticated) {
-      // If user is already logged in, just update their type
-      setUserType(type)
-    } else {
-      // Otherwise show registration modal
-      setShowRegisterModal(true)
-    }
-  }
-
-  const handleLoginClick = () => {
-    setShowLoginModal(true)
-    setShowRegisterModal(false)
-  }
-
-  const handleRegisterClick = () => {
-    setShowRegisterModal(true)
-    setShowLoginModal(false)
-  }
-
+export function UserTypeSelection({ selectedType, onSelect, disabled = false }: UserTypeSelectionProps) {
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-        <Button
-          onClick={() => handleTypeSelection("Homeowner")}
-          className={`h-auto py-8 px-6 flex flex-col items-center text-center transition-all duration-300 ${
-            selectedType === "Homeowner" || user?.userType === "Homeowner"
-              ? "bg-yellow-500 hover:bg-yellow-600 text-black"
-              : "bg-gray-800 hover:bg-gray-700 text-white border border-yellow-500/30"
-          }`}
-        >
-          <Home className="h-12 w-12 mb-4" />
-          <h3 className="text-xl font-bold mb-2">I'm a Homeowner</h3>
-          <p className="text-sm opacity-80">
-            Get a detailed report on your roof's condition, storm history, and repair needs
-          </p>
-        </Button>
+    <div className="grid grid-cols-2 gap-4">
+      <button
+        type="button"
+        onClick={() => onSelect("homeowner")}
+        disabled={disabled}
+        className={cn(
+          "flex flex-col items-center justify-center p-4 border rounded-lg transition-all",
+          selectedType === "homeowner"
+            ? "border-orange-500 bg-orange-50 text-orange-700"
+            : "border-gray-200 hover:border-gray-300 text-gray-700",
+          disabled && "opacity-50 cursor-not-allowed",
+        )}
+      >
+        <Home size={24} className="mb-2" />
+        <span className="font-medium">Homeowner</span>
+      </button>
 
-        <Button
-          onClick={() => handleTypeSelection("Pro")}
-          className={`h-auto py-8 px-6 flex flex-col items-center text-center transition-all duration-300 ${
-            selectedType === "Pro" || user?.userType === "Pro"
-              ? "bg-yellow-500 hover:bg-yellow-600 text-black"
-              : "bg-gray-800 hover:bg-gray-700 text-white border border-yellow-500/30"
-          }`}
-        >
-          <Briefcase className="h-12 w-12 mb-4" />
-          <h3 className="text-xl font-bold mb-2">I'm a Roofing Pro</h3>
-          <p className="text-sm opacity-80">
-            Access tools for roof measurements, storm tracking, lead generation, and more
-          </p>
-        </Button>
-      </div>
-
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onRegisterClick={handleRegisterClick}
-      />
-
-      <RegisterModal
-        isOpen={showRegisterModal}
-        onClose={() => setShowRegisterModal(false)}
-        onLoginClick={handleLoginClick}
-        initialUserType={selectedType}
-      />
-    </>
+      <button
+        type="button"
+        onClick={() => onSelect("contractor")}
+        disabled={disabled}
+        className={cn(
+          "flex flex-col items-center justify-center p-4 border rounded-lg transition-all",
+          selectedType === "contractor"
+            ? "border-orange-500 bg-orange-50 text-orange-700"
+            : "border-gray-200 hover:border-gray-300 text-gray-700",
+          disabled && "opacity-50 cursor-not-allowed",
+        )}
+      >
+        <Briefcase size={24} className="mb-2" />
+        <span className="font-medium">Contractor</span>
+      </button>
+    </div>
   )
 }

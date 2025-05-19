@@ -2,35 +2,38 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { ToastProvider } from "@/components/ui/toast"
 import { UserProvider } from "@/contexts/user-context"
+import { ErrorBoundary } from "@/components/error-boundary"
+import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "TheRoofFax.com - The World's Smartest Roof & Property Report",
-  description: "Get instant insights about your roof's condition, storm history, and repair needs.",
+  title: "RoofFax.Report - The World's Smartest Roof & Property Report",
+  description:
+    "Get comprehensive roof and property reports with RoofFax. Trusted by homeowners, built for roofing professionals.",
     generator: 'v0.dev'
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
     <html lang="en">
       <body className={inter.className}>
         <UserProvider>
-          <ToastProvider>
-            <div className="flex flex-col min-h-screen bg-black">
-              <Header />
-              <main className="flex-grow">{children}</main>
-              <Footer />
-            </div>
-          </ToastProvider>
+          <ErrorBoundary
+            fallback={
+              <div className="flex min-h-screen items-center justify-center">
+                Something went wrong. Please refresh the page.
+              </div>
+            }
+          >
+            {children}
+            <Toaster />
+          </ErrorBoundary>
         </UserProvider>
       </body>
     </html>

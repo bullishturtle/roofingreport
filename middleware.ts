@@ -3,13 +3,35 @@ import type { NextRequest } from "next/server"
 import { verify } from "jsonwebtoken"
 
 // Paths that don't require authentication
-const publicPaths = ["/", "/login", "/signup", "/about", "/contact", "/privacy", "/terms"]
+const publicPaths = [
+  "/",
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/verify-email",
+  "/resend-verification",
+  "/about",
+  "/contact",
+  "/privacy",
+  "/terms",
+]
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Check if the path is public
   if (publicPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`))) {
+    return NextResponse.next()
+  }
+
+  // Check if the path is for static files
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/images") ||
+    pathname.startsWith("/fonts") ||
+    pathname.startsWith("/favicon.ico")
+  ) {
     return NextResponse.next()
   }
 
@@ -36,15 +58,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     * - api routes that handle their own authentication
-     */
-    "/((?!_next/static|_next/image|favicon.ico|public|api).*)",
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 }

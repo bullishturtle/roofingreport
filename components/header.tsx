@@ -2,178 +2,176 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { useUser } from "@/contexts/user-context"
-import { LoginModal } from "@/components/auth/login-modal"
-import { RegisterModal } from "@/components/auth/register-modal"
-import { Menu, X, User } from "lucide-react"
+import { Menu, X } from "lucide-react"
+import { LoginModal } from "./auth/login-modal"
+import { RegisterModal } from "./auth/register-modal"
 
-export function Header() {
-  const [showMobileMenu, setShowMobileMenu] = useState(false)
-  const [showLoginModal, setShowLoginModal] = useState(false)
-  const [showRegisterModal, setShowRegisterModal] = useState(false)
-  const { isAuthenticated, user } = useUser()
+export default function Header() {
+  const { user, status, logout } = useUser()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [loginModalOpen, setLoginModalOpen] = useState(false)
+  const [registerModalOpen, setRegisterModalOpen] = useState(false)
 
   const toggleMobileMenu = () => {
-    setShowMobileMenu(!showMobileMenu)
-  }
-
-  const handleLoginClick = () => {
-    setShowLoginModal(true)
-    setShowRegisterModal(false)
-  }
-
-  const handleRegisterClick = () => {
-    setShowRegisterModal(true)
-    setShowLoginModal(false)
+    setMobileMenuOpen(!mobileMenuOpen)
   }
 
   return (
-    <>
-      <header className="bg-black border-b border-yellow-500/20 sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center">
-                <div className="h-8 w-8 rounded-full bg-yellow-500 flex items-center justify-center mr-2">
-                  <span className="text-black font-bold">R</span>
-                </div>
-                <span className="text-xl font-bold text-white">
-                  Roof<span className="text-yellow-500">Fax</span>
-                </span>
-              </Link>
-            </div>
+    <header className="sticky top-0 z-50 w-full border-b border-gray-800 bg-black/90 backdrop-blur-sm">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        <Link href="/" className="flex items-center">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500 text-black">
+            <span className="text-xl font-bold">R</span>
+          </div>
+          <span className="ml-2 text-xl font-bold text-white">RoofFax</span>
+        </Link>
 
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link href="/features" className="text-gray-300 hover:text-yellow-500 transition-colors">
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex">
+          <ul className="flex space-x-8">
+            <li>
+              <Link href="/features" className="text-sm text-gray-300 hover:text-white">
                 Features
               </Link>
-              <Link href="/pricing" className="text-gray-300 hover:text-yellow-500 transition-colors">
+            </li>
+            <li>
+              <Link href="/pricing" className="text-sm text-gray-300 hover:text-white">
                 Pricing
               </Link>
-              <Link href="/testimonials" className="text-gray-300 hover:text-yellow-500 transition-colors">
+            </li>
+            <li>
+              <Link href="/testimonials" className="text-sm text-gray-300 hover:text-white">
                 Testimonials
               </Link>
-              {isAuthenticated && (
-                <Link href="/dashboard" className="text-gray-300 hover:text-yellow-500 transition-colors">
+            </li>
+            <li>
+              <Link href="/3d-showcase" className="text-sm text-gray-300 hover:text-white">
+                3D Showcase
+              </Link>
+            </li>
+            {status === "authenticated" && (
+              <li>
+                <Link href="/dashboard" className="text-sm text-gray-300 hover:text-white">
                   Dashboard
                 </Link>
-              )}
-            </nav>
+              </li>
+            )}
+          </ul>
+        </nav>
 
-            <div className="hidden md:flex items-center space-x-4">
-              {isAuthenticated ? (
-                <Link href="/dashboard">
-                  <Button variant="outline" className="border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10">
-                    <User className="mr-2 h-4 w-4" />
-                    {user?.name.split(" ")[0]}
-                  </Button>
-                </Link>
-              ) : (
-                <>
-                  <Button variant="ghost" onClick={handleLoginClick} className="text-gray-300 hover:text-white">
-                    Sign In
-                  </Button>
-                  <Button onClick={handleRegisterClick} className="bg-yellow-500 hover:bg-yellow-600 text-black">
-                    Get Started Free
-                  </Button>
-                </>
-              )}
+        {/* Auth Buttons */}
+        <div className="hidden items-center space-x-4 md:flex">
+          {status === "authenticated" ? (
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-300">Hello, {user?.name}</span>
+              <button
+                onClick={logout}
+                className="rounded-md border border-gray-600 px-4 py-2 text-sm text-white hover:bg-gray-800"
+              >
+                Sign Out
+              </button>
             </div>
-
-            <button
-              className="md:hidden text-gray-300 hover:text-white"
-              onClick={toggleMobileMenu}
-              aria-label="Toggle menu"
-            >
-              {showMobileMenu ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          </div>
+          ) : (
+            <>
+              <button
+                onClick={() => setLoginModalOpen(true)}
+                className="rounded-md border border-gray-600 px-4 py-2 text-sm text-white hover:bg-gray-800"
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => setRegisterModalOpen(true)}
+                className="rounded-md bg-yellow-500 px-4 py-2 text-sm font-medium text-black hover:bg-yellow-400"
+              >
+                Get Started Free
+              </button>
+            </>
+          )}
         </div>
 
-        {/* Mobile menu */}
-        {showMobileMenu && (
-          <div className="md:hidden bg-gray-900 border-t border-yellow-500/20">
-            <div className="container mx-auto px-4 py-4 space-y-4">
+        {/* Mobile Menu Button */}
+        <button className="flex items-center md:hidden" onClick={toggleMobileMenu} aria-label="Toggle menu">
+          {mobileMenuOpen ? <X className="h-6 w-6 text-white" /> : <Menu className="h-6 w-6 text-white" />}
+        </button>
+      </div>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="absolute left-0 right-0 top-16 bg-black p-4 md:hidden">
+          <nav className="flex flex-col space-y-4">
+            <Link href="/features" className="text-gray-300 hover:text-white" onClick={() => setMobileMenuOpen(false)}>
+              Features
+            </Link>
+            <Link href="/pricing" className="text-gray-300 hover:text-white" onClick={() => setMobileMenuOpen(false)}>
+              Pricing
+            </Link>
+            <Link
+              href="/testimonials"
+              className="text-gray-300 hover:text-white"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Testimonials
+            </Link>
+            <Link
+              href="/3d-showcase"
+              className="text-gray-300 hover:text-white"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              3D Showcase
+            </Link>
+            {status === "authenticated" && (
               <Link
-                href="/features"
-                className="block text-gray-300 hover:text-yellow-500 transition-colors"
-                onClick={() => setShowMobileMenu(false)}
+                href="/dashboard"
+                className="text-gray-300 hover:text-white"
+                onClick={() => setMobileMenuOpen(false)}
               >
-                Features
+                Dashboard
               </Link>
-              <Link
-                href="/pricing"
-                className="block text-gray-300 hover:text-yellow-500 transition-colors"
-                onClick={() => setShowMobileMenu(false)}
-              >
-                Pricing
-              </Link>
-              <Link
-                href="/testimonials"
-                className="block text-gray-300 hover:text-yellow-500 transition-colors"
-                onClick={() => setShowMobileMenu(false)}
-              >
-                Testimonials
-              </Link>
-              {isAuthenticated && (
-                <Link
-                  href="/dashboard"
-                  className="block text-gray-300 hover:text-yellow-500 transition-colors"
-                  onClick={() => setShowMobileMenu(false)}
+            )}
+
+            {status === "authenticated" ? (
+              <>
+                <div className="pt-2 text-sm text-gray-300">Hello, {user?.name}</div>
+                <button
+                  onClick={() => {
+                    logout()
+                    setMobileMenuOpen(false)
+                  }}
+                  className="w-full rounded-md border border-gray-600 px-4 py-2 text-center text-white hover:bg-gray-800"
                 >
-                  Dashboard
-                </Link>
-              )}
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    setLoginModalOpen(true)
+                    setMobileMenuOpen(false)
+                  }}
+                  className="w-full rounded-md border border-gray-600 px-4 py-2 text-center text-white hover:bg-gray-800"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => {
+                    setRegisterModalOpen(true)
+                    setMobileMenuOpen(false)
+                  }}
+                  className="w-full rounded-md bg-yellow-500 px-4 py-2 text-center font-medium text-black hover:bg-yellow-400"
+                >
+                  Get Started Free
+                </button>
+              </>
+            )}
+          </nav>
+        </div>
+      )}
 
-              <div className="pt-4 border-t border-gray-800">
-                {isAuthenticated ? (
-                  <Link href="/dashboard" onClick={() => setShowMobileMenu(false)}>
-                    <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-black">
-                      <User className="mr-2 h-4 w-4" />
-                      My Dashboard
-                    </Button>
-                  </Link>
-                ) : (
-                  <div className="space-y-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        handleLoginClick()
-                        setShowMobileMenu(false)
-                      }}
-                      className="w-full border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10"
-                    >
-                      Sign In
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        handleRegisterClick()
-                        setShowMobileMenu(false)
-                      }}
-                      className="w-full bg-yellow-500 hover:bg-yellow-600 text-black"
-                    >
-                      Get Started Free
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </header>
-
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onRegisterClick={handleRegisterClick}
-      />
-
-      <RegisterModal
-        isOpen={showRegisterModal}
-        onClose={() => setShowRegisterModal(false)}
-        onLoginClick={handleLoginClick}
-      />
-    </>
+      {/* Auth Modals */}
+      <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
+      <RegisterModal isOpen={registerModalOpen} onClose={() => setRegisterModalOpen(false)} />
+    </header>
   )
 }

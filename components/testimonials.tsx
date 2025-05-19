@@ -1,46 +1,78 @@
-import Image from "next/image"
+import { Card, CardContent } from "@/components/ui/card"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 export function Testimonials() {
-  const testimonials = [
-    {
-      quote: "I almost signed a $14K roof contract—RoofFax helped me know what to say no to.",
-      name: "Sarah Johnson",
-      location: "Dallas, TX",
-      image: "/woman-portrait.png",
-    },
-    {
-      quote: "The PDF helped me win the claim with my insurance adjuster.",
-      name: "Michael Rodriguez",
-      location: "Tampa, FL",
-      image: "/thoughtful-man-portrait.png",
-    },
-  ]
-
   return (
-    <div className="mt-16">
-      <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">What Our Users Say</h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {testimonials.map((testimonial, index) => (
-          <div key={index} className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-start gap-4">
-              <div className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
-                <Image
-                  src={testimonial.image || "/placeholder.svg"}
-                  alt={testimonial.name}
-                  fill
-                  style={{ objectFit: "cover" }}
-                />
-              </div>
-              <div>
-                <p className="text-gray-700 italic mb-4">"{testimonial.quote}"</p>
-                <p className="font-bold text-gray-900">{testimonial.name}</p>
-                <p className="text-gray-600 text-sm">{testimonial.location}</p>
-              </div>
-            </div>
+    <section id="testimonials" className="py-12 md:py-24 bg-[#0a0d17]">
+      <div className="container px-4 md:px-6">
+        <div className="flex flex-col items-center text-center mb-12">
+          <div className="inline-block rounded-full bg-yellow-500/10 px-3 py-1 text-sm text-yellow-500 mb-4 border border-yellow-500/20">
+            Success Stories
           </div>
-        ))}
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-white mb-4">
+            Trusted by Professionals Nationwide
+          </h2>
+          <p className="max-w-[700px] text-gray-400 md:text-xl">
+            See what roofing contractors and property managers are saying about RoofFax.
+          </p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card className="bg-black/20 border-gray-800">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4 mb-4">
+                <Avatar>
+                  <AvatarFallback>JD</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium text-white">John Davis</p>
+                  <p className="text-sm text-gray-400">Apex Roofing Solutions</p>
+                </div>
+              </div>
+              <p className="text-gray-400">
+                "RoofFax has completely transformed our business. We've increased our close rate by 35% and cut our
+                proposal time in half. The accuracy of the reports is incredible."
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-black/20 border-gray-800">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4 mb-4">
+                <Avatar>
+                  <AvatarFallback>SM</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium text-white">Sarah Miller</p>
+                  <p className="text-sm text-gray-400">Elite Property Management</p>
+                </div>
+              </div>
+              <p className="text-gray-400">
+                "As a property manager overseeing 200+ properties, RoofFax has been a game-changer. The detailed reports
+                help us prioritize maintenance and budget accurately for repairs."
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-black/20 border-gray-800">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4 mb-4">
+                <Avatar>
+                  <AvatarFallback>RJ</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium text-white">Robert Johnson</p>
+                  <p className="text-sm text-gray-400">Storm Chasers Roofing</p>
+                </div>
+              </div>
+              <p className="text-gray-400">
+                "The storm tracking feature alone is worth the subscription. We can now target affected neighborhoods
+                immediately after a storm and be the first to offer our services."
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </section>
   )
 }

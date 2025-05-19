@@ -1,130 +1,124 @@
-"use client"
-
 import Link from "next/link"
-import Image from "next/image"
 import { Facebook, Linkedin, Mail, Phone } from "lucide-react"
 
 export function Footer() {
-  const currentYear = new Date().getFullYear()
-
   return (
-    <footer className="bg-gray-900 text-gray-300">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Company Info */}
+    <footer className="bg-[#070a12] border-t border-gray-800">
+      <div className="container px-4 md:px-6 py-12">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div>
-            <div className="flex items-center space-x-2 mb-4">
-              <Image
-                src="/images/trust-the-fox-logo.png"
-                alt="RoofFax Logo"
-                width={40}
-                height={40}
-                className="h-10 w-10 object-contain"
-              />
-              <span className="text-xl font-bold text-white">RoofFax.Report</span>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500 text-black font-bold text-xl">
+                R
+              </div>
+              <span className="text-xl font-bold">
+                Roof<span className="text-yellow-500">Fax</span>
+              </span>
             </div>
-            <p className="mb-4 text-gray-400">
-              Providing comprehensive roof reports and assessments for homeowners, buyers, and real estate
-              professionals.
+            <p className="text-gray-400 mb-4">
+              The world's smartest roof and property report platform. Trusted by homeowners, built for professionals.
             </p>
             <div className="flex space-x-4">
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
-                aria-label="Facebook"
-              >
-                <Facebook size={20} />
-              </a>
-              <a
-                href="https://linkedin.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
-                aria-label="LinkedIn"
-              >
-                <Linkedin size={20} />
-              </a>
+              <Link href="https://facebook.com" className="text-gray-400 hover:text-yellow-500">
+                <Facebook className="h-5 w-5" />
+                <span className="sr-only">Facebook</span>
+              </Link>
+              <Link href="https://linkedin.com" className="text-gray-400 hover:text-yellow-500">
+                <Linkedin className="h-5 w-5" />
+                <span className="sr-only">LinkedIn</span>
+              </Link>
             </div>
           </div>
 
-          {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Quick Links</h3>
+            <h3 className="text-lg font-medium text-white mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/" className="text-gray-400 hover:text-white transition-colors">
-                  Home
+                <Link href="#how-it-works" className="text-gray-400 hover:text-yellow-500">
+                  How It Works
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-gray-400 hover:text-white transition-colors">
-                  About Us
+                <Link href="#features" className="text-gray-400 hover:text-yellow-500">
+                  Features
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-gray-400 hover:text-white transition-colors">
-                  Contact
+                <Link href="#testimonials" className="text-gray-400 hover:text-yellow-500">
+                  Testimonials
                 </Link>
               </li>
               <li>
-                <Link href="/login" className="text-gray-400 hover:text-white transition-colors">
-                  Login
+                <Link href="/pricing" className="text-gray-400 hover:text-yellow-500">
+                  Pricing
                 </Link>
               </li>
               <li>
-                <Link href="/register" className="text-gray-400 hover:text-white transition-colors">
-                  Sign Up
+                <Link href="/blog" className="text-gray-400 hover:text-yellow-500">
+                  Blog
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Legal */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Legal</h3>
+            <h3 className="text-lg font-medium text-white mb-4">For Professionals</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
-                  Terms of Service
+                <Link href="https://rooffaxpro.com" className="text-gray-400 hover:text-yellow-500">
+                  RoofFax Pro
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
-                  Privacy Policy
+                <Link href="/partner-program" className="text-gray-400 hover:text-yellow-500">
+                  Partner Program
+                </Link>
+              </li>
+              <li>
+                <Link href="/api-documentation" className="text-gray-400 hover:text-yellow-500">
+                  API Documentation
+                </Link>
+              </li>
+              <li>
+                <Link href="/resources" className="text-gray-400 hover:text-yellow-500">
+                  Resources
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Contact */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Contact Us</h3>
+            <h3 className="text-lg font-medium text-white mb-4">Contact Us</h3>
             <ul className="space-y-2">
-              <li className="flex items-center space-x-2">
-                <Mail size={16} className="text-gray-400" />
-                <a href="mailto:Landon@rooffax.com" className="text-gray-400 hover:text-white transition-colors">
+              <li className="flex items-center gap-2 text-gray-400">
+                <Mail className="h-5 w-5 text-yellow-500" />
+                <a href="mailto:Landon@rooffax.com" className="hover:text-yellow-500">
                   Landon@rooffax.com
                 </a>
               </li>
-              <li className="flex items-center space-x-2">
-                <Phone size={16} className="text-gray-400" />
-                <a href="tel:+18508799172" className="text-gray-400 hover:text-white transition-colors">
+              <li className="flex items-center gap-2 text-gray-400">
+                <Phone className="h-5 w-5 text-yellow-500" />
+                <a href="tel:+18508799172" className="hover:text-yellow-500">
                   (850) 879-9172
                 </a>
               </li>
             </ul>
+            <p className="mt-4 text-gray-400">RoofFax.Report (by Thomas Roofing & Repair Inc.)</p>
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-10 pt-6 text-center md:text-left md:flex md:justify-between md:items-center">
-          <p className="text-gray-500 text-sm">&copy; {currentYear} RoofFax.Report. All rights reserved.</p>
-          <p className="text-gray-500 text-sm mt-2 md:mt-0">Powered by RoofFax™</p>
+        <div className="mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center">
+          <p className="text-gray-400 text-sm mb-4 md:mb-0">Powered by RoofFax™ | All rights reserved</p>
+          <div className="flex space-x-6">
+            <Link href="/terms" className="text-gray-400 hover:text-yellow-500 text-sm">
+              Terms of Service
+            </Link>
+            <Link href="/privacy" className="text-gray-400 hover:text-yellow-500 text-sm">
+              Privacy Policy
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
   )
 }
-
-export default Footer

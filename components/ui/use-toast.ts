@@ -1,10 +1,12 @@
 "use client"
 
 // Inspired by react-hot-toast library
-import type * as React from "react"
-import { useState, useCallback } from "react"
+import * as React from "react"
 
-import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
+import type {
+  ToastActionElement,
+  ToastProps,
+} from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
@@ -83,7 +85,9 @@ export const reducer = (state: State, action: Action): State => {
     case "UPDATE_TOAST":
       return {
         ...state,
-        toasts: state.toasts.map((t) => (t.id === action.toast.id ? { ...t, ...action.toast } : t)),
+        toasts: state.toasts.map((t) =>
+          t.id === action.toast.id ? { ...t, ...action.toast } : t
+        ),
       }
 
     case "DISMISS_TOAST": {
@@ -107,7 +111,7 @@ export const reducer = (state: State, action: Action): State => {
                 ...t,
                 open: false,
               }
-            : t,
+            : t
         ),
       }
     }
@@ -167,51 +171,24 @@ function toast({ ...props }: Toast) {
   }
 }
 
-type ToastType = "default" | "success" | "error" | "warning" | "info"
+function useToast() {
+  const [state, setState] = React.useState<State>(memoryState)
 
-interface ToastOptions {
-  title: string
-  description?: string
-  variant?: ToastType
-  duration?: number
-}
-
-export function useToast() {
-  const [toasts, setToasts] = useState<ToastOptions[]>([])
-
-  const showToast = useCallback(
-    (titleOrOptions: string | ToastOptions, variant?: ToastType, description?: string, duration = 5000) => {
-      let toast: ToastOptions
-
-      if (typeof titleOrOptions === "string") {
-        toast = {
-          title: titleOrOptions,
-          description,
-          variant: variant || "default",
-          duration,
-        }
-      } else {
-        toast = {
-          ...titleOrOptions,
-          duration: titleOrOptions.duration || 5000,
-        }
+  React.useEffect(() => {
+    listeners.push(setState)
+    return () => {
+      const index = listeners.indexOf(setState)
+      if (index > -1) {
+        listeners.splice(index, 1)
       }
+    }
+  }, [state])
 
-      setToasts((prev) => [...prev, toast])
-
-      // Auto-dismiss after duration
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t !== toast))
-      }, toast.duration)
-    },
-    [],
-  )
-
-  const dismissToast = useCallback((index: number) => {
-    setToasts((prev) => prev.filter((_, i) => i !== index))
-  }, [])
-
-  return { toast: showToast, toasts, dismissToast }
+  return {
+    ...state,
+    toast,
+    dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
+  }
 }
 
-export { toast }
+export { useToast, toast }

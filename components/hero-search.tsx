@@ -6,14 +6,16 @@ import { useState } from "react"
 import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/components/ui/toast"
+import { useToast } from "@/components/ui/use-toast"
 import { validationRules, validateField } from "@/lib/form-validation"
+import { useRouter } from "next/navigation"
 
 export function HeroSearch() {
   const [address, setAddress] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const { showToast } = useToast()
+  const { toast } = useToast()
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,15 +39,20 @@ export function HeroSearch() {
       await new Promise((resolve) => setTimeout(resolve, 1500))
 
       // Show success message
-      showToast(`Report requested for: ${address}`, "success")
+      toast({
+        title: "Report Requested",
+        description: `Report requested for: ${address}`,
+        variant: "success",
+      })
 
-      // In a real app, we would redirect to the report page or show a modal
-      console.log("Address submitted:", address)
-
-      // Reset form
-      setAddress("")
+      // Redirect to report page
+      router.push(`/report?address=${encodeURIComponent(address)}`)
     } catch (error) {
-      showToast("Error processing your request. Please try again.", "error")
+      toast({
+        title: "Error",
+        description: "Error processing your request. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }

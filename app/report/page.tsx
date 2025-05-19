@@ -120,12 +120,15 @@ export default function ReportPage() {
     setIsSendingEmail(true)
 
     try {
-      const result = await sendReportEmail({
+      // Create a mock report ID for demonstration purposes
+      const mockReportId = `report-${Date.now()}`
+
+      const result = await sendReportEmail(
+        mockReportId,
         recipientEmail,
-        recipientName: recipientName || "Property Owner",
-        address: address || "Unknown Address",
-        reportData,
-      })
+        recipientName || "Property Owner",
+        "Here is your requested roof report.",
+      )
 
       if (result.success) {
         toast({
@@ -137,7 +140,7 @@ export default function ReportPage() {
       } else {
         toast({
           title: "Error",
-          description: result.message || "Failed to send email. Please try again.",
+          description: result.error || "Failed to send email. Please try again.",
           variant: "destructive",
           duration: 5000,
         })

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Loader2 } from "lucide-react"
 import { validationRules, validateForm, hasErrors } from "@/lib/form-validation"
-import { useToast } from "@/components/ui/toast"
+import { useToast } from "@/components/ui/use-toast"
 
 export function ContactForm() {
   const [formData, setFormData] = useState({
@@ -27,7 +27,7 @@ export function ContactForm() {
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { showToast } = useToast()
+  const { toast } = useToast()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -69,7 +69,11 @@ export function ContactForm() {
       await new Promise((resolve) => setTimeout(resolve, 1500))
 
       // Show success message
-      showToast("Your message has been sent successfully!", "success")
+      toast({
+        title: "Message Sent",
+        description: "Your message has been sent successfully!",
+        variant: "success",
+      })
 
       // Reset form
       setFormData({
@@ -80,7 +84,11 @@ export function ContactForm() {
       })
     } catch (error) {
       console.error("Error submitting form:", error)
-      showToast("Error sending message. Please try again.", "error")
+      toast({
+        title: "Error",
+        description: "Error sending message. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsSubmitting(false)
     }

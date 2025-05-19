@@ -170,8 +170,8 @@ function toast({ ...props }: Toast) {
 type ToastType = "default" | "success" | "error" | "warning" | "info"
 
 interface ToastOptions {
-  title?: string
-  description: string
+  title: string
+  description?: string
   variant?: ToastType
   duration?: number
 }
@@ -179,19 +179,39 @@ interface ToastOptions {
 export function useToast() {
   const [toasts, setToasts] = useState<ToastOptions[]>([])
 
-  const toast = useCallback(({ title, description, variant = "default", duration = 5000 }: ToastOptions) => {
-    const id = Date.now()
+  const showToast = useCallback(
+    (titleOrOptions: string | ToastOptions, variant?: ToastType, description?: string, duration = 5000) => {
+      let toast: ToastOptions
 
-    setToasts((prev) => [...prev, { title, description, variant, duration }])
+      if (typeof titleOrOptions === "string") {
+        toast = {
+          title: titleOrOptions,
+          description,
+          variant: variant || "default",
+          duration,
+        }
+      } else {
+        toast = {
+          ...titleOrOptions,
+          duration: titleOrOptions.duration || 5000,
+        }
+      }
 
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((_, i) => i !== 0))
-    }, duration)
+      setToasts((prev) => [...prev, toast])
 
-    return id
+      // Auto-dismiss after duration
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t !== toast))
+      }, toast.duration)
+    },
+    [],
+  )
+
+  const dismissToast = useCallback((index: number) => {
+    setToasts((prev) => prev.filter((_, i) => i !== index))
   }, [])
 
-  return { toast, toasts }
+  return { toast: showToast, toasts, dismissToast }
 }
 
 export { toast }

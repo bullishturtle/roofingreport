@@ -8,22 +8,19 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
+    domains: ["images.unsplash.com", "res.cloudinary.com"],
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "**.cloudinary.com",
       },
     ],
     unoptimized: true,
   },
-  // Simplified configuration to avoid build issues
   experimental: {
-    serverActions: true,
-  },
-  // Disable webpack optimization to help identify issues
-  webpack: (config) => {
-    config.optimization.minimize = false
-    return config
+    serverActions: {
+      allowedOrigins: ["localhost:3000", "rooffax.report", "*.vercel.app"],
+    },
   },
 }
 

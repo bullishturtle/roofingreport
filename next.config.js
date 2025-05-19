@@ -8,17 +8,22 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ["images.unsplash.com", "res.cloudinary.com"],
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**.cloudinary.com",
+        hostname: "**",
       },
     ],
     unoptimized: true,
   },
+  // Simplified configuration to avoid build issues
   experimental: {
     serverActions: true,
+  },
+  // Disable webpack optimization to help identify issues
+  webpack: (config) => {
+    config.optimization.minimize = false
+    return config
   },
 }
 

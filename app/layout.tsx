@@ -1,13 +1,17 @@
 import type React from "react"
-import "./globals.css"
+import type { Metadata } from "next"
 import { Inter } from "next/font/google"
+import "./globals.css"
+import { UserProvider } from "@/contexts/user-context"
+import { Toaster } from "@/components/ui/toaster"
+import { ThemeProvider } from "@/components/theme-provider"
+import { RoofusProvider } from "@/contexts/roofus-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
-export const metadata = {
-  title: "RoofFax - The World's Smartest Roof & Property Report",
-  description:
-    "Get comprehensive roof and property reports with RoofFax. Trusted by homeowners, built for roofing professionals.",
+export const metadata: Metadata = {
+  title: "RoofFax Report - The World's Smartest Roof & Property Report",
+  description: "Get detailed reports on roof conditions, damage assessments, and repair recommendations.",
     generator: 'v0.dev'
 }
 
@@ -18,7 +22,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <ThemeProvider attribute="class" defaultTheme="light">
+          <UserProvider>
+            <RoofusProvider>
+              {children}
+              <Toaster />
+            </RoofusProvider>
+          </UserProvider>
+        </ThemeProvider>
+      </body>
     </html>
   )
 }

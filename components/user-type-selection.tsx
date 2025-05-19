@@ -1,48 +1,43 @@
 "use client"
 
-import { cn } from "@/lib/utils"
 import { Home, Briefcase } from "lucide-react"
 
 interface UserTypeSelectionProps {
   selectedType: "homeowner" | "contractor"
   onSelect: (type: "homeowner" | "contractor") => void
-  disabled?: boolean
 }
 
-export function UserTypeSelection({ selectedType, onSelect, disabled = false }: UserTypeSelectionProps) {
+export default function UserTypeSelection({ selectedType, onSelect }: UserTypeSelectionProps) {
   return (
-    <div className="grid grid-cols-2 gap-4">
-      <button
-        type="button"
-        onClick={() => onSelect("homeowner")}
-        disabled={disabled}
-        className={cn(
-          "flex flex-col items-center justify-center p-4 border rounded-lg transition-all",
-          selectedType === "homeowner"
-            ? "border-orange-500 bg-orange-50 text-orange-700"
-            : "border-gray-200 hover:border-gray-300 text-gray-700",
-          disabled && "opacity-50 cursor-not-allowed",
-        )}
-      >
-        <Home size={24} className="mb-2" />
-        <span className="font-medium">Homeowner</span>
-      </button>
+    <div className="space-y-2">
+      <p className="text-sm font-medium">I am a:</p>
+      <div className="grid grid-cols-2 gap-4">
+        <button
+          type="button"
+          onClick={() => onSelect("homeowner")}
+          className={`flex flex-col items-center justify-center p-4 rounded-lg border transition-all ${
+            selectedType === "homeowner"
+              ? "border-blue-500 bg-blue-50 text-blue-700"
+              : "border-gray-200 hover:border-gray-300"
+          }`}
+        >
+          <Home className="h-6 w-6 mb-2" />
+          <span className="text-sm font-medium">Homeowner</span>
+        </button>
 
-      <button
-        type="button"
-        onClick={() => onSelect("contractor")}
-        disabled={disabled}
-        className={cn(
-          "flex flex-col items-center justify-center p-4 border rounded-lg transition-all",
-          selectedType === "contractor"
-            ? "border-orange-500 bg-orange-50 text-orange-700"
-            : "border-gray-200 hover:border-gray-300 text-gray-700",
-          disabled && "opacity-50 cursor-not-allowed",
-        )}
-      >
-        <Briefcase size={24} className="mb-2" />
-        <span className="font-medium">Contractor</span>
-      </button>
+        <button
+          type="button"
+          onClick={() => onSelect("contractor")}
+          className={`flex flex-col items-center justify-center p-4 rounded-lg border transition-all ${
+            selectedType === "contractor"
+              ? "border-blue-500 bg-blue-50 text-blue-700"
+              : "border-gray-200 hover:border-gray-300"
+          }`}
+        >
+          <Briefcase className="h-6 w-6 mb-2" />
+          <span className="text-sm font-medium">Contractor</span>
+        </button>
+      </div>
     </div>
   )
 }

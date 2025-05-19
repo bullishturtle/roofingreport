@@ -1,108 +1,92 @@
-import { Badge } from "@/components/ui/badge"
+"use client"
+
 import { Button } from "@/components/ui/button"
-import { Eye, FileText, MoreHorizontal } from "lucide-react"
-import Link from "next/link"
+import { Eye, Download } from "lucide-react"
 
-export function RecentReportsTable() {
-  // This would be fetched from an API in a real application
-  const reports = [
-    {
-      id: "REP-1234",
-      address: "123 Main St, Anytown, USA",
-      date: "2023-04-15",
-      status: "Completed",
-      type: "Basic",
-    },
-    {
-      id: "REP-1235",
-      address: "456 Oak Ave, Somewhere, USA",
-      date: "2023-04-14",
-      status: "In Progress",
-      type: "Advanced",
-    },
-    {
-      id: "REP-1236",
-      address: "789 Pine Rd, Nowhere, USA",
-      date: "2023-04-13",
-      status: "Pending",
-      type: "3D",
-    },
-    {
-      id: "REP-1237",
-      address: "101 Elm St, Everywhere, USA",
-      date: "2023-04-12",
-      status: "Completed",
-      type: "Advanced",
-    },
-    {
-      id: "REP-1238",
-      address: "202 Maple Dr, Anywhere, USA",
-      date: "2023-04-11",
-      status: "Completed",
-      type: "Basic",
-    },
-  ]
+interface Report {
+  id: string
+  address: string
+  date: string
+  condition: string
+}
 
+interface RecentReportsTableProps {
+  reports: Report[]
+  onView: (reportId: string) => void
+  showPagination?: boolean
+}
+
+export default function RecentReportsTable({ reports, onView, showPagination = false }: RecentReportsTableProps) {
   return (
-    <div className="overflow-auto">
-      <table className="w-full caption-bottom text-sm">
+    <div className="overflow-x-auto">
+      <table className="w-full">
         <thead>
           <tr className="border-b">
-            <th className="h-12 px-4 text-left font-medium">Report ID</th>
-            <th className="h-12 px-4 text-left font-medium">Address</th>
-            <th className="h-12 px-4 text-left font-medium">Date</th>
-            <th className="h-12 px-4 text-left font-medium">Type</th>
-            <th className="h-12 px-4 text-left font-medium">Status</th>
-            <th className="h-12 px-4 text-left font-medium">Actions</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-500">Address</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-500">Date</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-500">Condition</th>
+            <th className="text-right py-3 px-4 font-medium text-gray-500">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {reports.map((report) => (
-            <tr key={report.id} className="border-b transition-colors hover:bg-muted/50">
-              <td className="p-4 align-middle font-medium">{report.id}</td>
-              <td className="p-4 align-middle">{report.address}</td>
-              <td className="p-4 align-middle">{report.date}</td>
-              <td className="p-4 align-middle">
-                <Badge variant={report.type === "3D" ? "default" : "outline"}>{report.type}</Badge>
-              </td>
-              <td className="p-4 align-middle">
-                <Badge
-                  variant="outline"
-                  className={
-                    report.status === "Completed"
-                      ? "bg-green-500/10 text-green-500 border-green-500/20"
-                      : report.status === "In Progress"
-                        ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
-                        : "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                  }
-                >
-                  {report.status}
-                </Badge>
-              </td>
-              <td className="p-4 align-middle">
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link href={`/dashboard/reports/${report.id}`}>
-                      <Eye className="h-4 w-4" />
-                      <span className="sr-only">View</span>
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link href={`/dashboard/reports/${report.id}/pdf`}>
-                      <FileText className="h-4 w-4" />
-                      <span className="sr-only">PDF</span>
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" size="icon">
-                    <MoreHorizontal className="h-4 w-4" />
-                    <span className="sr-only">More</span>
-                  </Button>
-                </div>
+          {reports.length === 0 ? (
+            <tr>
+              <td colSpan={4} className="py-6 text-center text-gray-500">
+                No reports found
               </td>
             </tr>
-          ))}
+          ) : (
+            reports.map((report) => (
+              <tr key={report.id} className="border-b">
+                <td className="py-3 px-4">{report.address}</td>
+                <td className="py-3 px-4">{new Date(report.date).toLocaleDateString()}</td>
+                <td className="py-3 px-4">
+                  <span
+                    className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                      report.condition === "Excellent"
+                        ? "bg-green-100 text-green-800"
+                        : report.condition === "Good"
+                          ? "bg-blue-100 text-blue-800"
+                          : report.condition === "Fair"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {report.condition}
+                  </span>
+                </td>
+                <td className="py-3 px-4 text-right">
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="ghost" size="sm" onClick={() => onView(report.id)} title="View Report">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" title="Download Report">
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
+
+      {showPagination && reports.length > 0 && (
+        <div className="flex items-center justify-between mt-4">
+          <p className="text-sm text-gray-500">
+            Showing <span className="font-medium">1</span> to <span className="font-medium">{reports.length}</span> of{" "}
+            <span className="font-medium">{reports.length}</span> reports
+          </p>
+          <div className="flex space-x-2">
+            <Button variant="outline" size="sm" disabled>
+              Previous
+            </Button>
+            <Button variant="outline" size="sm" disabled>
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

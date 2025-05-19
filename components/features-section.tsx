@@ -1,61 +1,64 @@
-import { Zap, Shield, BarChart3, Clock } from "lucide-react"
+import { Shield, BarChart, Clock, Zap, FileText, Users } from "lucide-react"
 
-export function FeaturesSection() {
+export default function FeaturesSection() {
+  const features = [
+    {
+      icon: Shield,
+      title: "Comprehensive Analysis",
+      description: "Get detailed insights about your roof condition, materials, and potential issues.",
+    },
+    {
+      icon: BarChart,
+      title: "Data-Driven Reports",
+      description: "Our reports are based on real data, satellite imagery, and AI analysis.",
+    },
+    {
+      icon: Clock,
+      title: "Instant Results",
+      description: "No waiting for inspectors. Get your roof report in minutes, not days.",
+    },
+    {
+      icon: Zap,
+      title: "AI-Powered",
+      description: "Advanced algorithms analyze your roof for damage, wear, and potential problems.",
+    },
+    {
+      icon: FileText,
+      title: "Detailed Documentation",
+      description: "Receive professional documentation you can share with contractors or insurance.",
+    },
+    {
+      icon: Users,
+      title: "Expert Support",
+      description: "Our team of roof experts is available to help interpret your report.",
+    },
+  ]
+
   return (
-    <section className="py-16 bg-black">
+    <section className="py-16">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-white mb-4">Redefining Roof & Property Reports</h2>
-          <p className="text-gray-400 max-w-2xl mx-auto">
-            Whether you're a homeowner navigating a storm claim or a contractor closing your next project, RoofFax
-            equips you with instant, AI-powered insights that matter.
+          <h2 className="text-3xl font-bold text-gray-900">Powerful Features</h2>
+          <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+            Discover what makes TheRoofFax.com the leading platform for roof reports and assessments
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div className="bg-gray-900/30 border border-gray-800 rounded-lg p-6">
-            <div className="bg-yellow-500/20 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-              <Zap className="text-yellow-500 h-6 w-6" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {features.map((feature, index) => (
+            <div
+              key={index}
+              className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
+            >
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 text-blue-600 mb-4">
+                <feature.icon className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+              <p className="text-gray-600">{feature.description}</p>
             </div>
-            <h3 className="text-xl font-semibold text-white mb-2">Instant Reports</h3>
-            <p className="text-gray-400">
-              Get comprehensive roof reports in seconds, not days. Our AI-powered platform delivers immediate insights.
-            </p>
-          </div>
-
-          <div className="bg-gray-900/30 border border-gray-800 rounded-lg p-6">
-            <div className="bg-yellow-500/20 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-              <Shield className="text-yellow-500 h-6 w-6" />
-            </div>
-            <h3 className="text-xl font-semibold text-white mb-2">Truth & Transparency</h3>
-            <p className="text-gray-400">
-              Make decisions with confidence using accurate, unbiased data about your roof's condition and value.
-            </p>
-          </div>
-
-          <div className="bg-gray-900/30 border border-gray-800 rounded-lg p-6">
-            <div className="bg-yellow-500/20 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-              <BarChart3 className="text-yellow-500 h-6 w-6" />
-            </div>
-            <h3 className="text-xl font-semibold text-white mb-2">Data-Driven Insights</h3>
-            <p className="text-gray-400">
-              Access detailed measurements, damage assessments, and material estimates backed by advanced analytics.
-            </p>
-          </div>
-
-          <div className="bg-gray-900/30 border border-gray-800 rounded-lg p-6">
-            <div className="bg-yellow-500/20 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-              <Clock className="text-yellow-500 h-6 w-6" />
-            </div>
-            <h3 className="text-xl font-semibold text-white mb-2">Time-Saving Technology</h3>
-            <p className="text-gray-400">
-              Eliminate juggling multiple apps with our all-in-one platform for measurements, tracking, and outreach.
-            </p>
-          </div>
+          ))}
         </div>
       </div>
     </section>
   )
 }
-
-export default FeaturesSection

@@ -1,69 +1,77 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
-import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import Link from "next/link"
-import { useSearchParams } from "next/navigation"
+import { useUser } from "@/contexts/user-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { useUser } from "@/contexts/user-context"
-import { useToast } from "@/components/ui/toast"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { CheckCircle } from "lucide-react"
-import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/components/ui/use-toast"
+import LoadingSpinner from "@/components/ui/loading-spinner"
+import Link from "next/link"
 
-const formSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  userType: z.enum(["Homeowner", "Pro"], {
-    required_error: "Please select a user type",
-  }),
-})
+interface RegisterFormProps {
+  onSuccess?: () => void
+}
 
-export function RegisterForm() {
-  const { register } = useUser()
-  const { showToast } = useToast()
-  const [isLoading, setIsLoading] = useState(false)
+export function RegisterForm({ onSuccess }: RegisterFormProps) {
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [userType, setUserType] = useState<"Homeowner" | "Pro">("Homeowner")
   const [registrationSuccess, setRegistrationSuccess] = useState(false)
   const [userEmail, setUserEmail] = useState("")
+  const { register } = useUser()
+  const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false)
 
-  // Get user type from URL if available
-  const searchParams = useSearchParams()
-  const userTypeParam = searchParams?.get("userType") as "Homeowner" | "Pro" | null
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-      userType: userTypeParam || undefined,
-    },
-  })
+    if (!name || !email || !password) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      })
+      return
+    }
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
-    console.log(`📝 Registration attempt for ${values.email} as ${values.userType}`)
+    console.log(`📝 Registration attempt for ${email} as ${userType}`)
 
     try {
-      const result = await register(values.name, values.email, values.password, values.userType)
+      const result = await register(name, email, password, userType)
 
       if (result.success) {
-        console.log(`✅ Registration successful for ${values.email}`)
+        console.log(`✅ Registration successful for ${email}`)
         setRegistrationSuccess(true)
-        setUserEmail(values.email)
-        form.reset()
+        setUserEmail(email)
+
+        toast({
+          title: "Success",
+          description: "Your account has been created successfully",
+        })
+
+        if (onSuccess) {
+          onSuccess()
+        }
       } else {
-        console.error(`❌ Registration failed for ${values.email}: ${result.error}`)
-        showToast("Registration failed", "error", result.error || "An error occurred during registration")
+        console.error(`❌ Registration failed for ${email}: ${result.error}`)
+        toast({
+          title: "Error",
+          description: result.error || "Registration failed",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("❌ Unexpected registration error:", error)
-      showToast("Registration failed", "error", "An unexpected error occurred")
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
@@ -72,20 +80,19 @@ export function RegisterForm() {
   if (registrationSuccess) {
     return (
       <div className="space-y-6">
-        <Alert className="bg-green-50 border-green-200">
-          <CheckCircle className="h-4 w-4 text-green-500" />
-          <AlertDescription className="text-green-700">
-            Registration successful! We&apos;ve sent a verification email to <strong>{userEmail}</strong>. Please check
-            your inbox and click the verification link to complete your registration.
-          </AlertDescription>
-        </Alert>
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-md">
+          <p>
+            Registration successful! We've sent a verification email to <strong>{userEmail}</strong>. Please check your
+            inbox and click the verification link to complete your registration.
+          </p>
+        </div>
 
         <div className="text-center space-y-4">
           <p className="text-sm text-gray-600">
-            Didn&apos;t receive the email?{" "}
+            Didn't receive the email?{" "}
             <Link
               href={`/resend-verification?email=${encodeURIComponent(userEmail)}`}
-              className="text-yellow-600 hover:text-yellow-500"
+              className="text-blue-600 hover:text-blue-800"
             >
               Resend verification email
             </Link>
@@ -100,95 +107,75 @@ export function RegisterForm() {
   }
 
   return (
-    <div className="space-y-6">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="name@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="userType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>I am a</FormLabel>
-                <div className="grid grid-cols-2 gap-4">
-                  <Button
-                    type="button"
-                    variant={field.value === "Homeowner" ? "default" : "outline"}
-                    onClick={() => form.setValue("userType", "Homeowner")}
-                    className={field.value === "Homeowner" ? "border-2 border-yellow-500" : ""}
-                  >
-                    Homeowner
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={field.value === "Pro" ? "default" : "outline"}
-                    onClick={() => form.setValue("userType", "Pro")}
-                    className={field.value === "Pro" ? "border-2 border-yellow-500" : ""}
-                  >
-                    Roofing Pro
-                  </Button>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <LoadingSpinner size="sm" className="mr-2" />
-                Creating account...
-              </>
-            ) : (
-              "Create account"
-            )}
-          </Button>
-        </form>
-      </Form>
-
-      <div className="text-center text-sm">
-        Already have an account?{" "}
-        <Link href="/login" className="text-yellow-600 hover:text-yellow-500">
-          Log in
-        </Link>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">Full Name</Label>
+        <Input
+          id="name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="John Doe"
+          required
+        />
       </div>
-    </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="name@example.com"
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>I am a</Label>
+        <div className="grid grid-cols-2 gap-4">
+          <Button
+            type="button"
+            variant={userType === "Homeowner" ? "default" : "outline"}
+            onClick={() => setUserType("Homeowner")}
+            className={userType === "Homeowner" ? "border-2 border-blue-500" : ""}
+          >
+            Homeowner
+          </Button>
+          <Button
+            type="button"
+            variant={userType === "Pro" ? "default" : "outline"}
+            onClick={() => setUserType("Pro")}
+            className={userType === "Pro" ? "border-2 border-blue-500" : ""}
+          >
+            Roofing Pro
+          </Button>
+        </div>
+      </div>
+
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? (
+          <>
+            <LoadingSpinner size="sm" className="mr-2" />
+            Creating account...
+          </>
+        ) : (
+          "Create account"
+        )}
+      </Button>
+    </form>
   )
 }

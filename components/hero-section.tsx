@@ -1,114 +1,84 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { AddressSearchForm } from "@/components/address-search-form"
 import { useUser } from "@/contexts/user-context"
-import { LoginModal } from "@/components/auth/login-modal"
-import { Check } from "lucide-react"
+import RegisterModal from "@/components/auth/register-modal"
+import { AnimatedCharacters } from "@/components/animated-characters"
 
-export function HeroSection() {
-  const router = useRouter()
+export default function HeroSection() {
   const { user } = useUser()
-  const [loginModalOpen, setLoginModalOpen] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [registerModalOpen, setRegisterModalOpen] = useState(false)
 
-  const handleAddressSubmit = async (address: string) => {
-    try {
-      setIsSubmitting(true)
-      console.log("Address submitted:", address)
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      if (!user) {
-        setLoginModalOpen(true)
-      } else {
-        // This will be replaced with actual API integration
-        console.log("Routing to report page with address:", address)
-        router.push("/report?address=" + encodeURIComponent(address))
-      }
-    } catch (error) {
-      console.error("Error submitting address:", error)
-    } finally {
-      setIsSubmitting(false)
-    }
+  const handleAddressSubmitWithoutAuth = () => {
+    setRegisterModalOpen(true)
   }
 
   return (
-    <section className="relative bg-black py-16 md:py-24" id="hero">
+    <section className="bg-gradient-to-b from-blue-50 to-white py-16 md:py-24">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-4">
-          <span className="inline-block bg-yellow-500/20 text-yellow-500 px-4 py-1 rounded-full text-sm font-medium">
-            The World's Smartest Roof & Property Report
-          </span>
-        </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-              <span className="text-yellow-500">Trusted by Homeowners.</span>
-              <br />
-              Built for Pros.
-            </h1>
-            <p className="text-lg text-gray-300">
-              At RoofFax, we're redefining how homeowners and roofing professionals assess, verify, and act on roof and
-              property data. Our mission is simple: deliver truth, transparency, and technology in an industry often
-              clouded by confusion and outdated methods.
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">Know Your Roof's Story</h1>
+            <p className="text-lg text-gray-700">
+              Get comprehensive roof reports with damage assessment, repair recommendations, and more.
             </p>
 
-            <div className="bg-gray-900/50 border border-gray-800 p-6 rounded-lg">
-              <AddressSearchForm onSubmit={handleAddressSubmit} isSubmitting={isSubmitting} buttonText="Get Report" />
-            </div>
+            <AddressSearchForm onSubmitWithoutAuth={handleAddressSubmitWithoutAuth} />
 
-            <div className="flex flex-wrap gap-4 items-center">
-              <button
-                className="bg-yellow-500 hover:bg-yellow-400 text-black font-medium px-6 py-3 rounded-md transition-all duration-200"
-                onClick={() => (window.location.href = "/trial")}
-                aria-label="Start a free trial"
-              >
-                Start Free Trial
-              </button>
-              <button
-                className="border border-gray-700 hover:bg-gray-800 text-white px-6 py-3 rounded-md transition-all duration-200"
-                onClick={() => (window.location.href = "/how-it-works")}
-                aria-label="Learn how RoofFax works"
-              >
-                See How It Works
-              </button>
-            </div>
-
-            <div className="flex flex-wrap gap-4 pt-4">
-              <div className="flex items-center">
-                <Check className="w-5 h-5 text-yellow-500 mr-2" aria-hidden="true" />
-                <span className="text-gray-300">No Credit Card Required</span>
+            <div className="flex flex-wrap gap-4 mt-8">
+              <div className="flex items-center space-x-2">
+                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span className="text-sm text-gray-600">Instant Reports</span>
               </div>
-              <div className="flex items-center">
-                <Check className="w-5 h-5 text-yellow-500 mr-2" aria-hidden="true" />
-                <span className="text-gray-300">Instant Reports</span>
+              <div className="flex items-center space-x-2">
+                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span className="text-sm text-gray-600">Damage Assessment</span>
               </div>
-              <div className="flex items-center">
-                <Check className="w-5 h-5 text-yellow-500 mr-2" aria-hidden="true" />
-                <span className="text-gray-300">Cancel Anytime</span>
+              <div className="flex items-center space-x-2">
+                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span className="text-sm text-gray-600">Repair Estimates</span>
               </div>
             </div>
           </div>
 
-          <div className="relative">
-            <div className="relative h-[400px] md:h-[500px] w-full border border-gray-800 rounded-lg overflow-hidden bg-gray-900/50">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-yellow-500 mb-2">Interactive 3D Model</div>
-                  <div className="text-gray-400 text-sm">Enable JavaScript to view</div>
-                </div>
+          <div className="relative h-[400px] lg:h-[500px]">
+            <div className="relative w-full h-full">
+              <Image
+                src="/roof-aerial-view.png"
+                alt="Roof Aerial View"
+                fill
+                style={{ objectFit: "cover" }}
+                className="rounded-lg shadow-lg"
+              />
+              <div className="absolute -bottom-10 -right-10">
+                <AnimatedCharacters variant="clipboard" size="lg" />
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
+      <RegisterModal isOpen={registerModalOpen} onClose={() => setRegisterModalOpen(false)} />
     </section>
   )
 }
-
-export default HeroSection

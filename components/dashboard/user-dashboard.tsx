@@ -1,142 +1,227 @@
 "use client"
 
-import { useUser } from "@/contexts/user-context"
-import { Button } from "@/components/ui/button"
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { LogOut, User, Mail, Calendar, Home, Briefcase, ExternalLink } from "lucide-react"
-import { useToast } from "@/components/ui/toast"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { useUser } from "@/contexts/user-context"
+import { Home, FileText, Settings, Plus, Download } from "lucide-react"
+import AddressSearchForm from "@/components/address-search-form"
 import { useRouter } from "next/navigation"
+import RecentReportsTable from "@/components/dashboard/recent-reports-table"
+import StatsCards from "@/components/dashboard/stats-cards"
 
-export function UserDashboard() {
-  const { user, logout } = useUser()
-  const { showToast } = useToast()
+export default function UserDashboard() {
+  const { user } = useUser()
   const router = useRouter()
+  const [activeTab, setActiveTab] = useState("overview")
 
-  if (!user) return null
+  // Mock data for recent reports
+  const recentReports = [
+    {
+      id: "1",
+      address: "123 Main St, Anytown, USA",
+      date: "2023-05-15",
+      condition: "Good",
+    },
+    {
+      id: "2",
+      address: "456 Oak Ave, Somewhere, USA",
+      date: "2023-04-22",
+      condition: "Fair",
+    },
+    {
+      id: "3",
+      address: "789 Pine Rd, Nowhere, USA",
+      date: "2023-03-10",
+      condition: "Excellent",
+    },
+  ]
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(date)
-  }
-
-  const handleLogout = async () => {
-    try {
-      await logout()
-      showToast("You have been logged out", "info")
-      router.push("/")
-    } catch (error) {
-      console.error("Logout failed:", error)
-      showToast("Failed to log out", "error")
-    }
-  }
-
-  const handlePortalRedirect = () => {
-    if (user.userType === "Homeowner") {
-      console.log("🏠 Redirecting to homeowner portal (coming soon)")
-      showToast("Homeowner portal coming soon!", "info")
-    } else if (user.userType === "Pro") {
-      console.log("🔧 Redirecting to pro portal (coming soon)")
-      showToast("Pro portal coming soon!", "info")
+  const handleViewReport = (reportId: string) => {
+    // In a real app, this would navigate to the specific report
+    // For now, we'll just store the address in sessionStorage and navigate to the report page
+    const report = recentReports.find((r) => r.id === reportId)
+    if (report) {
+      sessionStorage.setItem("rooffax_search_address", report.address)
+      router.push("/report")
     }
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-white">My Dashboard</h1>
-        <Button
-          onClick={handleLogout}
-          variant="outline"
-          className="border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10"
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Logout
-        </Button>
-      </div>
+      <h1 className="text-3xl font-bold mb-2">Welcome, {user?.name}</h1>
+      <p className="text-gray-600 mb-8">Manage your roof reports and account settings</p>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gray-800 border-gray-700 col-span-1">
-          <CardHeader>
-            <CardTitle className="text-white">Account Information</CardTitle>
-            <CardDescription className="text-gray-400">Your profile details</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center">
-              <User className="h-5 w-5 text-yellow-500 mr-3" />
-              <div>
-                <p className="text-sm text-gray-400">Name</p>
-                <p className="text-white">{user.name}</p>
+      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-8">
+          <TabsTrigger value="overview">
+            <Home className="mr-2 h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="reports">
+            <FileText className="mr-2 h-4 w-4" />
+            My Reports
+          </TabsTrigger>
+          <TabsTrigger value="settings">
+            <Settings className="mr-2 h-4 w-4" />
+            Settings
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="md:col-span-2">
+              <StatsCards />
+
+              <Card className="mt-8">
+                <CardHeader>
+                  <CardTitle>Recent Reports</CardTitle>
+                  <CardDescription>Your most recent roof reports</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <RecentReportsTable reports={recentReports} onView={handleViewReport} />
+
+                  {recentReports.length > 0 && (
+                    <div className="mt-4 text-center">
+                      <Button variant="outline" onClick={() => setActiveTab("reports")}>
+                        View All Reports
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>New Report</CardTitle>
+                  <CardDescription>Generate a new roof report</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AddressSearchForm />
+                </CardContent>
+              </Card>
+
+              <Card className="mt-8">
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <Button variant="outline" className="w-full justify-start" onClick={() => setActiveTab("reports")}>
+                      <FileText className="mr-2 h-4 w-4" />
+                      View All Reports
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start">
+                      <Download className="mr-2 h-4 w-4" />
+                      Download Latest Report
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Property
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="reports">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>My Reports</CardTitle>
+                  <CardDescription>All your roof reports in one place</CardDescription>
+                </div>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Report
+                </Button>
               </div>
-            </div>
+            </CardHeader>
+            <CardContent>
+              <RecentReportsTable reports={recentReports} onView={handleViewReport} showPagination />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-            <div className="flex items-center">
-              <Mail className="h-5 w-5 text-yellow-500 mr-3" />
-              <div>
-                <p className="text-sm text-gray-400">Email</p>
-                <p className="text-white">{user.email}</p>
+        <TabsContent value="settings">
+          <Card>
+            <CardHeader>
+              <CardTitle>Account Settings</CardTitle>
+              <CardDescription>Manage your account preferences</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Profile Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                      <input
+                        type="text"
+                        defaultValue={user?.name}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      <input
+                        type="email"
+                        defaultValue={user?.email}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        disabled
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Notification Preferences</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="email-notifications"
+                        defaultChecked
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                      />
+                      <label htmlFor="email-notifications" className="ml-2 text-gray-700">
+                        Email notifications
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="report-updates"
+                        defaultChecked
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                      />
+                      <label htmlFor="report-updates" className="ml-2 text-gray-700">
+                        Report updates
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input type="checkbox" id="marketing" className="h-4 w-4 text-blue-600 border-gray-300 rounded" />
+                      <label htmlFor="marketing" className="ml-2 text-gray-700">
+                        Marketing communications
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-gray-200">
+                  <Button>Save Changes</Button>
+                </div>
               </div>
-            </div>
-
-            <div className="flex items-center">
-              {user.userType === "Homeowner" ? (
-                <Home className="h-5 w-5 text-yellow-500 mr-3" />
-              ) : (
-                <Briefcase className="h-5 w-5 text-yellow-500 mr-3" />
-              )}
-              <div>
-                <p className="text-sm text-gray-400">Account Type</p>
-                <p className="text-white">{user.userType}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gray-800 border-gray-700 col-span-1 md:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-white">Account Activity</CardTitle>
-            <CardDescription className="text-gray-400">Your recent activity</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center">
-              <Calendar className="h-5 w-5 text-yellow-500 mr-3" />
-              <div>
-                <p className="text-sm text-gray-400">Account Created</p>
-                <p className="text-white">{formatDate(user.createdAt)}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center">
-              <Calendar className="h-5 w-5 text-yellow-500 mr-3" />
-              <div>
-                <p className="text-sm text-gray-400">Last Login</p>
-                <p className="text-white">{formatDate(user.lastLogin)}</p>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <Button
-                onClick={handlePortalRedirect}
-                className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-medium"
-              >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                {user.userType === "Homeowner"
-                  ? "Go to Homeowner Portal (Coming Soon)"
-                  : "Go to Pro Portal (Coming Soon)"}
-              </Button>
-              <p className="text-xs text-gray-400 mt-2 text-center">
-                {user.userType === "Homeowner"
-                  ? "trustthefox.com - Your homeowner portal is coming soon"
-                  : "rooffaxpro.com - Your pro portal is coming soon"}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

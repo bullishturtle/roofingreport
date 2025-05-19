@@ -1,77 +1,91 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
-import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useUser } from "@/contexts/user-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { useUser } from "@/contexts/user-context"
-import { useToast } from "@/components/ui/toast"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
-import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/components/ui/use-toast"
+import LoadingSpinner from "@/components/ui/loading-spinner"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 
-const formSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-})
+interface LoginFormProps {
+  onSuccess?: () => void
+}
 
-export function LoginForm() {
-  const { login } = useUser()
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard"
-  const { showToast } = useToast()
-  const [isLoading, setIsLoading] = useState(false)
+export function LoginForm({ onSuccess }: LoginFormProps) {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [verificationNeeded, setVerificationNeeded] = useState(false)
   const [userEmail, setUserEmail] = useState("")
+  const { login } = useUser()
+  const { toast } = useToast()
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  })
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     setVerificationNeeded(false)
 
+    if (!email || !password) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoading(true)
+
     try {
-      console.log(`🔑 Login attempt for ${values.email}`)
-      const result = await login(values.email, values.password)
+      console.log(`🔑 Login attempt for ${email}`)
+      const result = await login(email, password)
 
       if (result.success) {
-        console.log(`✅ Login successful for ${values.email}`)
-        showToast("Login successful", "success", "Welcome back!")
-        router.push(callbackUrl)
+        console.log(`✅ Login successful for ${email}`)
+        toast({
+          title: "Success",
+          description: "You have been logged in successfully",
+        })
+
+        if (onSuccess) {
+          onSuccess()
+        }
+
+        router.push("/dashboard")
       } else if (result.needsVerification) {
-        console.log(`⚠️ Email verification needed for ${values.email}`)
+        console.log(`⚠️ Email verification needed for ${email}`)
         setVerificationNeeded(true)
-        setUserEmail(values.email)
+        setUserEmail(email)
       } else {
-        console.error(`❌ Login failed for ${values.email}: ${result.error}`)
-        showToast("Login failed", "error", result.error || "Invalid email or password")
+        console.error(`❌ Login failed for ${email}: ${result.error}`)
+        toast({
+          title: "Error",
+          description: result.error || "Invalid email or password",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("❌ Unexpected login error:", error)
-      showToast("Login failed", "error", "An unexpected error occurred")
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {verificationNeeded && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md">
+          <p className="text-sm">
             Please verify your email address before logging in.{" "}
             <Link
               href={`/resend-verification?email=${encodeURIComponent(userEmail)}`}
@@ -79,62 +93,49 @@ export function LoginForm() {
             >
               Resend verification email
             </Link>
-          </AlertDescription>
-        </Alert>
+          </p>
+        </div>
       )}
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="name@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center justify-between">
-                  <FormLabel>Password</FormLabel>
-                  <Link href="/forgot-password" className="text-sm text-yellow-500 hover:text-yellow-400">
-                    Forgot password?
-                  </Link>
-                </div>
-                <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <LoadingSpinner size="sm" className="mr-2" />
-                Logging in...
-              </>
-            ) : (
-              "Log in"
-            )}
-          </Button>
-        </form>
-      </Form>
-
-      <div className="text-center text-sm">
-        Don&apos;t have an account?{" "}
-        <Link href="/register" className="text-yellow-600 hover:text-yellow-500">
-          Sign up
-        </Link>
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="name@example.com"
+          required
+        />
       </div>
-    </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Password</Label>
+          <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-800">
+            Forgot password?
+          </Link>
+        </div>
+        <Input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          required
+        />
+      </div>
+
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? (
+          <>
+            <LoadingSpinner size="sm" className="mr-2" />
+            Logging in...
+          </>
+        ) : (
+          "Log in"
+        )}
+      </Button>
+    </form>
   )
 }

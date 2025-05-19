@@ -2,25 +2,29 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 
-export type UserType = "homeowner" | "pro" | null
+export type UserRole = "homeowner" | "contractor" | "admin" | null
 export type UserStatus = "loading" | "authenticated" | "unauthenticated"
 
 interface User {
   id: string
   name: string
   email: string
-  userType: UserType
-  createdAt: string
-  lastLogin: string
+  role: UserRole
+  createdAt: Date
+  lastLogin: Date
 }
 
 interface UserContextType {
   user: User | null
   status: UserStatus
-  login: (email: string, password: string) => Promise<{ success: boolean; message: string }>
-  register: (name: string, email: string, password: string) => Promise<{ success: boolean; message: string }>
+  login: (email: string, password: string) => Promise<{ success: boolean; needsVerification?: boolean; error?: string }>
+  register: (
+    name: string,
+    email: string,
+    password: string,
+    userType: "Homeowner" | "Pro",
+  ) => Promise<{ success: boolean; error?: string }>
   logout: () => void
-  setUserType: (type: UserType) => void
   isLoading: boolean
 }
 
@@ -33,127 +37,91 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   // Check for existing session on mount
   useEffect(() => {
-    const checkSession = async () => {
+    const storedUser = localStorage.getItem("rooffax_user")
+    if (storedUser) {
       try {
-        // In a real app, this would be an API call to check the session
-        const storedUser = localStorage.getItem("roofFaxUser")
-
-        if (storedUser) {
-          const userData = JSON.parse(storedUser)
-          console.log("Session restored:", userData)
-          setUser(userData)
-          setStatus("authenticated")
-        } else {
-          setStatus("unauthenticated")
-        }
+        const parsedUser = JSON.parse(storedUser)
+        // Convert string dates back to Date objects
+        parsedUser.createdAt = new Date(parsedUser.createdAt)
+        parsedUser.lastLogin = new Date(parsedUser.lastLogin)
+        setUser(parsedUser)
+        setStatus("authenticated")
       } catch (error) {
-        console.error("Error checking session:", error)
+        console.error("Failed to parse stored user:", error)
+        localStorage.removeItem("rooffax_user")
         setStatus("unauthenticated")
       }
+    } else {
+      setStatus("unauthenticated")
     }
-
-    checkSession()
   }, [])
 
+  // Mock login function
   const login = async (email: string, password: string) => {
     setIsLoading(true)
-    console.log("Login attempt:", { email })
 
-    try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      // Mock validation - in a real app, this would be an API call
-      if (email && password) {
-        // For demo purposes, any valid email/password combination works
-        const mockUser: User = {
-          id: `user-${Date.now()}`,
-          name: email.split("@")[0],
-          email,
-          userType: null, // User type will be set separately
-          createdAt: new Date().toISOString(),
-          lastLogin: new Date().toISOString(),
-        }
-
-        setUser(mockUser)
-        setStatus("authenticated")
-        localStorage.setItem("roofFaxUser", JSON.stringify(mockUser))
-
-        console.log("Login successful:", mockUser)
-        setIsLoading(false)
-        return { success: true, message: "Login successful" }
+    // Mock validation
+    if (email && password) {
+      const mockUser: User = {
+        id: "user_" + Math.random().toString(36).substr(2, 9),
+        name: email.split("@")[0],
+        email,
+        role: email.includes("pro") || email.includes("contractor") ? "contractor" : "homeowner",
+        createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+        lastLogin: new Date(),
       }
 
-      console.log("Login failed: Invalid credentials")
+      setUser(mockUser)
+      setStatus("authenticated")
+      localStorage.setItem("rooffax_user", JSON.stringify(mockUser))
       setIsLoading(false)
-      return { success: false, message: "Invalid email or password" }
-    } catch (error) {
-      console.error("Login error:", error)
-      setIsLoading(false)
-      return { success: false, message: "An error occurred during login" }
+      return { success: true }
     }
+
+    setIsLoading(false)
+    return { success: false, error: "Invalid email or password" }
   }
 
-  const register = async (name: string, email: string, password: string) => {
+  // Mock register function
+  const register = async (name: string, email: string, password: string, userType: "Homeowner" | "Pro") => {
     setIsLoading(true)
-    console.log("Registration attempt:", { name, email })
 
-    try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      // Mock validation - in a real app, this would be an API call
-      if (name && email && password) {
-        const mockUser: User = {
-          id: `user-${Date.now()}`,
-          name,
-          email,
-          userType: null, // User type will be set separately
-          createdAt: new Date().toISOString(),
-          lastLogin: new Date().toISOString(),
-        }
-
-        setUser(mockUser)
-        setStatus("authenticated")
-        localStorage.setItem("roofFaxUser", JSON.stringify(mockUser))
-
-        console.log("Registration successful:", mockUser)
-        setIsLoading(false)
-        return { success: true, message: "Registration successful" }
+    // Mock registration
+    if (name && email && password) {
+      const mockUser: User = {
+        id: "user_" + Math.random().toString(36).substr(2, 9),
+        name,
+        email,
+        role: userType === "Pro" ? "contractor" : "homeowner",
+        createdAt: new Date(),
+        lastLogin: new Date(),
       }
 
-      console.log("Registration failed: Invalid data")
+      // Don't automatically log in after registration
+      // Instead, we'd typically send a verification email
       setIsLoading(false)
-      return { success: false, message: "Please fill in all required fields" }
-    } catch (error) {
-      console.error("Registration error:", error)
-      setIsLoading(false)
-      return { success: false, message: "An error occurred during registration" }
+      return { success: true }
     }
+
+    setIsLoading(false)
+    return { success: false, error: "Registration failed. Please check your information." }
   }
 
+  // Logout function
   const logout = () => {
-    console.log("Logging out user:", user?.email)
     setUser(null)
     setStatus("unauthenticated")
-    localStorage.removeItem("roofFaxUser")
-  }
-
-  const setUserType = (type: UserType) => {
-    if (user) {
-      const updatedUser = { ...user, userType: type }
-      setUser(updatedUser)
-      localStorage.setItem("roofFaxUser", JSON.stringify(updatedUser))
-      console.log("User type set:", type)
-    } else {
-      console.log("Cannot set user type: No user logged in")
-    }
+    localStorage.removeItem("rooffax_user")
   }
 
   return (
-    <UserContext.Provider value={{ user, status, login, register, logout, setUserType, isLoading }}>
-      {children}
-    </UserContext.Provider>
+    <UserContext.Provider value={{ user, status, login, register, logout, isLoading }}>{children}</UserContext.Provider>
   )
 }
 

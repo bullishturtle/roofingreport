@@ -1,122 +1,78 @@
 "use client"
 
-import { useState, useEffect, type FormEvent } from "react"
+import type React from "react"
+
+import { useState } from "react"
 import { Search } from "lucide-react"
-import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { useRouter } from "next/navigation"
+import { useUser } from "@/contexts/user-context"
+import LoadingSpinner from "@/components/ui/loading-spinner"
+import { useToast } from "@/components/ui/use-toast"
 
 interface AddressSearchFormProps {
-  onSubmit: (address: string) => void
-  isSubmitting?: boolean
-  buttonText?: string
-  className?: string
+  variant?: "default" | "hero"
+  onSubmitWithoutAuth?: () => void
 }
 
-export function AddressSearchForm({
-  onSubmit,
-  isSubmitting = false,
-  buttonText = "Get Report",
-  className = "",
-}: AddressSearchFormProps) {
+export function AddressSearchForm({ variant = "default", onSubmitWithoutAuth }: AddressSearchFormProps) {
   const [address, setAddress] = useState("")
-  const [error, setError] = useState("")
-  const [isLocalSubmitting, setIsLocalSubmitting] = useState(false)
-  const [successMessage, setSuccessMessage] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+  const { user } = useUser()
+  const { toast } = useToast()
 
-  // Reset success message when address changes
-  useEffect(() => {
-    if (successMessage) {
-      setSuccessMessage("")
-    }
-  }, [address])
-
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validate address
     if (!address.trim()) {
-      setError("Please enter an address")
+      toast({
+        title: "Error",
+        description: "Please enter a valid address",
+        variant: "destructive",
+      })
       return
     }
 
-    setError("")
-    setIsLocalSubmitting(true)
-
-    try {
-      // Simulate API call with delay
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // Call the parent's onSubmit handler
-      onSubmit(address)
-
-      // Show success message
-      setSuccessMessage("Address submitted successfully!")
-
-      // Optional: Reset form after successful submission
-      // setAddress("")
-    } catch (error) {
-      console.error("Error submitting address:", error)
-      setError("Failed to submit address. Please try again.")
-    } finally {
-      setIsLocalSubmitting(false)
+    // If user is not logged in and we have a callback for that case
+    if (!user && onSubmitWithoutAuth) {
+      onSubmitWithoutAuth()
+      return
     }
+
+    setIsLoading(true)
+
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+
+    // Store the address in sessionStorage for the report page
+    sessionStorage.setItem("rooffax_search_address", address)
+
+    setIsLoading(false)
+    router.push("/report")
   }
 
-  const submitting = isSubmitting || isLocalSubmitting
-
   return (
-    <div className={`w-full ${className}`}>
-      <form onSubmit={handleSubmit} aria-label="Address search form">
-        <div className="relative">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-grow">
-              <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                size={20}
-                aria-hidden="true"
-              />
-              <input
-                type="text"
-                placeholder="Enter your property address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className="pl-10 py-3 w-full bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
-                disabled={submitting}
-                aria-label="Property address"
-                aria-required="true"
-                aria-invalid={!!error}
-                aria-describedby={error ? "address-error" : undefined}
-              />
-            </div>
-            <button
-              type="submit"
-              className="bg-yellow-500 hover:bg-yellow-400 text-black font-medium py-3 px-6 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 min-w-[120px] flex items-center justify-center"
-              disabled={submitting || !address.trim()}
-              aria-busy={submitting}
-            >
-              {submitting ? (
-                <>
-                  <LoadingSpinner size="sm" className="mr-2" aria-hidden="true" />
-                  <span>Processing...</span>
-                </>
-              ) : (
-                buttonText
-              )}
-            </button>
-          </div>
-          {error && (
-            <p id="address-error" className="text-red-500 text-sm mt-1" role="alert">
-              {error}
-            </p>
-          )}
-          {successMessage && (
-            <p className="text-green-500 text-sm mt-1" role="status">
-              {successMessage}
-            </p>
-          )}
+    <form onSubmit={handleSubmit} className={`w-full ${variant === "hero" ? "max-w-2xl" : "max-w-md"}`}>
+      <div className="relative flex items-center">
+        <div className="absolute left-3 text-gray-400">
+          <Search size={20} />
         </div>
-      </form>
-    </div>
+        <Input
+          type="text"
+          placeholder="Enter your address"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          className={`pl-10 pr-24 py-6 ${variant === "hero" ? "text-lg h-14" : ""}`}
+          disabled={isLoading}
+        />
+        <div className="absolute right-1">
+          <Button type="submit" size={variant === "hero" ? "lg" : "default"} disabled={isLoading}>
+            {isLoading ? <LoadingSpinner size="sm" /> : "Get Report"}
+          </Button>
+        </div>
+      </div>
+    </form>
   )
 }
-
-export default AddressSearchForm

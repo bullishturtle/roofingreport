@@ -1,166 +1,151 @@
 "use client"
-
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+import { signIn } from "next-auth/react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Loader2 } from "lucide-react"
-import { toast } from "@/hooks/use-toast"
+import { Label } from "@/components/ui/label"
+import { Icons } from "@/components/icons"
+import { useToast } from "@/components/ui/toast"
 import Link from "next/link"
 
-// Form validation schema
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(1, { message: "Password is required" }),
-  rememberMe: z.boolean().optional(),
+  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
 })
 
 type LoginFormValues = z.infer<typeof loginSchema>
 
 export function LoginForm() {
-  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard"
+  const { showToast } = useToast()
 
-  // Initialize form
-  const form = useForm<LoginFormValues>({
+  const [isLoading, setIsLoading] = useState(false)
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      rememberMe: false,
-    },
   })
 
-  // Handle form submission
-  const onSubmit = async (data: LoginFormValues) => {
+  async function onSubmit(data: LoginFormValues) {
     setIsLoading(true)
 
     try {
-      // In a real implementation, you would call your authentication API
-      // For now, we'll simulate a successful login
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Show success message
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully logged in.",
+      const result = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
       })
 
-      // Redirect to dashboard
-      router.push("/dashboard")
+      if (result?.error) {
+        showToast(result.error, "error")
+        return
+      }
+
+      showToast("Login successful!", "success")
+      router.push(callbackUrl)
+      router.refresh()
     } catch (error) {
-      console.error("Login error:", error)
-      toast({
-        title: "Error",
-        description: "Invalid email or password. Please try again.",
-        variant: "destructive",
-      })
+      showToast("Something went wrong. Please try again.", "error")
     } finally {
       setIsLoading(false)
     }
   }
 
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsGoogleLoading(true)
+      await signIn("google", { callbackUrl })
+    } catch (error) {
+      showToast("Something went wrong with Google sign in.", "error")
+    } finally {
+      setIsGoogleLoading(false)
+    }
+  }
+
   return (
-    <Card className="w-full max-w-md border-neon-gold/30 bg-black/50 backdrop-blur-md shadow-neon-glow">
-      <CardHeader>
-        <CardTitle className="text-2xl text-white">Welcome back</CardTitle>
-        <CardDescription className="text-white/70">Sign in to your RoofFax account</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="john@example.com"
-                      {...field}
-                      className="bg-black/30 border-neon-gold/30 text-white placeholder:text-white/50 focus:border-neon-gold"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+    <div className="grid gap-6 bg-black/30 p-6 rounded-lg border border-white/10">
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="email" className="text-white">
+              Email
+            </Label>
+            <Input
+              id="email"
+              placeholder="name@example.com"
+              type="email"
+              autoCapitalize="none"
+              autoComplete="email"
+              autoCorrect="off"
+              disabled={isLoading || isGoogleLoading}
+              className="bg-black/50 border-white/20 text-white"
+              {...register("email")}
             />
-
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      {...field}
-                      className="bg-black/30 border-neon-gold/30 text-white placeholder:text-white/50 focus:border-neon-gold"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+            {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
+          </div>
+          <div className="grid gap-2">
             <div className="flex items-center justify-between">
-              <FormField
-                control={form.control}
-                name="rememberMe"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        className="data-[state=checked]:bg-neon-gold data-[state=checked]:border-neon-gold"
-                      />
-                    </FormControl>
-                    <FormLabel className="text-sm text-white cursor-pointer">Remember me</FormLabel>
-                  </FormItem>
-                )}
-              />
-
-              <Link href="/forgot-password" className="text-sm text-neon-gold hover:underline">
+              <Label htmlFor="password" className="text-white">
+                Password
+              </Label>
+              <Link href="/forgot-password" className="text-sm text-white/70 hover:text-neon-gold">
                 Forgot password?
               </Link>
             </div>
-
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-neon-gold to-neon-orange hover:from-neon-orange hover:to-neon-gold text-black border-none shadow-neon-glow"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing In...
-                </>
-              ) : (
-                "Sign In"
-              )}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-      <CardFooter className="flex justify-center">
-        <p className="text-sm text-white/70">
-          Don't have an account?{" "}
-          <Link href="/signup" className="text-neon-gold hover:underline">
-            Sign up
-          </Link>
-        </p>
-      </CardFooter>
-    </Card>
+            <Input
+              id="password"
+              placeholder="••••••••"
+              type="password"
+              autoCapitalize="none"
+              autoComplete="current-password"
+              disabled={isLoading || isGoogleLoading}
+              className="bg-black/50 border-white/20 text-white"
+              {...register("password")}
+            />
+            {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
+          </div>
+          <Button
+            type="submit"
+            disabled={isLoading || isGoogleLoading}
+            className="bg-gradient-to-r from-neon-gold to-neon-orange hover:from-neon-orange hover:to-neon-gold text-black border-none shadow-neon-glow"
+          >
+            {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
+            Sign In
+          </Button>
+        </div>
+      </form>
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-white/20" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-black/30 px-2 text-white/70">Or continue with</span>
+        </div>
+      </div>
+      <Button
+        variant="outline"
+        type="button"
+        disabled={isLoading || isGoogleLoading}
+        onClick={handleGoogleSignIn}
+        className="border-white/20 text-white hover:bg-white/10"
+      >
+        {isGoogleLoading ? (
+          <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Icons.google className="mr-2 h-4 w-4" />
+        )}
+        Google
+      </Button>
+    </div>
   )
 }

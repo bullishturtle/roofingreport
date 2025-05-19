@@ -4,59 +4,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
 import { RecentReportsTable } from "@/components/dashboard/recent-reports-table"
+import { StatsCards } from "@/components/dashboard/stats-cards"
 import { NeighborhoodMap } from "@/components/dashboard/neighborhood-map"
+import { CalendarView } from "@/components/dashboard/calendar-view"
 import { Badge } from "@/components/ui/badge"
-import { Download, FileText, Plus, Search, Settings, Users } from "lucide-react"
+import { BarChart, Download, FileText, Plus, Search, Settings, Users } from "lucide-react"
 import Link from "next/link"
-import { FileUpload } from "@/components/dashboard/file-upload"
-import { WeatherWidget } from "@/components/dashboard/weather-widget"
-
-// Static version of StatsCards for SSR
-function StaticStatsCards() {
-  return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {[
-        {
-          title: "Total Reports",
-          icon: <FileText className="h-4 w-4 text-blue-400" />,
-          value: "1,284",
-          percent: "18%",
-        },
-        { title: "Active Leads", icon: <Users className="h-4 w-4 text-purple-400" />, value: "342", percent: "12%" },
-        {
-          title: "Pending Projects",
-          icon: <Settings className="h-4 w-4 text-cyan-400" />,
-          value: "86",
-          percent: "7%",
-        },
-        {
-          title: "Completed Jobs",
-          icon: <Download className="h-4 w-4 text-green-400" />,
-          value: "624",
-          percent: "24%",
-        },
-      ].map((stat, index) => (
-        <Card key={index} className="border-white/10 bg-white/5 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-white">{stat.title}</CardTitle>
-            {stat.icon}
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">{stat.value}</div>
-            <p className="text-xs text-white/70 flex items-center">
-              <span className="mr-1 text-green-500">↗</span>
-              <span className="text-green-500 font-medium">{stat.percent}</span> from last month
-            </p>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  )
-}
+import { DashboardClientWrapper } from "@/components/dashboard/dashboard-client-wrapper"
 
 export default function DashboardPage() {
   return (
-    <>
+    <DashboardClientWrapper>
       <DashboardShell>
         <DashboardHeader heading="Dashboard" text="Manage your reports, leads, and projects all in one place.">
           <Button
@@ -69,8 +27,7 @@ export default function DashboardPage() {
           </Button>
         </DashboardHeader>
         <div className="grid gap-4 md:gap-8">
-          {/* Use static version for SSR */}
-          <StaticStatsCards />
+          <StatsCards />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="lg:col-span-5 border-white/10 bg-white/5 backdrop-blur-sm">
               <CardHeader>
@@ -149,13 +106,6 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </div>
-
-          {/* New row with Weather Widget and File Upload */}
-          <div className="grid gap-4 md:grid-cols-2">
-            <WeatherWidget />
-            <FileUpload />
-          </div>
-
           <Tabs defaultValue="map" className="w-full">
             <TabsList className="grid w-full grid-cols-3 md:w-auto bg-white/5 border border-white/10">
               <TabsTrigger value="map" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400">
@@ -209,7 +159,14 @@ export default function DashboardPage() {
                   <h3 className="text-lg font-medium text-white">Appointment Calendar</h3>
                   <p className="text-sm text-white/70">Schedule and manage your appointments and follow-ups.</p>
                 </div>
+                <Button
+                  size="sm"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-none shadow-neon-purple"
+                >
+                  <Plus className="mr-2 h-3 w-3" /> Add Event
+                </Button>
               </div>
+              <CalendarView />
             </TabsContent>
             <TabsContent
               value="analytics"
@@ -220,11 +177,28 @@ export default function DashboardPage() {
                   <h3 className="text-lg font-medium text-white">Performance Analytics</h3>
                   <p className="text-sm text-white/70">Track your team's performance and conversion rates.</p>
                 </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10">
+                    This Week
+                  </Button>
+                  <Button variant="outline" size="sm" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10">
+                    This Month
+                  </Button>
+                  <Button variant="outline" size="sm" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10">
+                    This Quarter
+                  </Button>
+                </div>
+              </div>
+              <div className="h-[300px] flex items-center justify-center border rounded-md bg-white/5 border-white/10">
+                <div className="flex flex-col items-center text-white/50">
+                  <BarChart className="h-10 w-10 mb-2" />
+                  <p>Analytics charts will appear here</p>
+                </div>
               </div>
             </TabsContent>
           </Tabs>
         </div>
       </DashboardShell>
-    </>
+    </DashboardClientWrapper>
   )
 }

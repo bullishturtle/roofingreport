@@ -1,7 +1,6 @@
 "use client"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { signIn } from "next-auth/react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -11,10 +10,8 @@ import { Label } from "@/components/ui/label"
 import { Icons } from "@/components/icons"
 import { useToast } from "@/components/ui/toast"
 
-const signUpSchema = z
+const resetPasswordSchema = z
   .object({
-    name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-    email: z.string().email({ message: "Please enter a valid email address" }),
     password: z.string().min(8, { message: "Password must be at least 8 characters" }),
     confirmPassword: z.string(),
   })
@@ -23,35 +20,36 @@ const signUpSchema = z
     path: ["confirmPassword"],
   })
 
-type SignUpFormValues = z.infer<typeof signUpSchema>
+type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>
 
-export function SignUpForm() {
+interface ResetPasswordFormProps {
+  token: string
+}
+
+export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const router = useRouter()
   const { showToast } = useToast()
-
   const [isLoading, setIsLoading] = useState(false)
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<SignUpFormValues>({
-    resolver: zodResolver(signUpSchema),
+  } = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
   })
 
-  async function onSubmit(data: SignUpFormValues) {
+  async function onSubmit(data: ResetPasswordFormValues) {
     setIsLoading(true)
 
     try {
-      const response = await fetch("/api/auth/register", {
+      const response = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: data.name,
-          email: data.email,
+          token,
           password: data.password,
         }),
       })
@@ -62,7 +60,7 @@ export function SignUpForm() {
         throw new Error(result.message || "Something went wrong")
       }
 
-      showToast("Account created successfully! Please sign in.", "success")
+      showToast("Password reset successfully!", "success")
       router.push("/login")
     } catch (error) {
       if (error instanceof Error) {
@@ -75,58 +73,13 @@ export function SignUpForm() {
     }
   }
 
-  const handleGoogleSignIn = async () => {
-    try {
-      setIsGoogleLoading(true)
-      await signIn("google", { callbackUrl: "/dashboard" })
-    } catch (error) {
-      showToast("Something went wrong with Google sign in.", "error")
-    } finally {
-      setIsGoogleLoading(false)
-    }
-  }
-
   return (
     <div className="grid gap-6 bg-black/30 p-6 rounded-lg border border-white/10">
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="name" className="text-white">
-              Name
-            </Label>
-            <Input
-              id="name"
-              placeholder="John Doe"
-              type="text"
-              autoCapitalize="words"
-              autoComplete="name"
-              autoCorrect="off"
-              disabled={isLoading || isGoogleLoading}
-              className="bg-black/50 border-white/20 text-white"
-              {...register("name")}
-            />
-            {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="email" className="text-white">
-              Email
-            </Label>
-            <Input
-              id="email"
-              placeholder="name@example.com"
-              type="email"
-              autoCapitalize="none"
-              autoComplete="email"
-              autoCorrect="off"
-              disabled={isLoading || isGoogleLoading}
-              className="bg-black/50 border-white/20 text-white"
-              {...register("email")}
-            />
-            {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
-          </div>
-          <div className="grid gap-2">
             <Label htmlFor="password" className="text-white">
-              Password
+              New Password
             </Label>
             <Input
               id="password"
@@ -134,7 +87,7 @@ export function SignUpForm() {
               type="password"
               autoCapitalize="none"
               autoComplete="new-password"
-              disabled={isLoading || isGoogleLoading}
+              disabled={isLoading}
               className="bg-black/50 border-white/20 text-white"
               {...register("password")}
             />
@@ -150,7 +103,7 @@ export function SignUpForm() {
               type="password"
               autoCapitalize="none"
               autoComplete="new-password"
-              disabled={isLoading || isGoogleLoading}
+              disabled={isLoading}
               className="bg-black/50 border-white/20 text-white"
               {...register("confirmPassword")}
             />
@@ -158,36 +111,14 @@ export function SignUpForm() {
           </div>
           <Button
             type="submit"
-            disabled={isLoading || isGoogleLoading}
+            disabled={isLoading}
             className="bg-gradient-to-r from-neon-gold to-neon-orange hover:from-neon-orange hover:to-neon-gold text-black border-none shadow-neon-glow"
           >
             {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
-            Create Account
+            Reset Password
           </Button>
         </div>
       </form>
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-white/20" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-black/30 px-2 text-white/70">Or continue with</span>
-        </div>
-      </div>
-      <Button
-        variant="outline"
-        type="button"
-        disabled={isLoading || isGoogleLoading}
-        onClick={handleGoogleSignIn}
-        className="border-white/20 text-white hover:bg-white/10"
-      >
-        {isGoogleLoading ? (
-          <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <Icons.google className="mr-2 h-4 w-4" />
-        )}
-        Google
-      </Button>
     </div>
   )
 }

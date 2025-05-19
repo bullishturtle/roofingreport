@@ -19,7 +19,7 @@ const nextConfig = {
   },
   experimental: {
     serverActions: {
-      allowedOrigins: ["localhost:3000", "rooffax.report", "*.vercel.app"],
+      allowedOrigins: ["localhost:3000", "rooffax.com", "*.vercel.app"],
     },
   },
 }

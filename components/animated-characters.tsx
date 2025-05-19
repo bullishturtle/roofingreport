@@ -11,11 +11,6 @@ export function AnimatedCharacters() {
   const pathname = usePathname()
   const isMobile = useMediaQuery("(max-width: 768px)")
 
-  // Return null during server-side rendering or on specific pages
-  if (typeof window === "undefined" || pathname === "/login" || pathname === "/signup") {
-    return null
-  }
-
   const [roofusPosition, setRoofusPosition] = useState({ x: 0, y: 0 })
   const [landonPosition, setLandonPosition] = useState({ x: -100, y: 0 })
   const [isRoofusVisible, setIsRoofusVisible] = useState(false)
@@ -29,6 +24,11 @@ export function AnimatedCharacters() {
   const [roofusAnimation, setRoofusAnimation] = useState<"idle" | "running" | "jumping" | "pointing">("idle")
   const [roofusDirection, setRoofusDirection] = useState<"left" | "right">("right")
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null)
+
+  // Return null during server-side rendering or on specific pages
+  if (typeof window === "undefined" || pathname === "/login" || pathname === "/signup") {
+    return null
+  }
 
   // Random positions within viewport bounds
   const getRandomPosition = () => {

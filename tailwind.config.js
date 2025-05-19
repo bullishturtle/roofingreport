@@ -18,35 +18,17 @@ module.exports = {
     },
     extend: {
       colors: {
-        navy: {
-          50: "#f0f4f8",
-          100: "#d9e2ec",
-          200: "#bcccdc",
-          300: "#9fb3c8",
-          400: "#829ab1",
-          500: "#627d98",
-          600: "#486581",
-          700: "#334e68",
-          800: "#243b53",
-          900: "#102a43",
-        },
-        orange: {
-          50: "#fff8f1",
-          100: "#feecdc",
-          200: "#fcd9bd",
-          300: "#fdba8c",
-          400: "#ff8a4c",
-          500: "#ff5a1f",
-          600: "#d03801",
-          700: "#b43403",
-          800: "#8a2c0d",
-          900: "#771d1d",
-        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        navy: {
+          800: "#0f172a",
+        },
+        yellow: {
+          500: "#FFD700", // Adjust to match the gold color in the design
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -90,25 +72,10 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: 0 },
         },
-        fadeIn: {
-          from: { opacity: 0 },
-          to: { opacity: 1 },
-        },
-        slideUp: {
-          from: { transform: "translateY(20px)", opacity: 0 },
-          to: { transform: "translateY(0)", opacity: 1 },
-        },
-        slideDown: {
-          from: { transform: "translateY(-20px)", opacity: 0 },
-          to: { transform: "translateY(0)", opacity: 1 },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fadeIn 0.5s ease-in-out",
-        "slide-up": "slideUp 0.5s ease-in-out",
-        "slide-down": "slideDown 0.5s ease-in-out",
       },
     },
   },

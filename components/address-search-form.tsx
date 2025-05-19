@@ -1,10 +1,8 @@
 "use client"
 
-import { useState, type FormEvent } from "react"
+import { useState, useEffect, type FormEvent } from "react"
 import { Search } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { LoadingSpinner } from "@/components/loading-spinner"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface AddressSearchFormProps {
   onSubmit: (address: string) => void
@@ -16,13 +14,22 @@ interface AddressSearchFormProps {
 export function AddressSearchForm({
   onSubmit,
   isSubmitting = false,
-  buttonText = "Search",
+  buttonText = "Get Report",
   className = "",
 }: AddressSearchFormProps) {
   const [address, setAddress] = useState("")
   const [error, setError] = useState("")
+  const [isLocalSubmitting, setIsLocalSubmitting] = useState(false)
+  const [successMessage, setSuccessMessage] = useState("")
 
-  const handleSubmit = (e: FormEvent) => {
+  // Reset success message when address changes
+  useEffect(() => {
+    if (successMessage) {
+      setSuccessMessage("")
+    }
+  }, [address])
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
 
     // Validate address
@@ -32,42 +39,84 @@ export function AddressSearchForm({
     }
 
     setError("")
-    onSubmit(address)
+    setIsLocalSubmitting(true)
+
+    try {
+      // Simulate API call with delay
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+
+      // Call the parent's onSubmit handler
+      onSubmit(address)
+
+      // Show success message
+      setSuccessMessage("Address submitted successfully!")
+
+      // Optional: Reset form after successful submission
+      // setAddress("")
+    } catch (error) {
+      console.error("Error submitting address:", error)
+      setError("Failed to submit address. Please try again.")
+    } finally {
+      setIsLocalSubmitting(false)
+    }
   }
 
+  const submitting = isSubmitting || isLocalSubmitting
+
   return (
-    <form onSubmit={handleSubmit} className={`w-full ${className}`}>
-      <div className="relative">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-grow">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <Input
-              type="text"
-              placeholder="Enter your property address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="pl-10 py-6 w-full"
-              disabled={isSubmitting}
-              aria-label="Property address"
-            />
+    <div className={`w-full ${className}`}>
+      <form onSubmit={handleSubmit} aria-label="Address search form">
+        <div className="relative">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-grow">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={20}
+                aria-hidden="true"
+              />
+              <input
+                type="text"
+                placeholder="Enter your property address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="pl-10 py-3 w-full bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+                disabled={submitting}
+                aria-label="Property address"
+                aria-required="true"
+                aria-invalid={!!error}
+                aria-describedby={error ? "address-error" : undefined}
+              />
+            </div>
+            <button
+              type="submit"
+              className="bg-yellow-500 hover:bg-yellow-400 text-black font-medium py-3 px-6 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 min-w-[120px] flex items-center justify-center"
+              disabled={submitting || !address.trim()}
+              aria-busy={submitting}
+            >
+              {submitting ? (
+                <>
+                  <LoadingSpinner size="sm" className="mr-2" aria-hidden="true" />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                buttonText
+              )}
+            </button>
           </div>
-          <Button
-            type="submit"
-            className="bg-orange-500 hover:bg-orange-600 text-white py-6 px-6"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <span className="flex items-center">
-                <LoadingSpinner className="mr-2" />
-                Processing...
-              </span>
-            ) : (
-              buttonText
-            )}
-          </Button>
+          {error && (
+            <p id="address-error" className="text-red-500 text-sm mt-1" role="alert">
+              {error}
+            </p>
+          )}
+          {successMessage && (
+            <p className="text-green-500 text-sm mt-1" role="status">
+              {successMessage}
+            </p>
+          )}
         </div>
-        {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-      </div>
-    </form>
+      </form>
+    </div>
   )
 }
+
+export default AddressSearchForm

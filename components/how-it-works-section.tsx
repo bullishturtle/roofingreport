@@ -1,4 +1,4 @@
-export default function HowItWorksSection() {
+export function HowItWorksSection() {
   return (
     <section id="how-it-works" className="bg-gray-900 py-16 md:py-24">
       <div className="container mx-auto px-4">
@@ -63,3 +63,5 @@ function Step({ number, title, description }: StepProps) {
     </div>
   )
 }
+
+export default HowItWorksSection

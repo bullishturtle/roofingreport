@@ -1,6 +1,6 @@
 import { Check } from "lucide-react"
 
-export default function PricingSection() {
+export function PricingSection() {
   return (
     <section id="pricing" className="bg-gray-900 py-16 md:py-24">
       <div className="container mx-auto px-4">
@@ -122,3 +122,5 @@ function PricingCard({
     </div>
   )
 }
+
+export default PricingSection

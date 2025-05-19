@@ -1,60 +1,52 @@
-import Image from "next/image"
-import type { Metadata } from "next"
-
-export const metadata: Metadata = {
-  title: "About Us - TheRoofFax.com",
-  description: "Learn about TheRoofFax.com's mission to provide accurate and affordable roof condition reports.",
-}
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
 
 export default function AboutPage() {
   return (
-    <div className="bg-white">
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-4xl font-bold text-gray-900 mb-6 text-center">About TheRoofFax.com</h1>
+    <div className="min-h-screen flex flex-col bg-black">
+      <Header />
+      <main className="flex-grow">
+        <div className="container mx-auto px-4 py-12">
+          <h1 className="text-3xl font-bold mb-6 text-white">About RoofFax</h1>
 
-          <div className="relative h-[300px] w-full mb-8 rounded-lg overflow-hidden">
-            <Image src="/images/roofus.png" alt="Roofus the RoofFax mascot" fill style={{ objectFit: "contain" }} />
-          </div>
+          <div className="prose prose-invert max-w-none">
+            <p className="mb-6 text-lg text-gray-300">RoofFax – The Smartest Roof & Property Report in the World</p>
 
-          <div className="prose prose-lg max-w-none">
-            <p>
-              TheRoofFax.com was founded by Thomas Roofing & Repair Inc., a trusted name in the roofing industry for
-              over 20 years. Our mission is to provide homeowners, real estate professionals, and property managers with
-              accurate, detailed information about roof conditions.
+            <p className="mb-6 text-gray-300">
+              At RoofFax, we're redefining how homeowners and roofing professionals assess, verify, and act on roof and
+              property data. Our mission is simple: deliver truth, transparency, and technology in an industry often
+              clouded by confusion and outdated methods.
             </p>
 
-            <h2>Our Mission</h2>
-            <p>
-              We believe that everyone deserves to know the true condition of their roof before problems arise. Our
-              AI-powered roof analysis technology makes it easy and affordable to get professional-quality roof
-              assessments without the wait or high cost of traditional inspections.
+            <p className="mb-8 text-gray-300">
+              Whether you're a homeowner navigating a storm claim or a contractor closing your next project, RoofFax
+              equips you with instant, AI-powered insights that matter.
             </p>
 
-            <h2>Meet Roofus</h2>
-            <p>
-              Roofus, our friendly mascot, represents our commitment to making roof inspections accessible and
-              understandable for everyone. Just like a loyal companion, Roofus is always there to help you understand
-              your roof's condition and guide you through the process.
+            <h2 className="text-2xl font-bold mt-8 mb-4 text-white">Our Technology</h2>
+            <p className="mb-6 text-gray-300">
+              Using advanced machine learning algorithms and high-resolution imagery, our platform can detect roof
+              damage, estimate material quantities, and provide accurate measurements. This technology allows us to
+              deliver detailed reports without the need for physical roof inspections in many cases.
             </p>
 
-            <h2>Our Technology</h2>
-            <p>
-              TheRoofFax.com uses advanced AI and machine learning algorithms to analyze satellite and aerial imagery of
-              your roof. Our technology can detect signs of damage, wear, and potential issues that might not be visible
-              from the ground. The result is a comprehensive report that helps you make informed decisions about your
-              property.
+            <h2 className="text-2xl font-bold mt-8 mb-4 text-white">Our Commitment</h2>
+            <p className="mb-6 text-gray-300">
+              We're committed to bringing transparency to the roofing industry through data-driven insights and
+              cutting-edge technology. By providing accurate, comprehensive reports, we help homeowners make informed
+              decisions and empower contractors to work more efficiently.
             </p>
 
-            <h2>Our Team</h2>
-            <p>
-              Our team consists of experienced roofing professionals, data scientists, and customer service experts who
-              are passionate about helping people protect their homes and investments. We're dedicated to providing
-              accurate information and excellent service to every customer.
+            <h2 className="text-2xl font-bold mt-8 mb-4 text-white">Our Team</h2>
+            <p className="mb-6 text-gray-300">
+              Our team consists of experienced roofing professionals, data scientists, and software engineers who are
+              passionate about revolutionizing the roofing industry. With decades of combined experience, we understand
+              the challenges faced by both homeowners and contractors.
             </p>
           </div>
         </div>
-      </div>
+      </main>
+      <Footer />
     </div>
   )
 }

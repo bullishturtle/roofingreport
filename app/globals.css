@@ -3,45 +3,34 @@
 @tailwind utilities;
 
 :root {
-  --navy-50: #f0f4f8;
-  --navy-100: #d9e2ec;
-  --navy-200: #bcccdc;
-  --navy-300: #9fb3c8;
-  --navy-400: #829ab1;
-  --navy-500: #627d98;
-  --navy-600: #486581;
-  --navy-700: #334e68;
-  --navy-800: #243b53;
-  --navy-900: #102a43;
-
-  --orange-50: #fff8f1;
-  --orange-100: #feecdc;
-  --orange-200: #fcd9bd;
-  --orange-300: #fdba8c;
-  --orange-400: #ff8a4c;
-  --orange-500: #ff5a1f;
-  --orange-600: #d03801;
-  --orange-700: #b43403;
-  --orange-800: #8a2c0d;
-  --orange-900: #771d1d;
-
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 0, 0, 0;
-  --background-end-rgb: 0, 0, 0;
+  --background: 0 0% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 47.9 95.8% 50.2%;
+  --primary-foreground: 26 83.3% 14.1%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 14.9%;
+  --muted-foreground: 0 0% 63.9%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 47.9 95.8% 50.2%;
+  --radius: 0.5rem;
 }
 
 @layer base {
-  body {
-    @apply text-gray-900 bg-white;
+  * {
+    @apply border-border;
   }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply font-bold text-navy-800;
+  body {
+    @apply bg-background text-foreground;
   }
 }
 
@@ -72,38 +61,6 @@ body {
 
 .animate-float {
   animation: float 6s ease-in-out infinite;
-}
-
-@layer components {
-  .btn-primary {
-    @apply bg-orange-500 text-white hover:bg-orange-600 transition-colors;
-  }
-
-  .btn-secondary {
-    @apply bg-navy-600 text-white hover:bg-navy-700 transition-colors;
-  }
-
-  .btn-outline {
-    @apply border border-orange-500 text-orange-500 hover:bg-orange-50 transition-colors;
-  }
-}
-
-@layer utilities {
-  .animate-fade-in {
-    animation: fadeIn 0.5s ease-in-out;
-  }
-
-  .animate-slide-up {
-    animation: slideUp 0.5s ease-in-out;
-  }
-
-  .animate-slide-down {
-    animation: slideDown 0.5s ease-in-out;
-  }
-
-  .animate-pulse-subtle {
-    animation: pulseSubtle 2s infinite;
-  }
 }
 
 @keyframes fadeIn {
@@ -137,14 +94,60 @@ body {
   }
 }
 
-@keyframes pulseSubtle {
+@keyframes slideInRight {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
   0%,
   100% {
     opacity: 1;
   }
   50% {
-    opacity: 0.8;
+    opacity: 0.7;
   }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-in-out;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.5s ease-in-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.5s ease-in-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.5s ease-in-out;
+}
+
+.animate-pulse-subtle {
+  animation: pulse 2s infinite;
 }
 
 /* Toast animations */
@@ -178,10 +181,57 @@ body {
   animation: slideOut 0.3s ease-in forwards;
 }
 
+/* Focus styles for accessibility */
+.focus-visible:focus {
+  outline: 2px solid theme("colors.yellow.500");
+  outline-offset: 2px;
+}
+
 /* Mobile responsiveness */
 @media (max-width: 640px) {
   .container {
     padding-left: 1rem;
     padding-right: 1rem;
   }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.2;
+  }
+
+  h2 {
+    font-size: 1.75rem;
+    line-height: 1.2;
+  }
+
+  .mobile-stack {
+    flex-direction: column;
+  }
+
+  .mobile-full {
+    width: 100%;
+  }
+}
+
+/* Skip to content link for accessibility */
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.skip-to-content:focus {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: auto;
+  height: auto;
+  padding: 0.5rem 1rem;
+  background-color: theme("colors.yellow.500");
+  color: theme("colors.black");
+  font-weight: bold;
+  z-index: 9999;
 }

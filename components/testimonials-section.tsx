@@ -1,4 +1,4 @@
-export default function TestimonialsSection() {
+export function TestimonialsSection() {
   return (
     <section className="bg-black py-16 md:py-24">
       <div className="container mx-auto px-4">
@@ -72,3 +72,5 @@ function TestimonialCard({ quote, author, role, image }: TestimonialCardProps) {
     </div>
   )
 }
+
+export default TestimonialsSection

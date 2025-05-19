@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertTriangle, CloudRain, CheckCircle, AlertCircle, Info } from "lucide-react"
 
 interface ReportPreviewProps {
@@ -8,11 +7,11 @@ interface ReportPreviewProps {
 export function ReportPreview({ address }: ReportPreviewProps) {
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="bg-gray-50 border-b">
-          <CardTitle className="text-lg">{address}</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
+      <div className="bg-white border rounded-lg overflow-hidden">
+        <div className="bg-gray-50 border-b px-4 py-3">
+          <h3 className="text-lg font-medium text-gray-900">{address}</h3>
+        </div>
+        <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="flex justify-between items-center pb-2 border-b border-gray-200">
@@ -63,14 +62,14 @@ export function ReportPreview({ address }: ReportPreviewProps) {
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader className="bg-gray-50 border-b">
-          <CardTitle className="text-lg">Roof Details</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
+      <div className="bg-white border rounded-lg overflow-hidden">
+        <div className="bg-gray-50 border-b px-4 py-3">
+          <h3 className="text-lg font-medium text-gray-900">Roof Details</h3>
+        </div>
+        <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="flex justify-between items-center pb-2 border-b border-gray-200">
@@ -106,14 +105,14 @@ export function ReportPreview({ address }: ReportPreviewProps) {
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader className="bg-gray-50 border-b">
-          <CardTitle className="text-lg">Potential Issues</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
+      <div className="bg-white border rounded-lg overflow-hidden">
+        <div className="bg-gray-50 border-b px-4 py-3">
+          <h3 className="text-lg font-medium text-gray-900">Potential Issues</h3>
+        </div>
+        <div className="p-6">
           <div className="space-y-4">
             <div className="flex items-start gap-2 pb-2 border-b border-gray-200">
               <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
@@ -139,8 +138,8 @@ export function ReportPreview({ address }: ReportPreviewProps) {
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

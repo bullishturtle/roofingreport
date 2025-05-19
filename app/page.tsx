@@ -1,9 +1,11 @@
 import { HeroSection } from "@/components/hero-section"
+import { TrustStats } from "@/components/trust-stats"
 
-export default function Home() {
+export default function HomePage() {
   return (
     <main>
       <HeroSection />
+      <TrustStats />
     </main>
   )
 }

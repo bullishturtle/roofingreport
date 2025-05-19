@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, useCallback, createContext, useContext, type ReactNode, useEffect } from "react"
-import { createPortal } from "react-dom"
 import { X, CheckCircle, AlertTriangle, Info, AlertCircle } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
 
 type ToastType = "success" | "error" | "warning" | "info"
 
@@ -68,17 +66,13 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      {mounted &&
-        createPortal(
-          <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
-            <AnimatePresence>
-              {toasts.map((toast) => (
-                <Toast key={toast.id} toast={toast} onDismiss={() => dismissToast(toast.id)} />
-              ))}
-            </AnimatePresence>
-          </div>,
-          document.body,
-        )}
+      {mounted && (
+        <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+          {toasts.map((toast) => (
+            <Toast key={toast.id} toast={toast} onDismiss={() => dismissToast(toast.id)} />
+          ))}
+        </div>
+      )}
     </ToastContext.Provider>
   )
 }
@@ -97,7 +91,7 @@ interface ToastProps {
 }
 
 const Toast = ({ toast, onDismiss }: ToastProps) => {
-  const { id, type, message } = toast
+  const { type, message } = toast
 
   const icons = {
     success: <CheckCircle className="h-5 w-5 text-green-500" />,
@@ -114,12 +108,7 @@ const Toast = ({ toast, onDismiss }: ToastProps) => {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.8 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 20, scale: 0.8 }}
-      className={`w-72 p-4 rounded-lg border shadow-lg ${bgColors[type]}`}
-    >
+    <div className={`w-72 p-4 rounded-lg border shadow-lg ${bgColors[type]} animate-fadeIn`}>
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0">{icons[type]}</div>
         <div className="flex-1 text-sm text-gray-700">{message}</div>
@@ -130,6 +119,6 @@ const Toast = ({ toast, onDismiss }: ToastProps) => {
           <X className="h-4 w-4" />
         </button>
       </div>
-    </motion.div>
+    </div>
   )
 }

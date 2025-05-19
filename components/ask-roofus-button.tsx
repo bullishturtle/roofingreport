@@ -11,14 +11,14 @@ export function AskRoofusButton() {
     <>
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 rounded-full shadow-lg bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 flex items-center gap-2 z-50"
+        className="fixed bottom-6 right-6 rounded-full shadow-lg bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 flex items-center gap-2 z-40"
       >
         <span className="text-2xl">🦊</span>
         <span>Got questions? Ask Roofus</span>
       </Button>
 
       {isOpen && (
-        <div className="fixed bottom-24 right-6 w-80 bg-white rounded-lg shadow-xl z-50 overflow-hidden">
+        <div className="fixed bottom-24 right-6 w-80 bg-white rounded-lg shadow-xl z-40 overflow-hidden">
           <div className="bg-amber-500 text-white p-4 flex justify-between items-center">
             <h3 className="font-bold flex items-center gap-2">
               <span className="text-xl">🦊</span> Chat with Roofus

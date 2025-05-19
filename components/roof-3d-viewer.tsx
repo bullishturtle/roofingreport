@@ -1,14 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Canvas } from "@react-three/fiber"
-import { OrbitControls, Environment, useGLTF } from "@react-three/drei"
-import { Suspense } from "react"
-
-function RoofModel({ modelPath }: { modelPath: string }) {
-  const { scene } = useGLTF(modelPath)
-  return <primitive object={scene} scale={1} position={[0, 0, 0]} />
-}
 
 export function Roof3DViewer() {
   const [mounted, setMounted] = useState(false)
@@ -26,17 +18,12 @@ export function Roof3DViewer() {
   }
 
   return (
-    <div className="w-full h-64 rounded-lg overflow-hidden border border-gray-200">
-      <Canvas camera={{ position: [5, 5, 5], fov: 50 }}>
-        <Suspense fallback={null}>
-          <ambientLight intensity={0.5} />
-          <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
-          <pointLight position={[-10, -10, -10]} />
-          <RoofModel modelPath="/assets/3d/duck.glb" />
-          <Environment preset="sunset" />
-          <OrbitControls />
-        </Suspense>
-      </Canvas>
+    <div className="w-full h-64 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center">
+      <div className="text-center p-4">
+        <div className="text-4xl mb-2">🏠</div>
+        <p className="text-gray-700 font-medium">3D Roof Viewer</p>
+        <p className="text-gray-500 text-sm">Enable JavaScript to view interactive 3D model</p>
+      </div>
     </div>
   )
 }

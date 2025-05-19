@@ -1,21 +1,25 @@
-import { Header } from "@/components/header"
-import { Hero } from "@/components/hero"
-import { HowItWorks } from "@/components/how-it-works"
-import { Stats } from "@/components/stats"
-import { Features } from "@/components/features"
+import { HeroSection } from "@/components/hero-section"
+import { FeaturesSection } from "@/components/features-section"
+import { AboutSection } from "@/components/about-section"
+import { CtaSection } from "@/components/cta-section"
+import { ProSection } from "@/components/pro-section"
+import { DemoSection } from "@/components/demo-section"
 import { Footer } from "@/components/footer"
-import { Testimonials } from "@/components/testimonials"
+import { Header } from "@/components/header"
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col bg-[#0a0d17]">
+    <div className="flex min-h-screen flex-col">
       <Header />
-      <Hero />
-      <Stats />
-      <HowItWorks />
-      <Features />
-      <Testimonials />
+      <main className="flex-1">
+        <HeroSection />
+        <FeaturesSection />
+        <AboutSection />
+        <DemoSection />
+        <ProSection />
+        <CtaSection />
+      </main>
       <Footer />
-    </main>
+    </div>
   )
 }

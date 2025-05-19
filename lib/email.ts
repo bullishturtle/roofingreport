@@ -1,125 +1,154 @@
-import nodemailer from "nodemailer"
-import { logError } from "@/lib/utils"
+"use server"
 
-// Email service configuration types
-interface EmailConfig {
-  host: string
-  port: number
-  secure: boolean
-  auth: {
-    user: string
-    pass: string
-  }
-  from: string
-}
+import { Resend } from "resend"
+import {
+  getVerificationEmailTemplate,
+  getResetPasswordEmailTemplate,
+  getWelcomeEmailTemplate,
+  getReportEmailTemplate,
+} from "./email-templates"
+
+// Initialize Resend with API key or placeholder
+const RESEND_API_KEY = process.env.EMAIL_API_KEY || ""
+const resend = new Resend(RESEND_API_KEY)
 
 // Email content interface
-interface EmailOptions {
-  to: string | string[]
-  subject: string
-  html: string
-  text?: string
-  attachments?: Array<{
-    filename: string
-    content: Buffer | string
-    contentType?: string
-  }>
-}
-
-// Email content type for backward compatibility
 export interface EmailContent {
   subject: string
   html: string
   text?: string
 }
 
-// Get email configuration from environment variables
-function getEmailConfig(): EmailConfig {
+// Email service interface
+export interface EmailService {
+  sendVerificationEmail: (to: string, verificationToken: string) => Promise<boolean>
+  sendResetPasswordEmail: (to: string, resetToken: string) => Promise<boolean>
+  sendWelcomeEmail: (to: string, name: string) => Promise<boolean>
+  sendReportEmail: (to: string, reportData: any) => Promise<boolean>
+}
+
+// Check if we're in development mode
+const isDevelopment = process.env.NODE_ENV !== "production"
+
+// Create a placeholder email service for development
+const createPlaceholderEmailService = (): EmailService => {
   return {
-    host: process.env.EMAIL_SERVER || "",
-    port: Number(process.env.EMAIL_PORT) || 587,
-    secure: process.env.EMAIL_SECURE === "true",
-    auth: {
-      user: process.env.EMAIL_USER || "",
-      pass: process.env.EMAIL_PASSWORD || "",
+    sendVerificationEmail: async (to: string, verificationToken: string) => {
+      console.log("📧 [PLACEHOLDER] Verification email would be sent to:", to)
+      console.log("📧 [PLACEHOLDER] Verification token:", verificationToken)
+      console.log(
+        "📧 [PLACEHOLDER] Email content:",
+        getVerificationEmailTemplate(verificationToken).substring(0, 100) + "...",
+      )
+      return true
     },
-    from: process.env.EMAIL_FROM || "RoofFax <noreply@rooffax.report>",
+
+    sendResetPasswordEmail: async (to: string, resetToken: string) => {
+      console.log("📧 [PLACEHOLDER] Reset password email would be sent to:", to)
+      console.log("📧 [PLACEHOLDER] Reset token:", resetToken)
+      console.log(
+        "📧 [PLACEHOLDER] Email content:",
+        getResetPasswordEmailTemplate(resetToken).substring(0, 100) + "...",
+      )
+      return true
+    },
+
+    sendWelcomeEmail: async (to: string, name: string) => {
+      console.log("📧 [PLACEHOLDER] Welcome email would be sent to:", to)
+      console.log("📧 [PLACEHOLDER] User name:", name)
+      console.log("📧 [PLACEHOLDER] Email content:", getWelcomeEmailTemplate(name).substring(0, 100) + "...")
+      return true
+    },
+
+    sendReportEmail: async (to: string, reportData: any) => {
+      console.log("📧 [PLACEHOLDER] Report email would be sent to:", to)
+      console.log("📧 [PLACEHOLDER] Report data:", JSON.stringify(reportData).substring(0, 100) + "...")
+      console.log("📧 [PLACEHOLDER] Email content:", getReportEmailTemplate(reportData).substring(0, 100) + "...")
+      return true
+    },
   }
 }
 
-// Create a development transporter for testing
-function createDevTransport() {
-  console.log("📧 Creating development email transport")
-  return nodemailer.createTransport({
-    host: "smtp.ethereal.email",
-    port: 587,
-    secure: false,
-    auth: {
-      user: "ethereal.user@ethereal.email",
-      pass: "ethereal_pass",
+// Create a production email service using Resend
+const createProductionEmailService = (): EmailService => {
+  return {
+    sendVerificationEmail: async (to: string, verificationToken: string) => {
+      try {
+        const html = getVerificationEmailTemplate(verificationToken)
+
+        await resend.emails.send({
+          from: process.env.EMAIL_FROM || "verification@rooffax.report",
+          to,
+          subject: "Verify your RoofFax account",
+          html,
+        })
+
+        return true
+      } catch (error) {
+        console.error("Failed to send verification email:", error)
+        return false
+      }
     },
-  })
-}
 
-// Create a production transporter
-function createProdTransport(config: EmailConfig) {
-  console.log("📧 Creating production email transport")
-  return nodemailer.createTransport({
-    host: config.host,
-    port: config.port,
-    secure: config.secure,
-    auth: config.auth,
-  })
-}
+    sendResetPasswordEmail: async (to: string, resetToken: string) => {
+      try {
+        const html = getResetPasswordEmailTemplate(resetToken)
 
-// Send an email
-export async function sendEmail({ to, subject, html, text, attachments = [] }: EmailOptions): Promise<void> {
-  try {
-    const isProduction = process.env.NODE_ENV === "production"
-    const config = getEmailConfig()
+        await resend.emails.send({
+          from: process.env.EMAIL_FROM || "noreply@rooffax.report",
+          to,
+          subject: "Reset your RoofFax password",
+          html,
+        })
 
-    // Validate configuration in production
-    if (isProduction) {
-      if (!config.host || !config.auth.user || !config.auth.pass) {
-        throw new Error("Email configuration is incomplete. Check environment variables.")
+        return true
+      } catch (error) {
+        console.error("Failed to send reset password email:", error)
+        return false
       }
-    }
+    },
 
-    // Create appropriate transport
-    const transport = isProduction ? createProdTransport(config) : createDevTransport()
+    sendWelcomeEmail: async (to: string, name: string) => {
+      try {
+        const html = getWelcomeEmailTemplate(name)
 
-    // Log email details in development
-    if (!isProduction) {
-      console.log("📧 Sending email:")
-      console.log(`To: ${Array.isArray(to) ? to.join(", ") : to}`)
-      console.log(`Subject: ${subject}`)
-      console.log(`Attachments: ${attachments.length}`)
-    }
+        await resend.emails.send({
+          from: process.env.EMAIL_FROM || "welcome@rooffax.report",
+          to,
+          subject: "Welcome to RoofFax!",
+          html,
+        })
 
-    // Send the email
-    const info = await transport.sendMail({
-      from: config.from,
-      to,
-      subject,
-      html,
-      text: text || html.replace(/<[^>]*>/g, ""), // Strip HTML tags for text version if not provided
-      attachments,
-    })
-
-    // Log success
-    if (!isProduction) {
-      console.log("📧 Email sent successfully!")
-      if (typeof nodemailer.getTestMessageUrl === "function" && info) {
-        console.log("Preview URL:", nodemailer.getTestMessageUrl(info))
+        return true
+      } catch (error) {
+        console.error("Failed to send welcome email:", error)
+        return false
       }
-    }
-  } catch (error) {
-    const err = error as Error
-    logError(err, "Email sending failed")
+    },
 
-    // Re-throw the error for the caller to handle
-    throw new Error(`Failed to send email: ${err.message}`)
+    sendReportEmail: async (to: string, reportData: any) => {
+      try {
+        const html = getReportEmailTemplate(reportData)
+
+        await resend.emails.send({
+          from: process.env.EMAIL_FROM || "reports@rooffax.report",
+          to,
+          subject: "Your RoofFax Report",
+          html,
+        })
+
+        return true
+      } catch (error) {
+        console.error("Failed to send report email:", error)
+        return false
+      }
+    },
   }
 }
 
-export default sendEmail
+// Determine which email service to use based on environment and API key
+export const emailService: EmailService =
+  isDevelopment || !RESEND_API_KEY ? createPlaceholderEmailService() : createProductionEmailService()
+
+// Default export for the email service
+export default emailService

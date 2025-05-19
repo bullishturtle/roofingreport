@@ -26,6 +26,19 @@ const nextConfig = {
     optimizeCss: true,
     optimizePackageImports: ["lucide-react"],
   },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Don't attempt to import these modules on the client
+      config.resolve.fallback = {
+        fs: false,
+        net: false,
+        dns: false,
+        tls: false,
+        child_process: false,
+      }
+    }
+    return config
+  },
 }
 
 module.exports = nextConfig

@@ -1,8 +1,8 @@
 "use client"
 
-import { onCLS, onFID, onLCP, onTTFB, onINP } from "web-vitals"
+import { onCLS, onFCP, onLCP, onTTFB, onINP } from "web-vitals"
 
-type MetricName = "CLS" | "FID" | "LCP" | "TTFB" | "INP"
+type MetricName = "CLS" | "FCP" | "LCP" | "TTFB" | "INP"
 
 type MetricData = {
   id: string
@@ -20,8 +20,8 @@ function getRating(name: MetricName, value: number): "good" | "needs-improvement
   switch (name) {
     case "CLS":
       return value <= 0.1 ? "good" : value <= 0.25 ? "needs-improvement" : "poor"
-    case "FID":
-      return value <= 100 ? "good" : value <= 300 ? "needs-improvement" : "poor"
+    case "FCP":
+      return value <= 1800 ? "good" : value <= 3000 ? "needs-improvement" : "poor"
     case "LCP":
       return value <= 2500 ? "good" : value <= 4000 ? "needs-improvement" : "poor"
     case "TTFB":
@@ -70,7 +70,7 @@ export function reportWebVitals() {
       // Add the rating
       const ratedMetric = {
         ...metric,
-        rating: getRating(metric.name, metric.value),
+        rating: getRating(metric.name as MetricName, metric.value),
       }
 
       // Report the metric
@@ -87,11 +87,12 @@ export function reportWebVitals() {
     }
 
     // Monitor all the Core Web Vitals plus TTFB
+    // Note: FID is replaced by INP in the latest web-vitals
     onCLS(sendMetric)
-    onFID(sendMetric)
+    onFCP(sendMetric)
     onLCP(sendMetric)
     onTTFB(sendMetric)
-    onINP(sendMetric) // Interaction to Next Paint (experimental)
+    onINP(sendMetric) // Interaction to Next Paint (replaces FID)
   } catch (error) {
     console.error("Failed to initialize Web Vitals reporting:", error)
   }

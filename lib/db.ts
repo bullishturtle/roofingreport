@@ -1,43 +1,35 @@
 import { neon, neonConfig } from "@neondatabase/serverless"
-import { Pool } from "@neondatabase/serverless"
+import { drizzle } from "drizzle-orm/neon-http"
 
-// Configure neon to use WebSockets in edge environments
+// Configure Neon to use WebSocket for better performance
 neonConfig.fetchConnectionCache = true
 
-// Get database URL from environment variables
-const DATABASE_URL = process.env.DATABASE_URL
+// Create a database client using the Neon serverless driver
+const sql = neon(process.env.DATABASE_URL!)
 
-if (!DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is not set")
-}
+// Create a Drizzle ORM instance
+export const db = drizzle(sql)
 
-// Create a SQL query executor using neon
-export const sql = neon(DATABASE_URL)
+// Export the SQL client for raw queries
+export { sql }
 
-// Create a connection pool for more complex operations
-let pool: Pool
-
-export function getPool() {
-  if (!pool) {
-    pool = new Pool({ connectionString: DATABASE_URL })
-  }
-  return pool
-}
-
-// Helper function to execute queries with better error handling and logging
-export async function executeQuery(queryText: string, params: any[] = []) {
+// Helper function to execute a raw SQL query
+export async function executeQuery(query: string, params: any[] = []) {
   try {
-    console.log(`Executing query: ${queryText.slice(0, 100)}${queryText.length > 100 ? "..." : ""}`)
-    const start = Date.now()
-    const result = await sql(queryText, params)
-    const duration = Date.now() - start
-    console.log(`Query executed in ${duration}ms`)
-    return result
+    return await sql(query, params)
   } catch (error) {
     console.error("Database query error:", error)
     throw error
   }
 }
 
-// Export sql as default for compatibility with existing code
-export default sql
+// Helper function to check database connection
+export async function checkDatabaseConnection() {
+  try {
+    const result = await sql`SELECT 1 as connection_test`
+    return result[0].connection_test === 1
+  } catch (error) {
+    console.error("Database connection error:", error)
+    return false
+  }
+}

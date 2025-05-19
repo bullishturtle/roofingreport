@@ -1,17 +1,12 @@
 CREATE TABLE IF NOT EXISTS web_vitals (
   id SERIAL PRIMARY KEY,
-  metric_id VARCHAR(255) NOT NULL,
-  metric_name VARCHAR(50) NOT NULL,
-  metric_value FLOAT NOT NULL,
-  metric_rating VARCHAR(50) NOT NULL,
-  metric_delta FLOAT,
-  navigation_type VARCHAR(255),
+  name VARCHAR(10) NOT NULL,
+  value FLOAT NOT NULL,
+  rating VARCHAR(20) NOT NULL,
   url TEXT NOT NULL,
   user_agent TEXT,
   timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Add indexes for faster queries
-CREATE INDEX IF NOT EXISTS idx_web_vitals_metric_name ON web_vitals(metric_name);
-CREATE INDEX IF NOT EXISTS idx_web_vitals_timestamp ON web_vitals(timestamp);
-CREATE INDEX IF NOT EXISTS idx_web_vitals_url ON web_vitals(url);
+CREATE INDEX IF NOT EXISTS web_vitals_name_idx ON web_vitals(name);
+CREATE INDEX IF NOT EXISTS web_vitals_timestamp_idx ON web_vitals(timestamp);

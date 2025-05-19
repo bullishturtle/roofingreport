@@ -3,12 +3,14 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { validationRules, validateField } from "@/lib/form-validation"
-import { useRouter } from "next/navigation"
+import { ContentAwareSkeleton } from "@/components/ui/content-aware-skeleton"
+import { TextPlaceholder } from "@/components/ui/text-placeholder"
 
 export function HeroSearch() {
   const [address, setAddress] = useState("")
@@ -58,7 +60,7 @@ export function HeroSearch() {
     }
   }
 
-  return (
+  const SearchForm = () => (
     <form onSubmit={handleSubmit} className="max-w-2xl mx-auto w-full">
       <div className="relative flex flex-col sm:flex-row gap-2">
         <div className="relative flex-grow">
@@ -82,7 +84,17 @@ export function HeroSearch() {
           {isLoading ? "Processing..." : "Get Report"}
         </Button>
       </div>
-      {error && <p className="mt-2 text-red-400 text-sm">{error}</p>}
+      {error && (
+        <TextPlaceholder isLoading={false} text={error} className="mt-2 text-red-400 text-sm">
+          <p className="mt-2 text-red-400 text-sm">{error}</p>
+        </TextPlaceholder>
+      )}
     </form>
+  )
+
+  return (
+    <ContentAwareSkeleton content={<SearchForm />} isLoading={false} preserveAspectRatio={true}>
+      <SearchForm />
+    </ContentAwareSkeleton>
   )
 }

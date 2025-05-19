@@ -1,14 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { LoadingSpinner } from "@/components/loading-spinner"
 import { Button } from "@/components/ui/button"
 import { useUser } from "@/contexts/user-context"
 import { logUserAction, logError } from "@/lib/utils"
-import { AlertTriangle, Download, Mail, Share2 } from "lucide-react"
+import { AlertTriangle, Download, Mail, Share2, Search } from "lucide-react"
 import { sendReportEmail } from "@/actions/report-actions"
 import {
   Dialog,
@@ -21,9 +21,12 @@ import {
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
+import { ReportContentPlaceholder } from "@/components/report/content-aware-report-placeholder"
+import { EmptyState } from "@/components/ui/empty-state"
+import { ImageContentPlaceholder } from "@/components/ui/image-content-placeholder"
+import { TextPlaceholder } from "@/components/ui/text-placeholder"
 
-export default function ReportPage() {
-  const searchParams = useSearchParams()
+export default function ReportPage({ searchParams }: { searchParams: { address?: string } }) {
   const router = useRouter()
   const { user } = useUser()
   const { toast } = useToast()
@@ -35,7 +38,7 @@ export default function ReportPage() {
   const [recipientName, setRecipientName] = useState("")
   const [isSendingEmail, setIsSendingEmail] = useState(false)
 
-  const address = searchParams.get("address")
+  const address = searchParams?.address
 
   useEffect(() => {
     if (!address) {
@@ -201,22 +204,6 @@ export default function ReportPage() {
       })
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen flex-col">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <LoadingSpinner size="lg" className="mx-auto mb-4" />
-            <p className="text-gray-600">Generating your roof report...</p>
-            <p className="text-sm text-gray-500 mt-2">This may take a few moments</p>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    )
-  }
-
   if (error) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -236,130 +223,150 @@ export default function ReportPage() {
     )
   }
 
+  const ReportContent = () => (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      {/* Report Header */}
+      <div className="bg-blue-900 text-white p-6">
+        <h1 className="text-2xl md:text-3xl font-bold mb-2">RoofFax Report</h1>
+        <p className="text-lg md:text-xl">{reportData.address}</p>
+        <p className="text-sm opacity-80">Generated on {reportData.reportDate}</p>
+      </div>
+
+      {/* Report Content */}
+      <div className="p-6">
+        {/* Overview Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold mb-4 text-blue-900 border-b pb-2">Roof Overview</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <dl className="space-y-2">
+                <div className="flex justify-between">
+                  <dt className="font-medium text-gray-600">Estimated Age:</dt>
+                  <dd>{reportData.roofAge}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="font-medium text-gray-600">Condition:</dt>
+                  <dd>{reportData.condition}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="font-medium text-gray-600">Est. Remaining Life:</dt>
+                  <dd>{reportData.estimatedLifespan}</dd>
+                </div>
+              </dl>
+            </div>
+            <div>
+              <dl className="space-y-2">
+                <div className="flex justify-between">
+                  <dt className="font-medium text-gray-600">Materials:</dt>
+                  <dd>{reportData.materials}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="font-medium text-gray-600">Square Footage:</dt>
+                  <dd>{reportData.squareFootage}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="font-medium text-gray-600">Slope:</dt>
+                  <dd>{reportData.slope}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        {/* Issues Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold mb-4 text-blue-900 border-b pb-2">Identified Issues</h2>
+          <ul className="list-disc pl-5 space-y-2">
+            {reportData.issues.map((issue: string, index: number) => (
+              <li key={index} className="text-gray-700">
+                {issue}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Recommendations Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold mb-4 text-blue-900 border-b pb-2">Recommendations</h2>
+          <ul className="list-disc pl-5 space-y-2">
+            {reportData.recommendations.map((rec: string, index: number) => (
+              <li key={index} className="text-gray-700">
+                {rec}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Images Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold mb-4 text-blue-900 border-b pb-2">Roof Images</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {reportData.images.map((image: string, index: number) => (
+              <div key={index} className="rounded-lg overflow-hidden shadow-md">
+                <ImageContentPlaceholder
+                  src={image || "/placeholder.svg"}
+                  alt={`Roof image ${index + 1}`}
+                  className="w-full h-48 object-cover"
+                  isLoading={false}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-4 justify-center md:justify-end mt-8">
+          <Button onClick={handleDownload} className="bg-blue-900 hover:bg-blue-800 text-white">
+            <Download className="mr-2 h-4 w-4" />
+            Download PDF
+          </Button>
+          <Button onClick={handleEmailDialogOpen} className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Mail className="mr-2 h-4 w-4" />
+            Email Report
+          </Button>
+          <Button onClick={handleShare} variant="outline" className="border-blue-900 text-blue-900 hover:bg-blue-50">
+            <Share2 className="mr-2 h-4 w-4" />
+            Share Report
+          </Button>
+        </div>
+
+        {/* Disclaimer */}
+        <div className="mt-8 text-xs text-gray-500 border-t pt-4">
+          <TextPlaceholder isLoading={false}>
+            <p>
+              This report is generated based on available data and satellite imagery. For a comprehensive professional
+              inspection, please consult with a certified roofing contractor.
+            </p>
+            <p className="mt-1">© {new Date().getFullYear()} RoofFax.Report. All rights reserved.</p>
+          </TextPlaceholder>
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1 bg-gray-50 py-8">
         <div className="container mx-auto px-4">
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            {/* Report Header */}
-            <div className="bg-blue-900 text-white p-6">
-              <h1 className="text-2xl md:text-3xl font-bold mb-2">RoofFax Report</h1>
-              <p className="text-lg md:text-xl">{reportData.address}</p>
-              <p className="text-sm opacity-80">Generated on {reportData.reportDate}</p>
-            </div>
-
-            {/* Report Content */}
-            <div className="p-6">
-              {/* Overview Section */}
-              <div className="mb-8">
-                <h2 className="text-xl font-bold mb-4 text-blue-900 border-b pb-2">Roof Overview</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <dl className="space-y-2">
-                      <div className="flex justify-between">
-                        <dt className="font-medium text-gray-600">Estimated Age:</dt>
-                        <dd>{reportData.roofAge}</dd>
-                      </div>
-                      <div className="flex justify-between">
-                        <dt className="font-medium text-gray-600">Condition:</dt>
-                        <dd>{reportData.condition}</dd>
-                      </div>
-                      <div className="flex justify-between">
-                        <dt className="font-medium text-gray-600">Est. Remaining Life:</dt>
-                        <dd>{reportData.estimatedLifespan}</dd>
-                      </div>
-                    </dl>
-                  </div>
-                  <div>
-                    <dl className="space-y-2">
-                      <div className="flex justify-between">
-                        <dt className="font-medium text-gray-600">Materials:</dt>
-                        <dd>{reportData.materials}</dd>
-                      </div>
-                      <div className="flex justify-between">
-                        <dt className="font-medium text-gray-600">Square Footage:</dt>
-                        <dd>{reportData.squareFootage}</dd>
-                      </div>
-                      <div className="flex justify-between">
-                        <dt className="font-medium text-gray-600">Slope:</dt>
-                        <dd>{reportData.slope}</dd>
-                      </div>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-
-              {/* Issues Section */}
-              <div className="mb-8">
-                <h2 className="text-xl font-bold mb-4 text-blue-900 border-b pb-2">Identified Issues</h2>
-                <ul className="list-disc pl-5 space-y-2">
-                  {reportData.issues.map((issue: string, index: number) => (
-                    <li key={index} className="text-gray-700">
-                      {issue}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Recommendations Section */}
-              <div className="mb-8">
-                <h2 className="text-xl font-bold mb-4 text-blue-900 border-b pb-2">Recommendations</h2>
-                <ul className="list-disc pl-5 space-y-2">
-                  {reportData.recommendations.map((rec: string, index: number) => (
-                    <li key={index} className="text-gray-700">
-                      {rec}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Images Section */}
-              <div className="mb-8">
-                <h2 className="text-xl font-bold mb-4 text-blue-900 border-b pb-2">Roof Images</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {reportData.images.map((image: string, index: number) => (
-                    <div key={index} className="rounded-lg overflow-hidden shadow-md">
-                      <img
-                        src={image || "/placeholder.svg"}
-                        alt={`Roof image ${index + 1}`}
-                        className="w-full h-48 object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap gap-4 justify-center md:justify-end mt-8">
-                <Button onClick={handleDownload} className="bg-blue-900 hover:bg-blue-800 text-white">
-                  <Download className="mr-2 h-4 w-4" />
-                  Download PDF
+          {isLoading ? (
+            <ReportContentPlaceholder isLoading={true}>
+              <ReportContent />
+            </ReportContentPlaceholder>
+          ) : reportData ? (
+            <ReportContent />
+          ) : (
+            <EmptyState
+              title="No Report Found"
+              description="We couldn't find a report with the provided address. Please try searching for an address to generate a new report."
+              icon={<Search className="h-10 w-10 text-gray-400" />}
+              action={
+                <Button onClick={() => router.push("/")} variant="outline">
+                  Search for an Address
                 </Button>
-                <Button onClick={handleEmailDialogOpen} className="bg-blue-600 hover:bg-blue-700 text-white">
-                  <Mail className="mr-2 h-4 w-4" />
-                  Email Report
-                </Button>
-                <Button
-                  onClick={handleShare}
-                  variant="outline"
-                  className="border-blue-900 text-blue-900 hover:bg-blue-50"
-                >
-                  <Share2 className="mr-2 h-4 w-4" />
-                  Share Report
-                </Button>
-              </div>
-
-              {/* Disclaimer */}
-              <div className="mt-8 text-xs text-gray-500 border-t pt-4">
-                <p>
-                  This report is generated based on available data and satellite imagery. For a comprehensive
-                  professional inspection, please consult with a certified roofing contractor.
-                </p>
-                <p className="mt-1">© {new Date().getFullYear()} RoofFax.Report. All rights reserved.</p>
-              </div>
-            </div>
-          </div>
+              }
+            />
+          )}
         </div>
       </main>
       <Footer />

@@ -13,8 +13,6 @@ type MetricData = {
   navigationType: string | undefined
 }
 
-type SendMetricFn = (metric: MetricData) => void
-
 // Determine the rating based on the metric value
 function getRating(name: MetricName, value: number): "good" | "needs-improvement" | "poor" {
   switch (name) {
@@ -66,11 +64,12 @@ async function reportWebVital(metric: MetricData) {
 // Function to report all web vitals
 export function reportWebVitals() {
   try {
-    const sendMetric: SendMetricFn = (metric) => {
+    const sendMetric = (metric: any) => {
       // Add the rating
+      const metricName = metric.name as MetricName
       const ratedMetric = {
         ...metric,
-        rating: getRating(metric.name as MetricName, metric.value),
+        rating: getRating(metricName, metric.value),
       }
 
       // Report the metric
@@ -87,12 +86,11 @@ export function reportWebVitals() {
     }
 
     // Monitor all the Core Web Vitals plus TTFB
-    // Note: FID is replaced by INP in the latest web-vitals
     onCLS(sendMetric)
     onFCP(sendMetric)
     onLCP(sendMetric)
     onTTFB(sendMetric)
-    onINP(sendMetric) // Interaction to Next Paint (replaces FID)
+    onINP(sendMetric)
   } catch (error) {
     console.error("Failed to initialize Web Vitals reporting:", error)
   }

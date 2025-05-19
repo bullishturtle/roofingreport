@@ -57,24 +57,24 @@ export function getReportEmailTemplate({
 }
 
 /**
- * Get a basic welcome email template with verification link
+ * Get a basic verification email template
  */
-export function getVerificationEmailTemplate(userName: string, verificationLink: string): string {
+export function getVerificationEmailTemplate(verificationToken: string): string {
+  const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://rooffax.report"}/verify-email?token=${verificationToken}`
+
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background-color: #1e3a8a; color: white; padding: 20px; text-align: center;">
-        <h1 style="margin: 0;">Welcome to RoofFax</h1>
+        <h1 style="margin: 0;">Verify Your Email</h1>
       </div>
       
       <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none;">
-        <p>Hello ${userName},</p>
-        
-        <p>Thank you for creating an account with RoofFax. We're excited to have you on board!</p>
+        <p>Thank you for creating an account with RoofFax.</p>
         
         <p>Please verify your email address by clicking the button below:</p>
         
         <div style="margin: 30px 0; text-align: center;">
-          <a href="${verificationLink}" style="background-color: #ea580c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
+          <a href="${verificationUrl}" style="background-color: #ea580c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
             Verify Email
           </a>
         </div>
@@ -95,7 +95,9 @@ export function getVerificationEmailTemplate(userName: string, verificationLink:
 /**
  * Get a basic password reset email template
  */
-export function getPasswordResetEmailTemplate(userName: string, resetLink: string): string {
+export function getPasswordResetEmailTemplate(resetToken: string): string {
+  const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://rooffax.report"}/reset-password?token=${resetToken}`
+
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background-color: #1e3a8a; color: white; padding: 20px; text-align: center;">
@@ -103,14 +105,12 @@ export function getPasswordResetEmailTemplate(userName: string, resetLink: strin
       </div>
       
       <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none;">
-        <p>Hello ${userName},</p>
-        
         <p>We received a request to reset your password for your RoofFax account.</p>
         
         <p>Click the button below to reset your password:</p>
         
         <div style="margin: 30px 0; text-align: center;">
-          <a href="${resetLink}" style="background-color: #ea580c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
+          <a href="${resetUrl}" style="background-color: #ea580c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
             Reset Password
           </a>
         </div>
@@ -130,9 +130,10 @@ export function getPasswordResetEmailTemplate(userName: string, resetLink: strin
 
 /**
  * Get a basic welcome email template
- * This is a placeholder implementation for deployment
  */
-export function getWelcomeEmailTemplate(userName: string, verificationLink: string): string {
+export function getWelcomeEmailTemplate(userName: string): string {
+  const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://rooffax.report"}/dashboard`
+
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background-color: #1e3a8a; color: white; padding: 20px; text-align: center;">
@@ -144,15 +145,11 @@ export function getWelcomeEmailTemplate(userName: string, verificationLink: stri
         
         <p>Thank you for creating an account with RoofFax. We're excited to have you on board!</p>
         
-        <p>Please verify your email address by clicking the button below:</p>
-        
         <div style="margin: 30px 0; text-align: center;">
-          <a href="${verificationLink}" style="background-color: #ea580c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
-            Verify Email
+          <a href="${dashboardUrl}" style="background-color: #ea580c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
+            Go to Dashboard
           </a>
         </div>
-        
-        <p>If you did not create this account, you can safely ignore this email.</p>
         
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
         

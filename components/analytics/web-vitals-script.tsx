@@ -9,6 +9,7 @@ export function WebVitalsScript() {
     reportWebVitals()
   }, [])
 
-  // This component doesn't render anything
   return null
 }
+
+export default WebVitalsScript

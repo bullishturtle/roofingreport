@@ -1,38 +1,58 @@
 "use client"
 
-import type React from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle } from "lucide-react"
-import { motion } from "framer-motion"
+import {
+  Ruler,
+  CloudRain,
+  Layers,
+  ClipboardList,
+  Shield,
+  CuboidIcon as Cube,
+  Home,
+  Wind,
+  Calendar,
+  FileText,
+  Map,
+  AlertTriangle,
+  BarChart,
+  Clock,
+  Zap,
+  type LucideIcon,
+} from "lucide-react"
 
 interface FeatureCardProps {
-  icon?: React.ReactNode
   title: string
   description: string
-  className?: string
-  titleClass?: string
+  icon: string
 }
 
-export function FeatureCard({ icon, title, description, className = "", titleClass = "" }: FeatureCardProps) {
+export function FeatureCard({ title, description, icon }: FeatureCardProps) {
+  const icons: Record<string, LucideIcon> = {
+    ruler: Ruler,
+    "cloud-rain": CloudRain,
+    layers: Layers,
+    "clipboard-list": ClipboardList,
+    shield: Shield,
+    cube: Cube,
+    home: Home,
+    wind: Wind,
+    calendar: Calendar,
+    "file-text": FileText,
+    map: Map,
+    "alert-triangle": AlertTriangle,
+    "bar-chart": BarChart,
+    clock: Clock,
+    zap: Zap,
+  }
+
+  const IconComponent = icons[icon] || Home
+
   return (
-    <motion.div
-      whileHover={{ y: -5, transition: { duration: 0.2 } }}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-    >
-      <Card className={`overflow-hidden border-white/10 bg-white/5 backdrop-blur-sm ${className}`}>
-        <CardHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            {icon || <CheckCircle className="h-5 w-5 text-blue-400" />}
-            <CardTitle className={`text-lg text-white ${titleClass}`}>{title}</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <CardDescription className="text-sm text-white/70">{description}</CardDescription>
-        </CardContent>
-      </Card>
-    </motion.div>
+    <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-100">
+      <div className="bg-amber-100 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+        <IconComponent className="h-6 w-6 text-amber-600" />
+      </div>
+      <h3 className="text-xl font-semibold mb-2">{title}</h3>
+      <p className="text-gray-600">{description}</p>
+    </div>
   )
 }

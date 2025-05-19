@@ -1,82 +1,79 @@
 "use client"
 
-import React from "react"
-
-import { useState, useEffect } from "react"
+import { useState, useCallback, createContext, useContext, type ReactNode, useEffect } from "react"
 import { createPortal } from "react-dom"
-import { motion, AnimatePresence } from "framer-motion"
 import { X, CheckCircle, AlertTriangle, Info, AlertCircle } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 
-export type ToastType = "success" | "error" | "warning" | "info"
+type ToastType = "success" | "error" | "warning" | "info"
 
-export interface Toast {
-  id: string
-  message: string
+interface ToastDetails {
+  id: number
   type: ToastType
-  duration?: number
+  message: string
 }
 
-interface ToastProviderProps {
-  children: React.ReactNode
+interface ToastContextProps {
+  toasts: ToastDetails[]
+  showToast: (message: string, type?: ToastType) => void
+  dismissToast: (id: number) => void
 }
 
-interface ToastContextType {
-  showToast: (message: string, type: ToastType, duration?: number) => void
-  hideToast: (id: string) => void
-}
+const ToastContext = createContext<ToastContextProps>({
+  toasts: [],
+  showToast: () => {},
+  dismissToast: () => {},
+})
 
-// Create context
-const ToastContext = React.createContext<ToastContextType | undefined>(undefined)
-
-// Create a hook to use the toast context
-export function useToast() {
-  const context = React.useContext(ToastContext)
-  if (!context) {
-    throw new Error("useToast must be used within a ToastProvider")
-  }
-  return context
-}
-
-export function ToastProvider({ children }: ToastProviderProps) {
-  const [toasts, setToasts] = useState<Toast[]>([])
-  const [isMounted, setIsMounted] = useState(false)
+export const ToastProvider = ({ children }: { children: ReactNode }) => {
+  const [toasts, setToasts] = useState<ToastDetails[]>([])
+  const [nextId, setNextId] = useState(0)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setIsMounted(true)
-    return () => setIsMounted(false)
+    setMounted(true)
+    return () => setMounted(false)
   }, [])
 
-  const showToast = (message: string, type: ToastType, duration = 5000) => {
-    const id = Math.random().toString(36).substring(2, 9)
-    const newToast = { id, message, type, duration }
-    setToasts((prev) => [...prev, newToast])
+  const showToast = useCallback(
+    (message: string, type: ToastType = "info") => {
+      const id = nextId
+      setToasts((prevToasts) => [...prevToasts, { id, type, message }])
+      setNextId(id + 1)
+    },
+    [nextId],
+  )
 
-    if (duration !== Number.POSITIVE_INFINITY) {
-      setTimeout(() => {
-        hideToast(id)
-      }, duration)
+  const dismissToast = useCallback((id: number) => {
+    setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id))
+  }, [])
+
+  // Auto-dismiss toasts after a certain duration
+  useEffect(() => {
+    if (toasts.length > 0) {
+      const timer = setTimeout(() => {
+        dismissToast(toasts[0].id)
+      }, 5000) // Dismiss after 5 seconds
+
+      return () => clearTimeout(timer)
     }
-  }
+  }, [toasts, dismissToast])
 
-  const hideToast = (id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id))
-  }
-
-  const value = { showToast, hideToast }
-
-  if (!isMounted) {
-    return <>{children}</>
+  const value = {
+    toasts,
+    showToast,
+    dismissToast,
   }
 
   return (
     <ToastContext.Provider value={value}>
       {children}
-      {isMounted &&
+      {mounted &&
         createPortal(
           <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
             <AnimatePresence>
               {toasts.map((toast) => (
-                <Toast key={toast.id} toast={toast} onClose={() => hideToast(toast.id)} />
+                <Toast key={toast.id} toast={toast} onDismiss={() => dismissToast(toast.id)} />
               ))}
             </AnimatePresence>
           </div>,
@@ -86,13 +83,21 @@ export function ToastProvider({ children }: ToastProviderProps) {
   )
 }
 
-interface ToastProps {
-  toast: Toast
-  onClose: () => void
+export const useToast = () => {
+  const context = useContext(ToastContext)
+  if (!context) {
+    throw new Error("useToast must be used within a ToastProvider")
+  }
+  return context
 }
 
-function Toast({ toast, onClose }: ToastProps) {
-  const { id, message, type } = toast
+interface ToastProps {
+  toast: ToastDetails
+  onDismiss: () => void
+}
+
+const Toast = ({ toast, onDismiss }: ToastProps) => {
+  const { id, type, message } = toast
 
   const icons = {
     success: <CheckCircle className="h-5 w-5 text-green-500" />,
@@ -102,10 +107,10 @@ function Toast({ toast, onClose }: ToastProps) {
   }
 
   const bgColors = {
-    success: "bg-green-500/10 border-green-500/30",
-    error: "bg-red-500/10 border-red-500/30",
-    warning: "bg-amber-500/10 border-amber-500/30",
-    info: "bg-blue-500/10 border-blue-500/30",
+    success: "bg-green-50 border-green-200",
+    error: "bg-red-50 border-red-200",
+    warning: "bg-amber-50 border-amber-200",
+    info: "bg-blue-50 border-blue-200",
   }
 
   return (
@@ -113,14 +118,14 @@ function Toast({ toast, onClose }: ToastProps) {
       initial={{ opacity: 0, y: 20, scale: 0.8 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 20, scale: 0.8 }}
-      className={`w-72 p-4 rounded-lg border backdrop-blur-md shadow-lg ${bgColors[type]}`}
+      className={`w-72 p-4 rounded-lg border shadow-lg ${bgColors[type]}`}
     >
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0">{icons[type]}</div>
-        <div className="flex-1 text-sm text-white">{message}</div>
+        <div className="flex-1 text-sm text-gray-700">{message}</div>
         <button
-          onClick={onClose}
-          className="flex-shrink-0 rounded-full p-1 text-white/70 hover:bg-white/10 hover:text-white"
+          onClick={onDismiss}
+          className="flex-shrink-0 rounded-full p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-600"
         >
           <X className="h-4 w-4" />
         </button>

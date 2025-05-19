@@ -3,138 +3,79 @@
 import type React from "react"
 
 import { useState } from "react"
+import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Loader2, AlertCircle } from "lucide-react"
-import { motion } from "framer-motion"
 import { useToast } from "@/components/ui/toast"
 import { validationRules, validateField } from "@/lib/form-validation"
 
 export function HeroSearch() {
   const [address, setAddress] = useState("")
-  const [isSearching, setIsSearching] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const { showToast } = useToast()
 
-  const validateAddress = () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Validate address
     const addressError = validateField(address, [
-      validationRules.required("Please enter an address"),
+      validationRules.required("Please enter a property address"),
       validationRules.address("Please enter a valid property address"),
     ])
 
-    setError(addressError)
-    return !addressError
-  }
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!validateAddress()) {
+    if (addressError) {
+      setError(addressError)
       return
     }
 
-    try {
-      setIsSearching(true)
-      setError(null)
+    setError(null)
+    setIsLoading(true)
 
+    try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500))
 
-      // In a real implementation, this would call an API endpoint
-      console.log("Searching for address:", address)
+      // Show success message
+      showToast(`Report requested for: ${address}`, "success")
 
-      // Show success toast
-      showToast(`Report generated for ${address}`, "success")
+      // In a real app, we would redirect to the report page or show a modal
+      console.log("Address submitted:", address)
 
-      // Redirect to the report page
-      window.location.href = `/report?address=${encodeURIComponent(address)}`
-    } catch (err) {
-      console.error("Search failed:", err)
-      setError("Search failed. Please try again.")
-      showToast("Failed to generate report. Please try again.", "error")
+      // Reset form
+      setAddress("")
+    } catch (error) {
+      showToast("Error processing your request. Please try again.", "error")
     } finally {
-      setIsSearching(false)
+      setIsLoading(false)
     }
   }
 
   return (
-    <form onSubmit={handleSearch} className="flex w-full max-w-md flex-col gap-2 sm:flex-row">
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neon-gold/70" />
-        <Input
-          type="text"
-          placeholder="Enter any property address..."
-          className={`pl-10 bg-black/30 border-2 ${
-            error ? "border-red-500/50 focus:border-red-500" : "border-neon-gold/30 focus:border-neon-gold"
-          } text-white placeholder:text-white/50 focus:ring-neon-gold/20`}
-          value={address}
-          onChange={(e) => {
-            setAddress(e.target.value)
-            if (error) validateAddress()
-          }}
-          onBlur={validateAddress}
-          aria-invalid={error ? "true" : "false"}
-          aria-describedby={error ? "address-error" : undefined}
-          disabled={isSearching}
-        />
-        {address.length > 0 && !isSearching && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="absolute right-3 top-1/2 -translate-y-1/2"
-          >
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-5 w-5 text-white/50 hover:text-white"
-              onClick={() => {
-                setAddress("")
-                setError(null)
-              }}
-            >
-              <span className="sr-only">Clear</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-3 w-3"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </Button>
-          </motion.div>
-        )}
-        {error && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <AlertCircle className="h-4 w-4 text-red-500" />
-          </div>
-        )}
-      </div>
-      <Button
-        type="submit"
-        disabled={isSearching || !address.trim()}
-        className="bg-gradient-to-r from-neon-gold to-neon-orange hover:from-neon-orange hover:to-neon-gold text-black border-none shadow-neon-glow"
-      >
-        {isSearching ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Searching...
-          </>
-        ) : (
-          "Get Instant Report"
-        )}
-      </Button>
-      {error && (
-        <div id="address-error" className="text-xs text-red-400 mt-1 sm:absolute sm:top-full">
-          {error}
+    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto w-full">
+      <div className="relative flex flex-col sm:flex-row gap-2">
+        <div className="relative flex-grow">
+          <Input
+            type="text"
+            placeholder="Enter any property address..."
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className={`h-12 pl-10 bg-white/10 backdrop-blur-md border-white/20 text-white placeholder:text-white/70 focus:border-amber-400 focus:ring-amber-400/20 ${
+              error ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : ""
+            }`}
+            disabled={isLoading}
+          />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/70" />
         </div>
-      )}
+        <Button
+          type="submit"
+          className="h-12 px-8 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-medium transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg"
+          disabled={isLoading}
+        >
+          {isLoading ? "Processing..." : "Get Report"}
+        </Button>
+      </div>
+      {error && <p className="mt-2 text-red-400 text-sm">{error}</p>}
     </form>
   )
 }

@@ -1,213 +1,153 @@
-import Image from "next/image"
-import Link from "next/link"
-import { AddressForm } from "@/components/address-form"
-import { RoofusViewer } from "@/components/roofus-viewer"
-import { SpaceAnimation } from "@/components/space-animation"
-import { Features } from "@/components/features"
-import { Footer } from "@/components/footer"
-import { Shield, Rocket, FileText } from "lucide-react"
+import { Search, Check } from "lucide-react"
+import AddressInput from "@/components/address-input"
+import StatsSection from "@/components/stats-section"
+import HowItWorks from "@/components/how-it-works"
+import Footer from "@/components/footer"
+import ChatBot from "@/components/chat-bot"
+import AnimatedFox from "@/components/animated-fox"
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen bg-[#050A1F] text-white overflow-hidden">
-      {/* Space background with stars */}
-      <div className="absolute inset-0 z-0">
-        <SpaceAnimation />
+    <div className="min-h-screen bg-gradient-to-b from-[#000a1f] to-[#001a45] text-white relative overflow-hidden">
+      {/* Animated stars background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {Array.from({ length: 50 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full bg-white opacity-30"
+            style={{
+              width: Math.random() * 3 + 1 + "px",
+              height: Math.random() * 3 + 1 + "px",
+              top: Math.random() * 100 + "%",
+              left: Math.random() * 100 + "%",
+              animation: `twinkle ${Math.random() * 5 + 3}s infinite ${Math.random() * 5}s`,
+            }}
+          />
+        ))}
       </div>
 
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between p-4 md:p-6">
+      <header className="container mx-auto px-4 py-6 flex justify-between items-center">
         <div className="flex items-center">
-          <div className="bg-yellow-500 rounded-full h-12 w-12 flex items-center justify-center text-black font-bold text-2xl">
+          <div className="bg-yellow-500 rounded-full w-12 h-12 flex items-center justify-center text-black font-bold text-2xl">
             R
           </div>
           <div className="ml-2 text-2xl font-bold">
             Roof<span className="text-yellow-500">Fax</span>
           </div>
         </div>
-        <nav className="hidden md:flex space-x-6">
-          <Link href="#" className="hover:text-yellow-500 transition-colors">
-            About
-          </Link>
-          <Link href="#" className="hover:text-yellow-500 transition-colors">
-            Features
-          </Link>
-          <Link href="#" className="hover:text-yellow-500 transition-colors">
-            Pricing
-          </Link>
-          <Link href="#" className="hover:text-yellow-500 transition-colors">
-            Blog
-          </Link>
-          <Link href="#" className="hover:text-yellow-500 transition-colors">
-            Contact
-          </Link>
-        </nav>
-        <div className="flex space-x-4">
-          <Link
-            href="https://trustthefox.com"
-            className="px-4 py-2 bg-transparent border border-yellow-500 text-yellow-500 rounded-md hover:bg-yellow-500 hover:text-black transition-colors"
-          >
-            Sign In
-          </Link>
-        </div>
+        <button className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-semibold px-6 py-3 rounded-full hover:from-yellow-400 hover:to-yellow-500 transition-all transform hover:scale-105 active:scale-95">
+          Get Started Free
+        </button>
       </header>
 
-      {/* Hero Section with Space Narrative */}
-      <section className="relative z-10 flex flex-col items-center justify-center text-center px-4 py-12 md:py-24">
-        <h1 className="text-4xl md:text-6xl font-bold mb-6 max-w-4xl">
-          Lost in the <span className="text-yellow-500">Vast Universe</span> of Roof Data?
-        </h1>
-        <p className="text-lg md:text-xl text-gray-300 max-w-2xl mb-8">
-          Discover the coordinates to your perfect roof solution. Roofus found the way home, and now he's here to guide
-          you.
-        </p>
-        <div className="w-full max-w-md mb-12">
-          <AddressForm />
-        </div>
-        <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-          <Link
-            href="#"
-            className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold rounded-md hover:from-yellow-600 hover:to-yellow-700 transition-colors"
-          >
-            Start Your Free Trial
-          </Link>
-          <Link
-            href="#"
-            className="px-6 py-3 bg-transparent border border-white text-white rounded-md hover:bg-white/10 transition-colors"
-          >
-            Schedule a Demo
-          </Link>
-        </div>
-        <p className="mt-4 text-sm text-gray-400">No credit card required. Cancel anytime.</p>
-      </section>
-
-      {/* Space Journey Narrative */}
-      <section className="relative z-10 py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div className="space-y-6">
-              <h2 className="text-3xl md:text-4xl font-bold">
-                The <span className="text-yellow-500">Cosmic Discovery</span>
-              </h2>
-              <p className="text-gray-300">
-                Lost in the endless void of space, searching for answers about their home, they discovered a mysterious
-                package floating among the stars. Inside was RoofFax - the exact coordinates to their property and the
-                key to finding their way back.
-              </p>
-              <p className="text-gray-300">
-                Now, Roofus is on a mission to help everyone navigate the universe of roof data, providing precise
-                measurements, condition assessments, and actionable insights.
-              </p>
-            </div>
-            <div className="relative h-80 md:h-96 rounded-lg overflow-hidden border-2 border-yellow-500/50">
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/70 z-10"></div>
-              <Image src="/vast-space-scene.png" alt="Space journey" fill className="object-cover" />
-              <div className="absolute bottom-4 left-4 right-4 z-20">
-                <p className="text-lg font-semibold">Roofus discovered the coordinates home</p>
-              </div>
-            </div>
+      {/* Main Content */}
+      <main className="container mx-auto px-4 pb-20">
+        {/* Hero Section */}
+        <section className="py-12 text-center max-w-4xl mx-auto">
+          <div className="inline-block bg-yellow-500 text-black font-semibold px-6 py-2 rounded-full mb-6">
+            The World&apos;s Smartest Roof & Property Report
           </div>
-        </div>
-      </section>
-
-      {/* Meet Roofus Section */}
-      <section className="relative z-10 py-16 px-4 bg-black/30">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">
-              Meet <span className="text-yellow-500">Roofus</span> in 3D
-            </h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Interact with our canine appraiser in full 3D. Rotate, zoom, and see different animations!
-            </p>
-          </div>
-
-          <RoofusViewer />
-
-          <div className="mt-12 text-center">
-            <p className="text-lg text-gray-300">
-              Roofus is equipped with the latest space-age technology to analyze your roof and provide accurate reports.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="relative z-10 py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">
-              How RoofFax <span className="text-yellow-500">Works</span>
-            </h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Three simple steps to get comprehensive roof insights
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-black/30 p-6 rounded-lg border border-gray-800 text-center">
-              <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Rocket className="w-8 h-8 text-yellow-500" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">1. Enter Address</h3>
-              <p className="text-gray-300">Simply enter your property address to begin the cosmic journey.</p>
-            </div>
-
-            <div className="bg-black/30 p-6 rounded-lg border border-gray-800 text-center">
-              <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-8 h-8 text-yellow-500" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">2. AI Analysis</h3>
-              <p className="text-gray-300">Our space-age AI technology analyzes satellite imagery of your roof.</p>
-            </div>
-
-            <div className="bg-black/30 p-6 rounded-lg border border-gray-800 text-center">
-              <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FileText className="w-8 h-8 text-yellow-500" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">3. Get Your Report</h3>
-              <p className="text-gray-300">
-                Receive a comprehensive roof report with measurements, condition assessment, and actionable insights.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="relative z-10 py-16 px-4 bg-gradient-to-b from-transparent to-black/50">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Enter an address. Get the facts.
+          <h1 className="text-5xl md:text-6xl font-bold mb-4">
+            Trusted by Homeowners.
             <br />
-            <span className="text-yellow-500">Outsmart the storm™</span>
+            Built for Pros.
+          </h1>
+          <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+            Tired of juggling a dozen apps? RoofFax brings roof measurement, storm tracking, skip tracing, code lookups,
+            proposals, and instant outreach together—guided by Roofus, built for closers.
+          </p>
+
+          {/* Address Input */}
+          <AddressInput />
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+            <button className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-semibold px-8 py-4 rounded-full hover:from-yellow-400 hover:to-yellow-500 transition-all transform hover:scale-105 active:scale-95">
+              Start Free Trial
+            </button>
+            <button className="border-2 border-yellow-500 text-yellow-500 font-semibold px-8 py-4 rounded-full hover:bg-yellow-500/10 transition-all transform hover:scale-105 active:scale-95">
+              See How It Works
+            </button>
+          </div>
+
+          {/* Features */}
+          <div className="flex flex-wrap justify-center gap-8 mt-8 text-lg">
+            <div className="flex items-center">
+              <Check className="text-yellow-500 mr-2" />
+              <span>No Credit Card Required</span>
+            </div>
+            <div className="flex items-center">
+              <Check className="text-yellow-500 mr-2" />
+              <span>Instant Reports</span>
+            </div>
+            <div className="flex items-center">
+              <Check className="text-yellow-500 mr-2" />
+              <span>Cancel Anytime</span>
+            </div>
+          </div>
+
+          {/* 3D Viewer Placeholder */}
+          <div className="mt-12 border-2 border-yellow-500 rounded-xl p-8 bg-black/30 max-w-3xl mx-auto">
+            <div className="flex justify-center gap-6">
+              <button className="bg-yellow-500/20 text-yellow-500 font-semibold px-6 py-3 rounded-full border border-yellow-500">
+                Interactive 3D
+              </button>
+              <button className="text-yellow-500 font-semibold px-6 py-3 rounded-full border border-yellow-500/30">
+                View Full Report
+              </button>
+            </div>
+            <p className="mt-4 text-gray-400">Enable JavaScript to view</p>
+          </div>
+        </section>
+
+        {/* Quick Links */}
+        <section className="flex flex-col sm:flex-row gap-4 justify-center mt-8 mb-16">
+          <button className="flex items-center justify-center gap-2 border-2 border-yellow-500 text-yellow-500 font-semibold px-8 py-4 rounded-full hover:bg-yellow-500/10 transition-all">
+            <Search />
+            <span>Roof Reports</span>
+          </button>
+          <button className="flex items-center justify-center gap-2 border-2 border-yellow-500/50 text-yellow-500/90 font-semibold px-8 py-4 rounded-full hover:bg-yellow-500/10 transition-all">
+            <span>More Tools</span>
+          </button>
+        </section>
+
+        {/* Stats Section */}
+        <StatsSection />
+
+        {/* How It Works Section */}
+        <HowItWorks />
+
+        {/* Call to Action */}
+        <section className="py-16 text-center max-w-4xl mx-auto">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            Enter an address. Get the facts. <span className="text-yellow-500">Outsmart the storm™</span>
           </h2>
           <p className="text-xl text-gray-300 mb-8">
             Stop wasting time on clunky apps. RoofFax does it all, so you can close more jobs, faster.
           </p>
-          <div className="flex flex-col md:flex-row gap-4 justify-center">
-            <Link
-              href="#"
-              className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold rounded-md hover:from-yellow-600 hover:to-yellow-700 transition-colors text-lg"
-            >
-              Start Your Free Trial
-            </Link>
-            <Link
-              href="#"
-              className="px-8 py-4 bg-transparent border border-white text-white rounded-md hover:bg-white/10 transition-colors text-lg"
-            >
-              Schedule a Demo
-            </Link>
-          </div>
-          <p className="mt-4 text-sm text-gray-400">No credit card required. Cancel anytime.</p>
-        </div>
-      </section>
 
-      {/* Features Section */}
-      <Features />
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-semibold px-8 py-4 rounded-full hover:from-yellow-400 hover:to-yellow-500 transition-all transform hover:scale-105 active:scale-95">
+              Start Your Free Trial
+            </button>
+            <button className="border-2 border-yellow-500 text-yellow-500 font-semibold px-8 py-4 rounded-full hover:bg-yellow-500/10 transition-all transform hover:scale-105 active:scale-95">
+              Schedule a Demo
+            </button>
+          </div>
+
+          <p className="mt-4 text-gray-400">No credit card required. Cancel anytime.</p>
+        </section>
+      </main>
 
       {/* Footer */}
       <Footer />
+
+      {/* Animated Fox (Rufus) */}
+      <AnimatedFox />
+
+      {/* Chat Bot */}
+      <ChatBot />
     </div>
   )
 }

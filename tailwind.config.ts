@@ -62,9 +62,7 @@ const config: Config = {
           ring: "hsl(var(--sidebar-ring))",
         },
         yellow: {
-          500: "#FFD700", // Brighter gold for RoofFax branding
-          600: "#E6C200",
-          700: "#CCAC00",
+          500: "#FFD700",
         },
       },
       backgroundImage: {

@@ -6,8 +6,8 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "RoofFax.Report - The World's Smartest Roof & Property Report",
-  description: "Get comprehensive roof reports in seconds. Trusted by homeowners, built for pros.",
+  title: "RoofFax Report",
+  description: "The World's Smartest Roof & Property Report",
     generator: 'v0.dev'
 }
 

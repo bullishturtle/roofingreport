@@ -5,50 +5,12 @@ import { Canvas, useFrame } from "@react-three/fiber"
 import { useGLTF, useAnimations, Environment, Html } from "@react-three/drei"
 import type * as THREE from "three"
 
-// Animation URLs from Supabase
-const ANIMATIONS = {
-  IDLE: "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/sign/roofus-models/idle.glb",
-  WALK: "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/sign/roofus-models/walk.glb",
-  RUN: "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/sign/roofus-models/run.glb",
-  JUMP: "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/sign/roofus-models/jump.glb",
-  CLIMB: "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/sign/roofus-models/climb.glb",
-  DEATH: "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/sign/roofus-models/death.glb",
-  SOMERSAULT: "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/sign/roofus-models/soumersault.glb",
-}
-
-// Texture URLs from Supabase
-const TEXTURES = {
-  BASE_COLOR: "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/sign/roofus-models/Image_0.jpg",
-  NORMAL_MAP: "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/sign/roofus-models/Image_2.jpg",
-}
-
-// HDR environment URL from Supabase
-const HDR_URL = "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/sign/roofus-models/color_121212.hdr"
+// Character model from Supabase public URL
+const CHARACTER_MODEL_URL =
+  "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/character.glb"
 
 // Animation states
 type AnimationState = "idle" | "walk" | "run" | "jump" | "climb" | "death" | "somersault"
-
-// Map animation states to URLs
-const getAnimationUrl = (animation: AnimationState): string => {
-  switch (animation) {
-    case "idle":
-      return ANIMATIONS.IDLE
-    case "walk":
-      return ANIMATIONS.WALK
-    case "run":
-      return ANIMATIONS.RUN
-    case "jump":
-      return ANIMATIONS.JUMP
-    case "climb":
-      return ANIMATIONS.CLIMB
-    case "death":
-      return ANIMATIONS.DEATH
-    case "somersault":
-      return ANIMATIONS.SOMERSAULT
-    default:
-      return ANIMATIONS.IDLE
-  }
-}
 
 // Roofus character component
 function RoofusModel({
@@ -67,17 +29,18 @@ function RoofusModel({
   const group = useRef<THREE.Group>(null)
   const [modelLoaded, setModelLoaded] = useState(false)
   const [modelError, setModelError] = useState(false)
-
-  // Get the animation URL
-  const animationUrl = getAnimationUrl(animation)
+  const [currentAnimation, setCurrentAnimation] = useState<string>(animation)
 
   // Load the model with error handling
   const { scene, animations } = useGLTF(
-    animationUrl,
+    CHARACTER_MODEL_URL,
     undefined,
-    () => setModelLoaded(true),
+    () => {
+      console.log("Model loaded successfully")
+      setModelLoaded(true)
+    },
     (error) => {
-      console.error(`Error loading Roofus model (${animation}):`, error)
+      console.error("Error loading Roofus model:", error)
       setModelError(true)
     },
   ) as any
@@ -87,14 +50,46 @@ function RoofusModel({
 
   // Handle animation changes
   useEffect(() => {
-    if (!modelLoaded || modelError || !actions || !names.length) return
+    if (!modelLoaded || modelError || !actions || !names || names.length === 0) return
 
-    // Find the first animation and play it
-    const animationName = names[0]
-    if (actions[animationName]) {
-      actions[animationName].reset().fadeIn(0.5).play()
+    console.log("Available animations:", names)
+
+    // Stop all animations
+    Object.values(actions).forEach((action: any) => action?.stop())
+
+    // Map animation state to animation name in the model
+    const animationMap: Record<AnimationState, string[]> = {
+      idle: ["idle", "Idle", "IDLE"],
+      walk: ["walk", "Walk", "WALK"],
+      run: ["run", "Run", "RUN"],
+      jump: ["jump", "Jump", "JUMP"],
+      climb: ["climb", "Climb", "CLIMB"],
+      death: ["death", "Death", "DEATH"],
+      somersault: ["somersault", "Somersault", "SOMERSAULT"],
     }
-  }, [actions, names, modelLoaded, modelError])
+
+    // Get possible animation names
+    const possibleNames = animationMap[animation] || ["idle", "Idle", "IDLE"]
+
+    // Find the closest matching animation in the model
+    let animationName = names[0] // Default to first animation
+    for (const name of possibleNames) {
+      const match = names.find((n) => n.toLowerCase().includes(name.toLowerCase()))
+      if (match) {
+        animationName = match
+        break
+      }
+    }
+
+    // Play the animation
+    if (actions[animationName]) {
+      console.log(`Playing animation: ${animationName}`)
+      actions[animationName].reset().fadeIn(0.5).play()
+      setCurrentAnimation(animationName)
+    } else {
+      console.warn(`Animation ${animationName} not found in model`)
+    }
+  }, [animation, actions, names, modelLoaded, modelError])
 
   // Simple animation for fallback cube
   useFrame(({ clock }) => {
@@ -203,11 +198,5 @@ export function Roofus3DSupabase({
   )
 }
 
-// Preload the models
-Object.values(ANIMATIONS).forEach((url) => {
-  try {
-    useGLTF.preload(url)
-  } catch (error) {
-    console.error(`Error preloading model (${url}):`, error)
-  }
-})
+// Preload the model
+useGLTF.preload(CHARACTER_MODEL_URL)

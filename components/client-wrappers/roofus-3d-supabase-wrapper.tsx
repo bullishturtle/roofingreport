@@ -38,10 +38,11 @@ export function Roofus3DSupabaseWrapper({
 
   useEffect(() => {
     setMounted(true)
+    console.log("Roofus3DSupabaseWrapper mounted, attempting to load model")
 
     // Error handling
-    const handleError = () => {
-      console.error("Error in Roofus3DSupabaseWrapper")
+    const handleError = (event: ErrorEvent) => {
+      console.error("Error in Roofus3DSupabaseWrapper:", event.error)
       setHasError(true)
     }
 
@@ -49,7 +50,18 @@ export function Roofus3DSupabaseWrapper({
     return () => window.removeEventListener("error", handleError)
   }, [])
 
-  if (!mounted || hasError) return null
+  if (!mounted) {
+    return null
+  }
+
+  if (hasError) {
+    console.log("Rendering fallback due to error")
+    return (
+      <div className={`${className} flex items-center justify-center bg-black/20 rounded-lg`}>
+        <div className="text-neon-gold text-sm">Failed to load Roofus</div>
+      </div>
+    )
+  }
 
   return (
     <Roofus3DSupabaseDynamic

@@ -1,18 +1,67 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect, useRef, Suspense } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
-import { useGLTF, useAnimations, Environment, Html } from "@react-three/drei"
+import { useGLTF, useAnimations, Environment, Html, useTexture } from "@react-three/drei"
 import type * as THREE from "three"
 
-// Character model from Supabase public URL
-const CHARACTER_MODEL_URL =
-  "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/character.glb"
+// Fix double slashes in URLs
+const fixUrl = (url: string) => url.replace("//", "/")
+
+// Character model and animations from Supabase public URLs
+const MODELS = {
+  CHARACTER: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//character.glb"),
+  IDLE: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//idle.glb"),
+  WALK: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//walk.glb"),
+  RUN: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//run.glb"),
+  JUMP: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//jump.glb"),
+  CLIMB: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//climb.glb"),
+  DEATH: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//death.glb"),
+  SOMERSAULT: fixUrl(
+    "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//soumersault.glb",
+  ),
+}
+
+// Texture URLs from Supabase
+const TEXTURES = {
+  BASE_COLOR: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//Image_0.jpg"),
+  ROUGHNESS: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//Image_1.jpg"),
+  NORMAL_MAP: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//Image_2.jpg"),
+}
+
+// HDR environment URL from Supabase
+const HDR_URL = fixUrl(
+  "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//color_121212.hdr",
+)
 
 // Animation states
 type AnimationState = "idle" | "walk" | "run" | "jump" | "climb" | "death" | "somersault"
 
-// Roofus character component
+// Map animation states to URLs
+const getAnimationUrl = (animation: AnimationState): string => {
+  switch (animation) {
+    case "idle":
+      return MODELS.IDLE
+    case "walk":
+      return MODELS.WALK
+    case "run":
+      return MODELS.RUN
+    case "jump":
+      return MODELS.JUMP
+    case "climb":
+      return MODELS.CLIMB
+    case "death":
+      return MODELS.DEATH
+    case "somersault":
+      return MODELS.SOMERSAULT
+    default:
+      return MODELS.IDLE
+  }
+}
+
+// Roofus character component with separate animation files
 function RoofusModel({
   position = [0, 0, 0],
   rotation = [0, 0, 0],
@@ -31,65 +80,51 @@ function RoofusModel({
   const [modelError, setModelError] = useState(false)
   const [currentAnimation, setCurrentAnimation] = useState<string>(animation)
 
-  // Load the model with error handling
-  const { scene, animations } = useGLTF(
-    CHARACTER_MODEL_URL,
-    undefined,
-    () => {
-      console.log("Model loaded successfully")
-      setModelLoaded(true)
-    },
-    (error) => {
-      console.error("Error loading Roofus model:", error)
-      setModelError(true)
-    },
-  ) as any
+  // Get the animation URL
+  const animationUrl = getAnimationUrl(animation)
+
+  // Load the model and animation
+  const { scene, animations } = useGLTF(animationUrl) as any
 
   // Set up animations
   const { actions, names } = useAnimations(animations, group)
 
+  // Load textures
+  const textures = useTexture({
+    map: TEXTURES.BASE_COLOR,
+    normalMap: TEXTURES.NORMAL_MAP,
+    roughnessMap: TEXTURES.ROUGHNESS,
+  })
+
+  // Apply textures to the model
+  useEffect(() => {
+    if (scene) {
+      scene.traverse((child: any) => {
+        if (child.isMesh) {
+          // Apply textures to the material
+          child.material.map = textures.map
+          child.material.normalMap = textures.normalMap
+          child.material.roughnessMap = textures.roughnessMap
+          child.material.needsUpdate = true
+        }
+      })
+      setModelLoaded(true)
+    }
+  }, [scene, textures])
+
   // Handle animation changes
   useEffect(() => {
-    if (!modelLoaded || modelError || !actions || !names || names.length === 0) return
+    if (!modelLoaded || !actions || !names || names.length === 0) return
 
-    console.log("Available animations:", names)
+    console.log(`Animation loaded: ${animation}, Available animations:`, names)
 
-    // Stop all animations
-    Object.values(actions).forEach((action: any) => action?.stop())
-
-    // Map animation state to animation name in the model
-    const animationMap: Record<AnimationState, string[]> = {
-      idle: ["idle", "Idle", "IDLE"],
-      walk: ["walk", "Walk", "WALK"],
-      run: ["run", "Run", "RUN"],
-      jump: ["jump", "Jump", "JUMP"],
-      climb: ["climb", "Climb", "CLIMB"],
-      death: ["death", "Death", "DEATH"],
-      somersault: ["somersault", "Somersault", "SOMERSAULT"],
-    }
-
-    // Get possible animation names
-    const possibleNames = animationMap[animation] || ["idle", "Idle", "IDLE"]
-
-    // Find the closest matching animation in the model
-    let animationName = names[0] // Default to first animation
-    for (const name of possibleNames) {
-      const match = names.find((n) => n.toLowerCase().includes(name.toLowerCase()))
-      if (match) {
-        animationName = match
-        break
-      }
-    }
-
-    // Play the animation
+    // Play the first animation
+    const animationName = names[0]
     if (actions[animationName]) {
-      console.log(`Playing animation: ${animationName}`)
       actions[animationName].reset().fadeIn(0.5).play()
       setCurrentAnimation(animationName)
-    } else {
-      console.warn(`Animation ${animationName} not found in model`)
     }
-  }, [animation, actions, names, modelLoaded, modelError])
+  }, [animation, actions, names, modelLoaded])
 
   // Simple animation for fallback cube
   useFrame(({ clock }) => {
@@ -112,9 +147,35 @@ function RoofusModel({
 
   return (
     <group ref={group} position={position} rotation={rotation as any} onClick={onClick}>
-      {modelLoaded && <primitive object={scene.clone()} scale={[scale, scale, scale]} />}
+      {scene && <primitive object={scene.clone()} scale={[scale, scale, scale]} />}
     </group>
   )
+}
+
+// Error boundary for 3D rendering
+function ErrorBoundary({ children }: { children: React.ReactNode }) {
+  const [hasError, setHasError] = useState(false)
+
+  useEffect(() => {
+    const handleError = () => {
+      setHasError(true)
+    }
+
+    window.addEventListener("error", handleError)
+    return () => window.removeEventListener("error", handleError)
+  }, [])
+
+  if (hasError) {
+    return (
+      <Html center>
+        <div className="bg-black/50 backdrop-blur-sm p-3 rounded-lg text-white text-sm">
+          3D rendering error. Please try again.
+        </div>
+      </Html>
+    )
+  }
+
+  return <>{children}</>
 }
 
 // Loading component
@@ -168,23 +229,25 @@ export function Roofus3DSupabase({
     <div className={`relative ${className}`}>
       <div className="w-full h-full">
         <Canvas shadows camera={{ position: [0, 0, 5], fov: 50 }} gl={{ antialias: true, alpha: true }}>
-          <Suspense fallback={<LoadingFallback />}>
-            <RoofusModel
-              position={position}
-              rotation={rotation}
-              scale={scale}
-              animation={animation}
-              onClick={handleClick}
-            />
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingFallback />}>
+              <RoofusModel
+                position={position}
+                rotation={rotation}
+                scale={scale}
+                animation={animation}
+                onClick={handleClick}
+              />
 
-            {showEnvironment && (
-              <>
-                <Environment preset="sunset" />
-                <ambientLight intensity={0.5} />
-                <directionalLight position={[10, 10, 5]} intensity={1} castShadow shadow-mapSize={[1024, 1024]} />
-              </>
-            )}
-          </Suspense>
+              {showEnvironment && (
+                <>
+                  <Environment files={HDR_URL} />
+                  <ambientLight intensity={0.5} />
+                  <directionalLight position={[10, 10, 5]} intensity={1} castShadow shadow-mapSize={[1024, 1024]} />
+                </>
+              )}
+            </Suspense>
+          </ErrorBoundary>
         </Canvas>
       </div>
 
@@ -198,5 +261,11 @@ export function Roofus3DSupabase({
   )
 }
 
-// Preload the model
-useGLTF.preload(CHARACTER_MODEL_URL)
+// Preload the models
+Object.values(MODELS).forEach((url) => {
+  try {
+    useGLTF.preload(url)
+  } catch (error) {
+    console.error(`Error preloading model (${url}):`, error)
+  }
+})

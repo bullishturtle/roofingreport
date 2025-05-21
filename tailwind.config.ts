@@ -53,18 +53,9 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Neon color palette
-        neon: {
-          gold: "#FFD700",
-          orange: "#FF8C00",
-          purple: "#A855F7",
-          blue: "#3B82F6",
-          cyan: "#06B6D4",
-          green: "#10B981",
-          pink: "#EC4899",
-          red: "#EF4444",
-          yellow: "#EAB308",
-        },
+        "neon-gold": "#FFD700",
+        "neon-orange": "#FF8C00",
+        "neon-blue": "#1E90FF",
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -1,130 +1,113 @@
 "use client"
 
-import React from "react"
+import * as React from "react"
+import * as ToastPrimitives from "@radix-ui/react-toast"
+import { cva, type VariantProps } from "class-variance-authority"
+import { X } from "lucide-react"
 
-import { useState, useEffect } from "react"
-import { createPortal } from "react-dom"
-import { motion, AnimatePresence } from "framer-motion"
-import { X, CheckCircle, AlertTriangle, Info, AlertCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-export type ToastType = "success" | "error" | "warning" | "info"
+const ToastProvider = ToastPrimitives.Provider
 
-export interface Toast {
-  id: string
-  message: string
-  type: ToastType
-  duration?: number
-}
+const ToastViewport = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Viewport>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
+>(({ className, ...props }, ref) => (
+  <ToastPrimitives.Viewport
+    ref={ref}
+    className={cn(
+      "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]",
+      className,
+    )}
+    {...props}
+  />
+))
+ToastViewport.displayName = ToastPrimitives.Viewport.displayName
 
-interface ToastProviderProps {
-  children: React.ReactNode
-}
+const toastVariants = cva(
+  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
+  {
+    variants: {
+      variant: {
+        default: "border-neon-gold/30 bg-black/80 backdrop-blur-md text-white",
+        destructive: "destructive group border-destructive bg-destructive text-destructive-foreground",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+)
 
-interface ToastContextType {
-  showToast: (message: string, type: ToastType, duration?: number) => void
-  hideToast: (id: string) => void
-}
+const Toast = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Root>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> & VariantProps<typeof toastVariants>
+>(({ className, variant, ...props }, ref) => {
+  return <ToastPrimitives.Root ref={ref} className={cn(toastVariants({ variant }), className)} {...props} />
+})
+Toast.displayName = ToastPrimitives.Root.displayName
 
-// Create context
-const ToastContext = React.createContext<ToastContextType | undefined>(undefined)
+const ToastAction = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Action>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Action>
+>(({ className, ...props }, ref) => (
+  <ToastPrimitives.Action
+    ref={ref}
+    className={cn(
+      "inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-neon-gold/30 bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-neon-gold/10 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive",
+      className,
+    )}
+    {...props}
+  />
+))
+ToastAction.displayName = ToastPrimitives.Action.displayName
 
-// Create a hook to use the toast context
-export function useToast() {
-  const context = React.useContext(ToastContext)
-  if (!context) {
-    throw new Error("useToast must be used within a ToastProvider")
-  }
-  return context
-}
+const ToastClose = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Close>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Close>
+>(({ className, ...props }, ref) => (
+  <ToastPrimitives.Close
+    ref={ref}
+    className={cn(
+      "absolute right-2 top-2 rounded-md p-1 text-white/50 opacity-0 transition-opacity hover:text-white focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
+      className,
+    )}
+    toast-close=""
+    {...props}
+  >
+    <X className="h-4 w-4" />
+  </ToastPrimitives.Close>
+))
+ToastClose.displayName = ToastPrimitives.Close.displayName
 
-export function ToastProvider({ children }: ToastProviderProps) {
-  const [toasts, setToasts] = useState<Toast[]>([])
-  const [isMounted, setIsMounted] = useState(false)
+const ToastTitle = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Title>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title>
+>(({ className, ...props }, ref) => (
+  <ToastPrimitives.Title ref={ref} className={cn("text-sm font-semibold text-neon-gold", className)} {...props} />
+))
+ToastTitle.displayName = ToastPrimitives.Title.displayName
 
-  useEffect(() => {
-    setIsMounted(true)
-    return () => setIsMounted(false)
-  }, [])
+const ToastDescription = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Description>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Description>
+>(({ className, ...props }, ref) => (
+  <ToastPrimitives.Description ref={ref} className={cn("text-sm opacity-90 text-white", className)} {...props} />
+))
+ToastDescription.displayName = ToastPrimitives.Description.displayName
 
-  const showToast = (message: string, type: ToastType, duration = 5000) => {
-    const id = Math.random().toString(36).substring(2, 9)
-    const newToast = { id, message, type, duration }
-    setToasts((prev) => [...prev, newToast])
+type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
 
-    if (duration !== Number.POSITIVE_INFINITY) {
-      setTimeout(() => {
-        hideToast(id)
-      }, duration)
-    }
-  }
+type ToastActionElement = React.ReactElement<typeof ToastAction>
 
-  const hideToast = (id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id))
-  }
-
-  const value = { showToast, hideToast }
-
-  if (!isMounted) {
-    return <>{children}</>
-  }
-
-  return (
-    <ToastContext.Provider value={value}>
-      {children}
-      {isMounted &&
-        createPortal(
-          <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
-            <AnimatePresence>
-              {toasts.map((toast) => (
-                <Toast key={toast.id} toast={toast} onClose={() => hideToast(toast.id)} />
-              ))}
-            </AnimatePresence>
-          </div>,
-          document.body,
-        )}
-    </ToastContext.Provider>
-  )
-}
-
-interface ToastProps {
-  toast: Toast
-  onClose: () => void
-}
-
-function Toast({ toast, onClose }: ToastProps) {
-  const { id, message, type } = toast
-
-  const icons = {
-    success: <CheckCircle className="h-5 w-5 text-green-500" />,
-    error: <AlertCircle className="h-5 w-5 text-red-500" />,
-    warning: <AlertTriangle className="h-5 w-5 text-amber-500" />,
-    info: <Info className="h-5 w-5 text-blue-500" />,
-  }
-
-  const bgColors = {
-    success: "bg-green-500/10 border-green-500/30",
-    error: "bg-red-500/10 border-red-500/30",
-    warning: "bg-amber-500/10 border-amber-500/30",
-    info: "bg-blue-500/10 border-blue-500/30",
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.8 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 20, scale: 0.8 }}
-      className={`w-72 p-4 rounded-lg border backdrop-blur-md shadow-lg ${bgColors[type]}`}
-    >
-      <div className="flex items-start gap-3">
-        <div className="flex-shrink-0">{icons[type]}</div>
-        <div className="flex-1 text-sm text-white">{message}</div>
-        <button
-          onClick={onClose}
-          className="flex-shrink-0 rounded-full p-1 text-white/70 hover:bg-white/10 hover:text-white"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-    </motion.div>
-  )
+export {
+  type ToastProps,
+  type ToastActionElement,
+  ToastProvider,
+  ToastViewport,
+  Toast,
+  ToastTitle,
+  ToastDescription,
+  ToastClose,
+  ToastAction,
 }

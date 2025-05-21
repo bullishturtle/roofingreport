@@ -1,257 +1,170 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import {
-  ArrowLeft,
-  Calendar,
-  CloudLightning,
-  Download,
-  FileText,
-  Home,
-  Info,
-  Layers,
-  MessageSquare,
-  Share2,
-} from "lucide-react"
+import { ArrowLeft, Home, Building2 } from "lucide-react"
 import Link from "next/link"
-import Image from "next/image"
-import { RoofMeasurements } from "@/components/report/roof-measurements"
-import { PropertyDetails } from "@/components/report/property-details"
-import { RoofCondition } from "@/components/report/roof-condition"
-import { ReportActions } from "@/components/report/report-actions"
+import { ReportPreview } from "@/components/report-preview"
+import { Toaster } from "@/components/ui/toaster"
 
 export default function ReportPage() {
+  const searchParams = useSearchParams()
+  const address = searchParams.get("address") || "123 Main St, Anytown, USA"
+  const [isLoading, setIsLoading] = useState(true)
+  const [isRedirecting, setIsRedirecting] = useState(false)
+
+  useEffect(() => {
+    // Simulate loading delay
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 2000)
+
+    return () => clearTimeout(timer)
+  }, [])
+
+  const handleRedirect = (type: "homeowner" | "pro") => {
+    setIsRedirecting(true)
+
+    // Simulate redirect delay
+    setTimeout(() => {
+      // INTEGRATION_POINT: Redirect to appropriate portal
+      if (type === "homeowner") {
+        // Will redirect to trustthefox.com
+        console.log("Redirecting to trustthefox.com")
+        window.location.href = "https://trustthefox.com"
+      } else {
+        // Will redirect to rooffaxpro.com
+        console.log("Redirecting to rooffaxpro.com")
+        window.location.href = "https://rooffaxpro.com"
+      }
+    }, 500)
+  }
+
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="flex min-h-screen flex-col bg-gradient-to-b from-black to-blue-950 relative overflow-hidden">
+      {/* Background grid effect */}
+      <div className="absolute inset-0 grid-bg opacity-20"></div>
+
+      {/* Animated gradient orbs */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-neon-gold/10 blur-[100px] animate-float"></div>
+      <div
+        className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-neon-orange/10 blur-[100px] animate-float"
+        style={{ animationDelay: "1s" }}
+      ></div>
+
+      {/* Header */}
+      <header className="sticky top-0 z-50 w-full border-b border-neon-gold/20 bg-black/50 backdrop-blur-md">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/dashboard">
-                <ArrowLeft className="h-4 w-4" />
-                <span className="sr-only">Back to Dashboard</span>
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-lg font-bold">Roof Report: 123 Main St, Anytown, USA</h1>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Report ID: REP-1234</span>
-                <span>•</span>
-                <span>Generated: April 15, 2023</span>
-                <Badge variant="outline" className="ml-2 bg-green-500/10 text-green-500 border-green-500/20">
-                  Completed
-                </Badge>
-              </div>
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-neon-gold to-neon-orange flex items-center justify-center shadow-neon-glow">
+              <span className="text-xl font-bold text-black">R</span>
             </div>
+            <span className="text-xl font-bold text-white">
+              Roof<span className="text-neon-gold">Fax</span>
+            </span>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-1">
-              <Share2 className="h-4 w-4" /> Share
-            </Button>
-            <Button variant="outline" size="sm" className="gap-1">
-              <Download className="h-4 w-4" /> Download PDF
-            </Button>
-            <Button size="sm" className="gap-1">
-              <FileText className="h-4 w-4" /> Create Proposal
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            className="border-neon-gold/30 text-neon-gold hover:bg-neon-gold/10"
+          >
+            <Link href="/" className="flex items-center gap-1">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Home
+            </Link>
+          </Button>
         </div>
       </header>
 
-      <main className="flex-1 container py-6">
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="md:col-span-2 space-y-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Property Overview</CardTitle>
-                <CardDescription>Satellite imagery and 3D visualization of the property.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="aspect-video overflow-hidden rounded-md border bg-muted">
-                  <Image
-                    src="/placeholder.svg?height=450&width=800"
-                    width={800}
-                    height={450}
-                    alt="Property Satellite View"
-                    className="w-full object-cover"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div className="aspect-video overflow-hidden rounded-md border bg-muted">
-                    <Image
-                      src="/placeholder.svg?height=200&width=400"
-                      width={400}
-                      height={200}
-                      alt="Property 3D Model"
-                      className="w-full object-cover"
-                    />
-                  </div>
-                  <div className="aspect-video overflow-hidden rounded-md border bg-muted">
-                    <Image
-                      src="/placeholder.svg?height=200&width=400"
-                      width={400}
-                      height={200}
-                      alt="Property Heat Map"
-                      className="w-full object-cover"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Tabs defaultValue="measurements" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="measurements">Measurements</TabsTrigger>
-                <TabsTrigger value="condition">Condition</TabsTrigger>
-                <TabsTrigger value="details">Property Details</TabsTrigger>
-                <TabsTrigger value="history">History</TabsTrigger>
-              </TabsList>
-              <TabsContent value="measurements">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Roof Measurements</CardTitle>
-                    <CardDescription>Detailed measurements of the roof structure.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <RoofMeasurements />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              <TabsContent value="condition">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Roof Condition Assessment</CardTitle>
-                    <CardDescription>AI-powered analysis of the roof's current condition.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <RoofCondition />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              <TabsContent value="details">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Property Details</CardTitle>
-                    <CardDescription>Information about the property and its characteristics.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <PropertyDetails />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              <TabsContent value="history">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Property History</CardTitle>
-                    <CardDescription>Historical data about the property and previous roof work.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-start gap-4 border-l-2 border-primary pl-4 pt-2">
-                        <Calendar className="h-5 w-5 text-primary mt-0.5" />
-                        <div>
-                          <h4 className="font-medium">Property Built</h4>
-                          <p className="text-sm text-muted-foreground">1998</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-4 border-l-2 border-primary pl-4 pt-2">
-                        <Layers className="h-5 w-5 text-primary mt-0.5" />
-                        <div>
-                          <h4 className="font-medium">Roof Installed</h4>
-                          <p className="text-sm text-muted-foreground">2010 - Asphalt Shingles</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-4 border-l-2 border-primary pl-4 pt-2">
-                        <CloudLightning className="h-5 w-5 text-primary mt-0.5" />
-                        <div>
-                          <h4 className="font-medium">Storm Damage</h4>
-                          <p className="text-sm text-muted-foreground">March 2022 - Hail Storm</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-4 border-l-2 border-primary pl-4 pt-2">
-                        <Home className="h-5 w-5 text-primary mt-0.5" />
-                        <div>
-                          <h4 className="font-medium">Last Inspection</h4>
-                          <p className="text-sm text-muted-foreground">June 2022 - Minor Repairs</p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+      <main className="flex-1 container py-12">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center h-64">
+            <div className="w-16 h-16 border-4 border-neon-gold/30 border-t-neon-gold rounded-full animate-spin mb-4"></div>
+            <p className="text-white/70">Generating your RoofFax report...</p>
           </div>
+        ) : (
+          <div className="space-y-12">
+            <ReportPreview address={address} onClose={() => {}} />
 
-          <div className="space-y-6">
-            <ReportActions />
+            <div className="border-t border-neon-gold/20 pt-12">
+              <h2 className="text-2xl font-bold text-white text-center mb-8">Want More Detailed Insights?</h2>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
-                  <Info className="h-4 w-4" /> AI Insights
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4 text-sm">
-                  <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-md">
-                    <h4 className="font-medium text-amber-600 mb-1">Potential Issues Detected</h4>
-                    <p className="text-muted-foreground">
-                      Signs of granule loss and minor wind damage on the south-facing slope.
-                    </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                <div className="border-2 border-neon-gold/30 bg-black/50 backdrop-blur-md rounded-xl p-6 text-center">
+                  <div className="h-16 w-16 rounded-full bg-neon-gold/20 flex items-center justify-center mx-auto mb-4">
+                    <Home className="h-8 w-8 text-neon-gold" />
                   </div>
-                  <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
-                    <h4 className="font-medium text-blue-600 mb-1">Code Compliance</h4>
-                    <p className="text-muted-foreground">
-                      Current roof may not meet updated 2023 wind resistance codes for your area.
-                    </p>
-                  </div>
-                  <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-md">
-                    <h4 className="font-medium text-green-600 mb-1">Recommendation</h4>
-                    <p className="text-muted-foreground">
-                      Consider scheduling an in-person inspection to assess potential storm damage claim.
-                    </p>
+                  <h3 className="text-xl font-bold text-white mb-2">I'm a Homeowner</h3>
+                  <p className="text-white/70 mb-6">
+                    Get a complete roof assessment, receive proactive storm alerts, and protect your home before damage
+                    occurs.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1 bg-neon-gold/10 hover:bg-neon-gold/20 backdrop-blur-sm border border-neon-gold/30 text-neon-gold"
+                      asChild
+                    >
+                      <Link href="/signup">Sign Up Free</Link>
+                    </Button>
+                    <Button
+                      className="flex-1 bg-gradient-to-r from-neon-gold to-neon-orange hover:from-neon-orange hover:to-neon-gold text-black border-none shadow-neon-glow"
+                      onClick={() => handleRedirect("homeowner")}
+                      disabled={isRedirecting}
+                    >
+                      {isRedirecting ? "Redirecting..." : "Go to TrustTheFox"}
+                    </Button>
                   </div>
                 </div>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full gap-1">
-                  <MessageSquare className="h-4 w-4" /> Ask AI Assistant
-                </Button>
-              </CardFooter>
-            </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Similar Properties</CardTitle>
-                <CardDescription>Recent roof work on similar properties in the area.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex gap-3">
-                      <div className="h-14 w-14 rounded-md overflow-hidden flex-shrink-0">
-                        <Image
-                          src={`/placeholder.svg?height=56&width=56&text=Property ${i}`}
-                          width={56}
-                          height={56}
-                          alt={`Similar Property ${i}`}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-medium">{100 + i * 100} Oak St, Anytown</h4>
-                        <p className="text-xs text-muted-foreground">Roof Replacement - March 2023</p>
-                        <p className="text-xs text-primary mt-1">View Report</p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="border-2 border-blue-500/30 bg-black/50 backdrop-blur-md rounded-xl p-6 text-center">
+                  <div className="h-16 w-16 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-4">
+                    <Building2 className="h-8 w-8 text-blue-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">I'm a Roofing Pro</h3>
+                  <p className="text-white/70 mb-6">
+                    Access detailed measurements, get early access to storm-affected areas, and be the first to offer
+                    services.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1 bg-blue-500/10 hover:bg-blue-500/20 backdrop-blur-sm border border-blue-500/30 text-blue-400"
+                      asChild
+                    >
+                      <Link href="/demo">See Demo</Link>
+                    </Button>
+                    <Button
+                      className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-none shadow-neon-blue"
+                      onClick={() => handleRedirect("pro")}
+                      disabled={isRedirecting}
+                    >
+                      {isRedirecting ? "Redirecting..." : "Go to RoofFaxPro"}
+                    </Button>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </main>
+
+      {/* Footer */}
+      <footer className="w-full border-t border-neon-gold/20 py-6 bg-black/50 backdrop-blur-md">
+        <div className="container flex flex-col gap-6 md:gap-0 md:h-16 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 rounded-full bg-gradient-to-br from-neon-gold to-neon-orange flex items-center justify-center shadow-neon-glow">
+              <span className="text-sm font-bold text-black">R</span>
+            </div>
+            <span className="text-sm font-bold text-white">
+              Roof<span className="text-neon-gold">Fax</span>
+            </span>
+          </div>
+          <p className="text-sm text-white/50">&copy; 2023 RoofFax. All rights reserved.</p>
+        </div>
+      </footer>
+
+      <Toaster />
     </div>
   )
 }

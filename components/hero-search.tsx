@@ -5,58 +5,73 @@ import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
+import { Search } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useToast } from "@/components/ui/use-toast"
 
 export function HeroSearch() {
   const [address, setAddress] = useState("")
-  const [isSearching, setIsSearching] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+  const { showToast } = useToast()
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!address.trim()) return
 
-    setIsSearching(true)
+    if (!address.trim()) {
+      showToast("Please enter a valid address", "error")
+      return
+    }
 
-    // Simulate search
+    setIsLoading(true)
+
+    // Simulate API call
     setTimeout(() => {
-      setIsSearching(false)
-      // In a real app, you would navigate to results or show results here
-      console.log("Searching for:", address)
+      setIsLoading(false)
+      router.push(`/report?address=${encodeURIComponent(address)}`)
     }, 1500)
   }
 
   return (
-    <div id="hero-search" className="w-full max-w-4xl mx-auto text-center">
-      <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-neon-gold to-amber-300">
-        Get Your Roof's History Report
-      </h1>
-
-      <p className="text-lg md:text-xl mb-8 text-gray-300 max-w-2xl mx-auto">
-        Just like CarFax for vehicles, RoofFax provides comprehensive history and information about any roof.
-      </p>
-
-      <Card className="bg-black/50 backdrop-blur-md border-neon-gold/30 shadow-lg shadow-neon-gold/20">
-        <CardContent className="p-4">
-          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
+    <div className="w-full max-w-md mx-auto">
+      <div className="bg-black/40 backdrop-blur-md border border-neon-gold/30 rounded-xl p-6 shadow-neon-glow">
+        <h2 className="text-xl font-bold text-white mb-4">Get Your Roof Report</h2>
+        <form onSubmit={handleSearch} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="address" className="text-sm font-medium text-white">
+              Enter Property Address
+            </label>
             <Input
-              type="text"
-              placeholder="Enter property address"
-              className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+              id="address"
+              placeholder="123 Main St, City, State"
+              className="bg-black/50 border-white/20 text-white placeholder:text-white/50"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
+              disabled={isLoading}
             />
-            <Button
-              type="submit"
-              className="bg-neon-gold hover:bg-neon-gold/80 text-black font-medium"
-              disabled={isSearching}
-            >
-              {isSearching ? "Searching..." : "Get Roof Report"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <p className="mt-4 text-sm text-gray-400">Trusted by thousands of homeowners and professionals nationwide</p>
+          </div>
+          <Button
+            type="submit"
+            className="w-full bg-gradient-to-r from-neon-gold to-neon-orange hover:from-neon-orange hover:to-neon-gold text-black border-none shadow-neon-glow"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <span className="animate-pulse mr-2">●</span>
+                Searching...
+              </>
+            ) : (
+              <>
+                <Search className="mr-2 h-4 w-4" />
+                Search Property
+              </>
+            )}
+          </Button>
+        </form>
+        <div className="mt-4 text-center">
+          <p className="text-xs text-white/50">Instant access to roof measurements, condition, and storm history</p>
+        </div>
+      </div>
     </div>
   )
 }

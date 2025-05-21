@@ -2,33 +2,37 @@
 
 import { useState, useEffect } from "react"
 
-export function useMediaQuery(query: string): boolean {
+export const useMediaQuery = (query: string): boolean => {
+  // Default to false on server-side
   const [matches, setMatches] = useState(false)
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
-
-    // Create a media query list
-    const mediaQuery = window.matchMedia(query)
-
-    // Set the initial value
-    setMatches(mediaQuery.matches)
-
-    // Define a callback function to handle changes
-    const handleChange = (event: MediaQueryListEvent) => {
-      setMatches(event.matches)
+    // Only run on client-side
+    if (typeof window === "undefined") {
+      return
     }
 
-    // Add the callback as a listener for changes to the media query
-    mediaQuery.addEventListener("change", handleChange)
+    const mediaQuery = window.matchMedia(query)
 
-    // Clean up
-    return () => {
-      mediaQuery.removeEventListener("change", handleChange)
+    // Set initial value
+    setMatches(mediaQuery.matches)
+
+    // Define listener function
+    const handleChange = () => {
+      setMatches(mediaQuery.matches)
+    }
+
+    // Use safer event listener pattern
+    try {
+      // Modern browsers
+      mediaQuery.addEventListener("change", handleChange)
+      return () => mediaQuery.removeEventListener("change", handleChange)
+    } catch (e) {
+      // Fallback for older browsers
+      mediaQuery.addListener(handleChange)
+      return () => mediaQuery.removeListener(handleChange)
     }
   }, [query])
 
-  // Return false on the server, the initial value on the client
-  return mounted ? matches : false
+  return matches
 }

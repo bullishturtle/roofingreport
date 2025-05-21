@@ -12,17 +12,26 @@ const fixUrl = (url: string) => {
   return fixedUrl
 }
 
-// We'll use only the idle animation for now
-const IDLE_URL = fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//idle.glb")
+// Character model and animations from Supabase public URLs
+const MODELS = {
+  CHARACTER: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//character.glb"),
+  IDLE: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//idle.glb"),
+  WALK: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//walk.glb"),
+}
 
 export default function Preload() {
   useEffect(() => {
-    // Preload the idle model
+    // Log URLs for debugging
+    console.log("Preloading models:", MODELS)
+
+    // Preload the most commonly used 3D models
     try {
-      useGLTF.preload(IDLE_URL)
-      console.log("Preloaded Roofus idle animation")
+      // Only preload the most commonly used animations to save bandwidth
+      useGLTF.preload(MODELS.IDLE)
+      useGLTF.preload(MODELS.WALK)
+      console.log("Preloaded Roofus 3D models from Supabase public URLs")
     } catch (error) {
-      console.error("Failed to preload Roofus model:", error)
+      console.error("Failed to preload Roofus 3D models:", error)
     }
   }, [])
 

@@ -5,12 +5,17 @@ import { Roofus3DSupabaseWrapper } from "./client-wrappers/roofus-3d-supabase-wr
 
 export function HeroRoofusSupabase() {
   const [mounted, setMounted] = useState(false)
-
-  // We're only using idle animation now
-  const animation = "idle"
+  const [animation, setAnimation] = useState<"idle" | "walk">("walk")
 
   useEffect(() => {
     setMounted(true)
+
+    // Switch between idle and walking
+    const interval = setInterval(() => {
+      setAnimation((prev) => (prev === "idle" ? "walk" : "idle"))
+    }, 5000)
+
+    return () => clearInterval(interval)
   }, [])
 
   if (!mounted) return null

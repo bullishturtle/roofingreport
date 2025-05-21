@@ -16,69 +16,121 @@ const fixUrl = (url: string) => {
   return fixedUrl
 }
 
-// We'll use only the idle animation for now to simplify
-const IDLE_URL = fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//idle.glb")
+// Character model and animations from Supabase public URLs
+const MODELS = {
+  CHARACTER: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/character.glb"),
+  IDLE: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/idle.glb"),
+  WALK: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/walk.glb"),
+  RUN: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/run.glb"),
+  JUMP: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/jump.glb"),
+  CLIMB: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/climb.glb"),
+  DEATH: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/death.glb"),
+  SOMERSAULT: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/soumersault.glb"),
+}
+
+// Texture URLs from Supabase
+const TEXTURES = {
+  BASE_COLOR: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/Image_0.jpg"),
+  ROUGHNESS: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/Image_1.jpg"),
+  NORMAL_MAP: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/Image_2.jpg"),
+}
+
+// HDR environment URL from Supabase
+const HDR_URL = fixUrl(
+  "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/color_121212.hdr",
+)
 
 // Animation states
 type AnimationState = "idle" | "walk" | "run" | "jump" | "climb" | "death" | "somersault"
 
-// Simplified Roofus model component that only uses the idle animation
+// Map animation states to URLs
+const getAnimationUrl = (animation: AnimationState): string => {
+  switch (animation) {
+    case "idle":
+      return MODELS.IDLE
+    case "walk":
+      return MODELS.WALK
+    case "run":
+      return MODELS.RUN
+    case "jump":
+      return MODELS.JUMP
+    case "climb":
+      return MODELS.CLIMB
+    case "death":
+      return MODELS.DEATH
+    case "somersault":
+      return MODELS.SOMERSAULT
+    default:
+      return MODELS.IDLE
+  }
+}
+
+// Roofus character component with separate animation files
 function RoofusModel({
   position = [0, 0, 0],
   rotation = [0, 0, 0],
   scale = 0.5,
+  animation = "idle",
   onClick,
+  onAnimationLoad,
+  onAnimationError,
 }: {
   position?: [number, number, number]
   rotation?: [number, number, number]
   scale?: number
+  animation?: AnimationState
   onClick?: () => void
+  onAnimationLoad?: (animation: AnimationState) => void
+  onAnimationError?: (animation: AnimationState, error: any) => void
 }) {
   const group = useRef<THREE.Group>(null)
   const [modelLoaded, setModelLoaded] = useState(false)
   const [modelError, setModelError] = useState(false)
+  const [currentAnimation, setCurrentAnimation] = useState<string>(animation)
 
-  // Load the model with error handling
+  // Get the animation URL
+  const animationUrl = getAnimationUrl(animation)
+
+  // Load the model and animation with error handling
   const { scene, animations } = useGLTF(
-    IDLE_URL,
+    animationUrl,
     undefined,
     () => {
-      console.log("Roofus model loaded successfully")
+      console.log(`Animation loaded successfully: ${animation}`)
       setModelLoaded(true)
+      onAnimationLoad?.(animation)
     },
     (error) => {
-      console.error("Error loading Roofus model:", error)
+      console.error(`Error loading animation: ${animation}`, error)
       setModelError(true)
+      onAnimationError?.(animation, error)
     },
   ) as any
 
-  // Set up animations if available
+  // Set up animations
   const { actions, names } = useAnimations(animations, group)
 
-  // Play animation if available
+  // Handle animation changes
   useEffect(() => {
     if (!modelLoaded || modelError || !actions || !names || names.length === 0) return
 
-    console.log("Available animations:", names)
+    console.log(`Available animations for ${animation}:`, names)
 
     // Play the first animation
     const animationName = names[0]
     if (actions[animationName]) {
       console.log(`Playing animation: ${animationName}`)
       actions[animationName].reset().fadeIn(0.5).play()
+      setCurrentAnimation(animationName)
+    } else {
+      console.warn(`Animation ${animationName} not found in model`)
     }
-  }, [modelLoaded, modelError, actions, names])
+  }, [animation, actions, names, modelLoaded, modelError])
 
   // Simple animation for fallback cube
   useFrame(({ clock }) => {
-    if (group.current) {
-      // Gentle bobbing motion for both the model and fallback
-      group.current.position.y = position[1] + Math.sin(clock.getElapsedTime()) * 0.05
-
-      // Additional rotation for the fallback cube
-      if (modelError) {
-        group.current.rotation.y = Math.sin(clock.getElapsedTime() * 0.5) * 0.3
-      }
+    if (modelError && group.current) {
+      group.current.rotation.y = Math.sin(clock.getElapsedTime()) * 0.3
     }
   })
 
@@ -141,10 +193,12 @@ export function Roofus3DSupabase({
   position = [0, -1, 0],
   rotation = [0, 0, 0],
   scale = 0.5,
-  animation = "idle", // This is ignored for now since we're only using the idle animation
+  animation = "idle",
   showEnvironment = true,
   className = "",
   onClick,
+  onAnimationLoad,
+  onAnimationError,
 }: {
   position?: [number, number, number]
   rotation?: [number, number, number]
@@ -153,6 +207,8 @@ export function Roofus3DSupabase({
   showEnvironment?: boolean
   className?: string
   onClick?: () => void
+  onAnimationLoad?: (animation: AnimationState) => void
+  onAnimationError?: (animation: AnimationState, error: any) => void
 }) {
   const [mounted, setMounted] = useState(false)
   const [showSpeechBubble, setShowSpeechBubble] = useState(false)
@@ -180,7 +236,15 @@ export function Roofus3DSupabase({
         <Canvas shadows camera={{ position: [0, 0, 5], fov: 50 }} gl={{ antialias: true, alpha: true }}>
           <ErrorBoundary>
             <Suspense fallback={<LoadingFallback />}>
-              <RoofusModel position={position} rotation={rotation} scale={scale} onClick={handleClick} />
+              <RoofusModel
+                position={position}
+                rotation={rotation}
+                scale={scale}
+                animation={animation}
+                onClick={handleClick}
+                onAnimationLoad={onAnimationLoad}
+                onAnimationError={onAnimationError}
+              />
 
               {showEnvironment && (
                 <>
@@ -204,9 +268,10 @@ export function Roofus3DSupabase({
   )
 }
 
-// Preload the idle model
+// Preload the most commonly used models
 try {
-  useGLTF.preload(IDLE_URL)
+  useGLTF.preload(MODELS.IDLE)
+  useGLTF.preload(MODELS.WALK)
 } catch (error) {
-  console.error("Error preloading model:", error)
+  console.error("Error preloading models:", error)
 }

@@ -8,9 +8,9 @@ export function RoofusAssistant() {
   const [mounted, setMounted] = useState(false)
   const isMobile = useMediaQuery("(max-width: 768px)")
   const [showRoofus, setShowRoofus] = useState(true)
-
-  // We're only using idle animation now
-  const animation = "idle"
+  const [animation, setAnimation] = useState<"idle" | "walk" | "run" | "jump" | "climb" | "death" | "somersault">(
+    "idle",
+  )
 
   useEffect(() => {
     setMounted(true)
@@ -19,6 +19,15 @@ export function RoofusAssistant() {
     if (isMobile) {
       setShowRoofus(Math.random() > 0.5)
     }
+
+    // Randomly change animation every 10 seconds
+    const animationInterval = setInterval(() => {
+      const animations: ("idle" | "walk" | "run" | "jump" | "climb")[] = ["idle", "walk", "run", "jump", "climb"]
+      const randomAnimation = animations[Math.floor(Math.random() * animations.length)]
+      setAnimation(randomAnimation)
+    }, 10000)
+
+    return () => clearInterval(animationInterval)
   }, [isMobile])
 
   if (!mounted || !showRoofus) return null

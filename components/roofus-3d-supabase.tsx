@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, useRef, Suspense } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
-import { useGLTF, useAnimations, Environment, Html, useTexture } from "@react-three/drei"
+import { useGLTF, useAnimations, Environment, Html } from "@react-three/drei"
 import type * as THREE from "three"
 
 // Fix double slashes in URLs
@@ -68,12 +68,16 @@ function RoofusModel({
   scale = 0.5,
   animation = "idle",
   onClick,
+  onAnimationLoad,
+  onAnimationError,
 }: {
   position?: [number, number, number]
   rotation?: [number, number, number]
   scale?: number
   animation?: AnimationState
   onClick?: () => void
+  onAnimationLoad?: (animation: AnimationState) => void
+  onAnimationError?: (animation: AnimationState, error: any) => void
 }) {
   const group = useRef<THREE.Group>(null)
   const [modelLoaded, setModelLoaded] = useState(false)
@@ -83,48 +87,41 @@ function RoofusModel({
   // Get the animation URL
   const animationUrl = getAnimationUrl(animation)
 
-  // Load the model and animation
-  const { scene, animations } = useGLTF(animationUrl) as any
+  // Load the model and animation with error handling
+  const { scene, animations } = useGLTF(
+    animationUrl,
+    undefined,
+    () => {
+      console.log(`Animation loaded successfully: ${animation}`)
+      setModelLoaded(true)
+      onAnimationLoad?.(animation)
+    },
+    (error) => {
+      console.error(`Error loading animation: ${animation}`, error)
+      setModelError(true)
+      onAnimationError?.(animation, error)
+    },
+  ) as any
 
   // Set up animations
   const { actions, names } = useAnimations(animations, group)
 
-  // Load textures
-  const textures = useTexture({
-    map: TEXTURES.BASE_COLOR,
-    normalMap: TEXTURES.NORMAL_MAP,
-    roughnessMap: TEXTURES.ROUGHNESS,
-  })
-
-  // Apply textures to the model
-  useEffect(() => {
-    if (scene) {
-      scene.traverse((child: any) => {
-        if (child.isMesh) {
-          // Apply textures to the material
-          child.material.map = textures.map
-          child.material.normalMap = textures.normalMap
-          child.material.roughnessMap = textures.roughnessMap
-          child.material.needsUpdate = true
-        }
-      })
-      setModelLoaded(true)
-    }
-  }, [scene, textures])
-
   // Handle animation changes
   useEffect(() => {
-    if (!modelLoaded || !actions || !names || names.length === 0) return
+    if (!modelLoaded || modelError || !actions || !names || names.length === 0) return
 
-    console.log(`Animation loaded: ${animation}, Available animations:`, names)
+    console.log(`Available animations for ${animation}:`, names)
 
     // Play the first animation
     const animationName = names[0]
     if (actions[animationName]) {
+      console.log(`Playing animation: ${animationName}`)
       actions[animationName].reset().fadeIn(0.5).play()
       setCurrentAnimation(animationName)
+    } else {
+      console.warn(`Animation ${animationName} not found in model`)
     }
-  }, [animation, actions, names, modelLoaded])
+  }, [animation, actions, names, modelLoaded, modelError])
 
   // Simple animation for fallback cube
   useFrame(({ clock }) => {
@@ -196,6 +193,8 @@ export function Roofus3DSupabase({
   showEnvironment = true,
   className = "",
   onClick,
+  onAnimationLoad,
+  onAnimationError,
 }: {
   position?: [number, number, number]
   rotation?: [number, number, number]
@@ -204,6 +203,8 @@ export function Roofus3DSupabase({
   showEnvironment?: boolean
   className?: string
   onClick?: () => void
+  onAnimationLoad?: (animation: AnimationState) => void
+  onAnimationError?: (animation: AnimationState, error: any) => void
 }) {
   const [mounted, setMounted] = useState(false)
   const [showSpeechBubble, setShowSpeechBubble] = useState(false)
@@ -237,6 +238,8 @@ export function Roofus3DSupabase({
                 scale={scale}
                 animation={animation}
                 onClick={handleClick}
+                onAnimationLoad={onAnimationLoad}
+                onAnimationError={onAnimationError}
               />
 
               {showEnvironment && (
@@ -261,11 +264,10 @@ export function Roofus3DSupabase({
   )
 }
 
-// Preload the models
-Object.values(MODELS).forEach((url) => {
-  try {
-    useGLTF.preload(url)
-  } catch (error) {
-    console.error(`Error preloading model (${url}):`, error)
-  }
-})
+// Preload the most commonly used models
+try {
+  useGLTF.preload(MODELS.IDLE)
+  useGLTF.preload(MODELS.WALK)
+} catch (error) {
+  console.error("Error preloading models:", error)
+}

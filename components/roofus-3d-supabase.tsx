@@ -16,227 +16,81 @@ const fixUrl = (url: string) => {
   return fixedUrl
 }
 
-// Character model and animations from Supabase public URLs
-const MODELS = {
-  CHARACTER: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//character.glb"),
-  IDLE: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//idle.glb"),
-  WALK: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//walk.glb"),
-  RUN: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//run.glb"),
-  JUMP: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//jump.glb"),
-  CLIMB: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//climb.glb"),
-  DEATH: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//death.glb"),
-  SOMERSAULT: fixUrl(
-    "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//soumersault.glb",
-  ),
-}
+// We'll use only the idle animation for now to simplify
+const IDLE_URL = fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//idle.glb")
 
 // Animation states
 type AnimationState = "idle" | "walk" | "run" | "jump" | "climb" | "death" | "somersault"
 
-// Track which animations have failed to load
-const failedAnimations = new Set<AnimationState>()
-
-// Map animation states to URLs with fallback
-const getAnimationUrl = (animation: AnimationState): string => {
-  // If this animation has failed before, use idle as fallback
-  if (failedAnimations.has(animation)) {
-    console.log(`Using fallback for failed animation: ${animation}`)
-    return MODELS.IDLE
-  }
-
-  switch (animation) {
-    case "idle":
-      return MODELS.IDLE
-    case "walk":
-      return MODELS.WALK
-    case "run":
-      return MODELS.RUN
-    case "jump":
-      return MODELS.JUMP
-    case "climb":
-      return MODELS.CLIMB
-    case "death":
-      return MODELS.DEATH
-    case "somersault":
-      return MODELS.SOMERSAULT
-    default:
-      return MODELS.IDLE
-  }
-}
-
-// Simple animation component that doesn't rely on GLB files
-function FallbackAnimation({
-  position = [0, 0, 0],
-  rotation = [0, 0, 0],
-  scale = 0.5,
-  animation = "idle",
-  onClick,
-}: {
-  position?: [number, number, number]
-  rotation?: [number, number, number]
-  scale?: number
-  animation?: AnimationState
-  onClick?: () => void
-}) {
-  const meshRef = useRef<THREE.Mesh>(null)
-
-  // Simple animation based on the requested type
-  useFrame(({ clock }) => {
-    if (!meshRef.current) return
-
-    const t = clock.getElapsedTime()
-
-    switch (animation) {
-      case "idle":
-        meshRef.current.position.y = Math.sin(t * 2) * 0.05
-        break
-      case "walk":
-        meshRef.current.rotation.y = Math.sin(t * 2) * 0.2
-        break
-      case "run":
-        meshRef.current.rotation.y = Math.sin(t * 4) * 0.3
-        break
-      case "jump":
-        meshRef.current.position.y = Math.abs(Math.sin(t * 2)) * 0.2
-        break
-      case "climb":
-        meshRef.current.position.y = ((t % 2) / 2) * 0.3
-        break
-      case "death":
-        meshRef.current.rotation.z = Math.min(Math.PI / 2, t % 3)
-        break
-      case "somersault":
-        meshRef.current.rotation.x = t * 2
-        break
-    }
-  })
-
-  return (
-    <group position={position} rotation={rotation as any} onClick={onClick}>
-      <mesh ref={meshRef}>
-        <boxGeometry args={[1 * scale, 2 * scale, 0.5 * scale]} />
-        <meshStandardMaterial color="#FFD700" />
-      </mesh>
-    </group>
-  )
-}
-
-// Roofus character component with separate animation files
+// Simplified Roofus model component that only uses the idle animation
 function RoofusModel({
   position = [0, 0, 0],
   rotation = [0, 0, 0],
   scale = 0.5,
-  animation = "idle",
   onClick,
-  onAnimationLoad,
-  onAnimationError,
 }: {
   position?: [number, number, number]
   rotation?: [number, number, number]
   scale?: number
-  animation?: AnimationState
   onClick?: () => void
-  onAnimationLoad?: (animation: AnimationState) => void
-  onAnimationError?: (animation: AnimationState, error: any) => void
 }) {
   const group = useRef<THREE.Group>(null)
   const [modelLoaded, setModelLoaded] = useState(false)
   const [modelError, setModelError] = useState(false)
-  const [currentAnimation, setCurrentAnimation] = useState<string>(animation)
-  const [useFallback, setUseFallback] = useState(false)
 
-  // Get the animation URL
-  const animationUrl = getAnimationUrl(animation)
-
-  // State to hold the model data, initialized to null
-  const [modelData, setModelData] = useState<{ scene: THREE.Group | null; animations: THREE.AnimationClip[] }>({
-    scene: null,
-    animations: [],
-  })
-
-  // useGLTF hook can only be called at the top level
-  const gltf = useGLTF(animationUrl)
-
-  useEffect(() => {
-    let isMounted = true // Add a flag to prevent setting state after unmount
-
-    const loadModel = async () => {
-      try {
-        if (isMounted) {
-          setModelData({ scene: gltf.scene, animations: gltf.animations })
-          setModelLoaded(true)
-          onAnimationLoad?.(animation)
-        }
-      } catch (error: any) {
-        console.error(`Exception loading animation: ${animation}`, error)
-        if (isMounted) {
-          setModelError(true)
-          failedAnimations.add(animation)
-          onAnimationError?.(animation, error)
-          setUseFallback(true)
-        }
-      }
-    }
-
-    if (!gltf) {
+  // Load the model with error handling
+  const { scene, animations } = useGLTF(
+    IDLE_URL,
+    undefined,
+    () => {
+      console.log("Roofus model loaded successfully")
+      setModelLoaded(true)
+    },
+    (error) => {
+      console.error("Error loading Roofus model:", error)
       setModelError(true)
-      failedAnimations.add(animation)
-      onAnimationError?.(animation, new Error("useGLTF failed to load model"))
-      setUseFallback(true)
-    } else {
-      loadModel()
-    }
+    },
+  ) as any
 
-    return () => {
-      isMounted = false // Set the flag to false when the component unmounts
-    }
-  }, [animation, gltf, onAnimationLoad, onAnimationError])
-
-  const { scene, animations } = modelData
-
-  // Set up animations
+  // Set up animations if available
   const { actions, names } = useAnimations(animations, group)
 
-  // Handle animation changes
+  // Play animation if available
   useEffect(() => {
     if (!modelLoaded || modelError || !actions || !names || names.length === 0) return
 
-    console.log(`Available animations for ${animation}:`, names)
+    console.log("Available animations:", names)
 
     // Play the first animation
     const animationName = names[0]
     if (actions[animationName]) {
       console.log(`Playing animation: ${animationName}`)
       actions[animationName].reset().fadeIn(0.5).play()
-      setCurrentAnimation(animationName)
-    } else {
-      console.warn(`Animation ${animationName} not found in model`)
     }
-  }, [animation, actions, names, modelLoaded, modelError])
+  }, [modelLoaded, modelError, actions, names])
 
-  // If we're using the fallback, render the simple animation
-  if (useFallback) {
-    return (
-      <FallbackAnimation
-        position={position}
-        rotation={rotation}
-        scale={scale}
-        animation={animation}
-        onClick={onClick}
-      />
-    )
-  }
+  // Simple animation for fallback cube
+  useFrame(({ clock }) => {
+    if (group.current) {
+      // Gentle bobbing motion for both the model and fallback
+      group.current.position.y = position[1] + Math.sin(clock.getElapsedTime()) * 0.05
+
+      // Additional rotation for the fallback cube
+      if (modelError) {
+        group.current.rotation.y = Math.sin(clock.getElapsedTime() * 0.5) * 0.3
+      }
+    }
+  })
 
   // Render fallback if model fails to load
   if (modelError) {
     return (
-      <FallbackAnimation
-        position={position}
-        rotation={rotation}
-        scale={scale}
-        animation={animation}
-        onClick={onClick}
-      />
+      <group ref={group} position={position} rotation={rotation as any} onClick={onClick}>
+        <mesh>
+          <boxGeometry args={[1, 2, 1]} />
+          <meshStandardMaterial color="#FFD700" />
+        </mesh>
+      </group>
     )
   }
 
@@ -287,12 +141,10 @@ export function Roofus3DSupabase({
   position = [0, -1, 0],
   rotation = [0, 0, 0],
   scale = 0.5,
-  animation = "idle",
+  animation = "idle", // This is ignored for now since we're only using the idle animation
   showEnvironment = true,
   className = "",
   onClick,
-  onAnimationLoad,
-  onAnimationError,
 }: {
   position?: [number, number, number]
   rotation?: [number, number, number]
@@ -301,29 +153,16 @@ export function Roofus3DSupabase({
   showEnvironment?: boolean
   className?: string
   onClick?: () => void
-  onAnimationLoad?: (animation: AnimationState) => void
-  onAnimationError?: (animation: AnimationState, error: any) => void
 }) {
   const [mounted, setMounted] = useState(false)
   const [showSpeechBubble, setShowSpeechBubble] = useState(false)
   const [speechText, setSpeechText] = useState("Hi, I'm Roofus! Need help with your roof?")
-  const [hasError, setHasError] = useState(false)
 
   // Handle client-side rendering
   useEffect(() => {
     setMounted(true)
-
-    // Global error handler
-    const handleError = (event: ErrorEvent) => {
-      if (event.message.includes("roofus") || event.message.includes("animation") || event.message.includes("GLB")) {
-        console.error("Global error in Roofus3DSupabase:", event.error)
-        setHasError(true)
-      }
-    }
-
-    window.addEventListener("error", handleError)
     return () => {
-      window.removeEventListener("error", handleError)
+      // Clean up any resources
     }
   }, [])
 
@@ -333,26 +172,7 @@ export function Roofus3DSupabase({
     onClick?.()
   }
 
-  // Handle animation errors
-  const handleAnimationError = (anim: AnimationState, error: any) => {
-    console.error(`Animation error in Roofus3DSupabase: ${anim}`, error)
-    onAnimationError?.(anim, error)
-  }
-
   if (!mounted) return null
-
-  // If there's a global error, render a simple fallback
-  if (hasError) {
-    return (
-      <div className={`relative ${className}`}>
-        <div className="w-full h-full flex items-center justify-center">
-          <div className="bg-black/50 backdrop-blur-sm p-3 rounded-lg text-white text-sm">
-            Unable to load 3D model. Please try again later.
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className={`relative ${className}`}>
@@ -360,15 +180,7 @@ export function Roofus3DSupabase({
         <Canvas shadows camera={{ position: [0, 0, 5], fov: 50 }} gl={{ antialias: true, alpha: true }}>
           <ErrorBoundary>
             <Suspense fallback={<LoadingFallback />}>
-              <RoofusModel
-                position={position}
-                rotation={rotation}
-                scale={scale}
-                animation={animation}
-                onClick={handleClick}
-                onAnimationLoad={onAnimationLoad}
-                onAnimationError={handleAnimationError}
-              />
+              <RoofusModel position={position} rotation={rotation} scale={scale} onClick={handleClick} />
 
               {showEnvironment && (
                 <>
@@ -392,9 +204,9 @@ export function Roofus3DSupabase({
   )
 }
 
-// Preload only the idle animation which is most reliable
+// Preload the idle model
 try {
-  useGLTF.preload(MODELS.IDLE)
+  useGLTF.preload(IDLE_URL)
 } catch (error) {
-  console.error("Error preloading idle model:", error)
+  console.error("Error preloading model:", error)
 }

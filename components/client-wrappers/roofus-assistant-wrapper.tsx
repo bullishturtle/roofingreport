@@ -1,8 +1,22 @@
 "use client"
 
-import { RoofusAssistant } from "@/components/roofus-assistant"
+import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
 
-export function RoofusAssistantWrapper() {
-  // This wrapper now just returns null since RoofusAssistant returns null
+const RoofusAssistant = dynamic(() => import("../roofus-assistant").then((mod) => mod.RoofusAssistant), {
+  loading: () => null,
+})
+
+export default function RoofusAssistantWrapper() {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return null
+  }
+
   return <RoofusAssistant />
 }

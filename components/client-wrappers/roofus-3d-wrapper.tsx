@@ -1,0 +1,65 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
+
+// Dynamically import the 3D Roofus component with no SSR
+const Roofus3DDynamic = dynamic(() => import("../roofus-3d").then((mod) => mod.Roofus3D), {
+  ssr: false,
+  loading: () => (
+    <div className="fixed bottom-0 right-0 w-64 h-64 z-50 flex items-center justify-center">
+      <div className="w-12 h-12 border-4 border-t-neon-gold border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+    </div>
+  ),
+})
+
+export function Roofus3DWrapper({
+  position = [0, -1, 0],
+  rotation = [0, 0, 0],
+  scale = 0.5,
+  animation = "idle",
+  showEnvironment = true,
+  className = "",
+  onClick,
+}: {
+  position?: [number, number, number]
+  rotation?: [number, number, number]
+  scale?: number
+  animation?: AnimationState
+  showEnvironment?: boolean
+  className?: string
+  onClick?: () => void
+}) {
+  const [mounted, setMounted] = useState(false)
+  const [hasError, setHasError] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+
+    // Error handling
+    const handleError = () => {
+      console.error("Error in Roofus3DWrapper")
+      setHasError(true)
+    }
+
+    window.addEventListener("error", handleError)
+    return () => window.removeEventListener("error", handleError)
+  }, [])
+
+  if (!mounted || hasError) return null
+
+  return (
+    <Roofus3DDynamic
+      position={position}
+      rotation={rotation}
+      scale={scale}
+      animation={animation}
+      showEnvironment={showEnvironment}
+      className={className}
+      onClick={onClick}
+    />
+  )
+}
+
+// Type definition for animation states
+type AnimationState = "idle" | "running" | "jumping" | "pointing" | "waving" | "climbing"

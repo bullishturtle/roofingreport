@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { CheckCircle, XCircle, AlertCircle } from "lucide-react"
+import { CheckCircle, XCircle, AlertCircle, RefreshCw } from "lucide-react"
 import dynamic from "next/dynamic"
 
 // Fix URL formatting function
@@ -32,9 +32,6 @@ const ANIMATIONS = {
   ),
 }
 
-// Log all URLs to verify they're correct
-console.log("Animation URLs:", ANIMATIONS)
-
 // Dynamically import the 3D Roofus component with no SSR
 const Roofus3DSupabase = dynamic(() => import("@/components/roofus-3d-supabase").then((mod) => mod.Roofus3DSupabase), {
   ssr: false,
@@ -59,38 +56,42 @@ export default function AnimationTestPage() {
   })
   const [currentTest, setCurrentTest] = useState<AnimationState | null>(null)
   const [errorMessages, setErrorMessages] = useState<Record<string, string>>({})
+  const [accessibleUrls, setAccessibleUrls] = useState<Record<string, boolean>>({})
+
+  // Function to test URL accessibility
+  const testUrlAccessibility = async (animation: AnimationState) => {
+    try {
+      const response = await fetch(ANIMATIONS[animation], { method: "HEAD" })
+      const isAccessible = response.ok
+      setAccessibleUrls((prev) => ({ ...prev, [animation]: isAccessible }))
+      return isAccessible
+    } catch (error) {
+      console.error(`Error checking URL accessibility: ${animation}`, error)
+      setAccessibleUrls((prev) => ({ ...prev, [animation]: false }))
+      return false
+    }
+  }
 
   // Function to test a specific animation
-  const testAnimation = (animation: AnimationState) => {
+  const testAnimation = async (animation: AnimationState) => {
     setCurrentTest(animation)
     setTestResults((prev) => ({ ...prev, [animation]: "loading" }))
 
-    // Test if the URL is accessible
-    fetch(ANIMATIONS[animation], { method: "HEAD" })
-      .then((response) => {
-        if (!response.ok) {
-          console.error(`URL not accessible: ${ANIMATIONS[animation]}, status: ${response.status}`)
-          setTestResults((prev) => ({ ...prev, [animation]: "error" }))
-          setErrorMessages((prev) => ({
-            ...prev,
-            [animation]: `URL not accessible: ${response.status} - ${ANIMATIONS[animation]}`,
-          }))
-          setCurrentTest(null)
-        } else {
-          console.log(`URL verified: ${ANIMATIONS[animation]}`)
-          setTestResults((prev) => ({ ...prev, [animation]: "success" }))
-          setCurrentTest(null)
-        }
-      })
-      .catch((error) => {
-        console.error(`Error checking URL: ${ANIMATIONS[animation]}`, error)
-        setTestResults((prev) => ({ ...prev, [animation]: "error" }))
-        setErrorMessages((prev) => ({
-          ...prev,
-          [animation]: `Error checking URL: ${error.message} - ${ANIMATIONS[animation]}`,
-        }))
-        setCurrentTest(null)
-      })
+    // First check if the URL is accessible
+    const isAccessible = await testUrlAccessibility(animation)
+    if (!isAccessible) {
+      setTestResults((prev) => ({ ...prev, [animation]: "error" }))
+      setErrorMessages((prev) => ({
+        ...prev,
+        [animation]: `URL not accessible: ${ANIMATIONS[animation]}`,
+      }))
+      setCurrentTest(null)
+      return
+    }
+
+    // If URL is accessible, we'll let the component try to load it
+    // The result will be reported via the callbacks
+    setCurrentAnimation(animation)
   }
 
   // Auto test all animations
@@ -100,15 +101,14 @@ export default function AnimationTestPage() {
     const animations: AnimationState[] = ["idle", "walk", "run", "jump", "climb", "death", "somersault"]
     let currentIndex = 0
 
-    const testNext = () => {
+    const testNext = async () => {
       if (currentIndex >= animations.length) {
         setAutoTest(false)
         return
       }
 
       const animation = animations[currentIndex]
-      setCurrentAnimation(animation)
-      testAnimation(animation)
+      await testAnimation(animation)
       currentIndex++
 
       setTimeout(testNext, 3000)
@@ -125,6 +125,7 @@ export default function AnimationTestPage() {
   const handleAnimationLoad = (animation: AnimationState) => {
     console.log(`Animation loaded successfully: ${animation}`)
     setTestResults((prev) => ({ ...prev, [animation]: "success" }))
+    setCurrentTest(null)
   }
 
   // Handle animation load error
@@ -133,9 +134,22 @@ export default function AnimationTestPage() {
     setTestResults((prev) => ({ ...prev, [animation]: "error" }))
     setErrorMessages((prev) => ({
       ...prev,
-      [animation]: `Error loading: ${error.message || "Unknown error"} - ${ANIMATIONS[animation]}`,
+      [animation]: `Error loading: ${error.message || JSON.stringify(error) || "Unknown error"}`,
     }))
+    setCurrentTest(null)
   }
+
+  // Test all URLs on mount
+  useEffect(() => {
+    const testAllUrls = async () => {
+      const animations: AnimationState[] = ["idle", "walk", "run", "jump", "climb", "death", "somersault"]
+      for (const animation of animations) {
+        await testUrlAccessibility(animation)
+      }
+    }
+
+    testAllUrls()
+  }, [])
 
   return (
     <div className="container mx-auto py-8">
@@ -190,12 +204,11 @@ export default function AnimationTestPage() {
                     variant={currentAnimation === animation ? "default" : "outline"}
                     className="w-full justify-between"
                     onClick={() => {
-                      setCurrentAnimation(animation)
                       testAnimation(animation)
                     }}
                   >
                     <span className="capitalize">{animation}</span>
-                    {testResults[animation] === "loading" && <span className="animate-spin ml-2">⟳</span>}
+                    {testResults[animation] === "loading" && <RefreshCw className="h-4 w-4 animate-spin" />}
                     {testResults[animation] === "success" && <CheckCircle className="h-4 w-4 text-green-500" />}
                     {testResults[animation] === "error" && <XCircle className="h-4 w-4 text-red-500" />}
                     {testResults[animation] === "pending" && <AlertCircle className="h-4 w-4 text-gray-400" />}
@@ -209,10 +222,17 @@ export default function AnimationTestPage() {
                     <div key={animation}>
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-medium capitalize">{animation}</span>
-                        {testResults[animation] === "loading" && <span className="text-yellow-500">Testing...</span>}
-                        {testResults[animation] === "success" && <span className="text-green-500">Success</span>}
-                        {testResults[animation] === "error" && <span className="text-red-500">Failed</span>}
-                        {testResults[animation] === "pending" && <span className="text-gray-400">Not Tested</span>}
+                        <div className="flex items-center gap-2">
+                          {accessibleUrls[animation] !== undefined && (
+                            <span className={accessibleUrls[animation] ? "text-green-500" : "text-red-500"}>
+                              {accessibleUrls[animation] ? "URL OK" : "URL Error"}
+                            </span>
+                          )}
+                          {testResults[animation] === "loading" && <span className="text-yellow-500">Testing...</span>}
+                          {testResults[animation] === "success" && <span className="text-green-500">Success</span>}
+                          {testResults[animation] === "error" && <span className="text-red-500">Failed</span>}
+                          {testResults[animation] === "pending" && <span className="text-gray-400">Not Tested</span>}
+                        </div>
                       </div>
 
                       {testResults[animation] === "error" && errorMessages[animation] && (

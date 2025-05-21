@@ -11,6 +11,7 @@ export function RoofusAssistant() {
   const [animation, setAnimation] = useState<"idle" | "walk" | "run" | "jump" | "climb" | "death" | "somersault">(
     "idle",
   )
+  const [animationError, setAnimationError] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     setMounted(true)
@@ -20,15 +21,26 @@ export function RoofusAssistant() {
       setShowRoofus(Math.random() > 0.5)
     }
 
-    // Randomly change animation every 10 seconds
+    // Randomly change animation every 10 seconds, but only use animations that haven't failed
     const animationInterval = setInterval(() => {
-      const animations: ("idle" | "walk" | "run" | "jump" | "climb")[] = ["idle", "walk", "run", "jump", "climb"]
-      const randomAnimation = animations[Math.floor(Math.random() * animations.length)]
+      // Filter out animations that have failed
+      const availableAnimations: ("idle" | "walk")[] = ["idle"]
+      if (!animationError["walk"]) availableAnimations.push("walk")
+
+      // Always include idle as a fallback
+      const randomAnimation = availableAnimations[Math.floor(Math.random() * availableAnimations.length)]
       setAnimation(randomAnimation)
     }, 10000)
 
     return () => clearInterval(animationInterval)
-  }, [isMobile])
+  }, [isMobile, animationError])
+
+  // Handle animation errors
+  const handleAnimationError = (anim: string) => {
+    setAnimationError((prev) => ({ ...prev, [anim]: true }))
+    // Fall back to idle animation
+    setAnimation("idle")
+  }
 
   if (!mounted || !showRoofus) return null
 
@@ -40,6 +52,7 @@ export function RoofusAssistant() {
         scale={0.5}
         showEnvironment={false}
         className="w-full h-full"
+        onAnimationError={() => handleAnimationError(animation)}
       />
     </div>
   )

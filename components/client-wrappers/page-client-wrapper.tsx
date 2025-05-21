@@ -13,10 +13,12 @@ const StarsBackground = dynamic(() => import("./stars-background"), {
 
 const RoofusAssistant = dynamic(() => import("../roofus-assistant").then((mod) => mod.RoofusAssistant), {
   ssr: false,
+  loading: () => null,
 })
 
 export default function PageClientWrapper({ children }: { children?: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
+  const [hasError, setHasError] = useState(false)
   const pathname = usePathname()
 
   // Don't show Roofus on login/signup pages
@@ -24,6 +26,17 @@ export default function PageClientWrapper({ children }: { children?: React.React
 
   useEffect(() => {
     setMounted(true)
+
+    // Error handling
+    const handleError = (event: ErrorEvent) => {
+      if (event.message.includes("Roofus")) {
+        console.error("Error in PageClientWrapper:", event.error)
+        setHasError(true)
+      }
+    }
+
+    window.addEventListener("error", handleError)
+    return () => window.removeEventListener("error", handleError)
   }, [])
 
   if (!mounted) {
@@ -33,7 +46,7 @@ export default function PageClientWrapper({ children }: { children?: React.React
   return (
     <>
       <StarsBackground />
-      {!hideRoofus && <RoofusAssistant />}
+      {!hideRoofus && !hasError && <RoofusAssistant />}
       {children}
     </>
   )

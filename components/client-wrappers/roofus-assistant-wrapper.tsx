@@ -10,12 +10,24 @@ const RoofusAssistant = dynamic(() => import("../roofus-assistant").then((mod) =
 
 export default function RoofusAssistantWrapper() {
   const [mounted, setMounted] = useState(false)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     setMounted(true)
+
+    // Error handling
+    const handleError = (event: ErrorEvent) => {
+      if (event.message.includes("Roofus")) {
+        console.error("Error in RoofusAssistantWrapper:", event.error)
+        setHasError(true)
+      }
+    }
+
+    window.addEventListener("error", handleError)
+    return () => window.removeEventListener("error", handleError)
   }, [])
 
-  if (!mounted) {
+  if (!mounted || hasError) {
     return null
   }
 

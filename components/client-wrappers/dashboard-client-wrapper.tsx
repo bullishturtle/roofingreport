@@ -15,15 +15,28 @@ const StatsCards = dynamic(() => import("../dashboard/stats-cards"), {
   ssr: false,
 })
 
-const RoofusAssistantClient = dynamic(() => import("../roofus-assistant").then((mod) => mod.RoofusAssistant), {
+const RoofusAssistant = dynamic(() => import("../roofus-assistant").then((mod) => mod.RoofusAssistant), {
   ssr: false,
+  loading: () => null,
 })
 
 export default function DashboardClientWrapper() {
   const [mounted, setMounted] = useState(false)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     setMounted(true)
+
+    // Error handling
+    const handleError = (event: ErrorEvent) => {
+      if (event.message.includes("Roofus")) {
+        console.error("Error in DashboardClientWrapper:", event.error)
+        setHasError(true)
+      }
+    }
+
+    window.addEventListener("error", handleError)
+    return () => window.removeEventListener("error", handleError)
   }, [])
 
   if (!mounted) {
@@ -39,7 +52,7 @@ export default function DashboardClientWrapper() {
   return (
     <>
       <StatsCards />
-      <RoofusAssistantClient />
+      {!hasError && <RoofusAssistant />}
     </>
   )
 }

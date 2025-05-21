@@ -3,15 +3,9 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import RoofusPreloadWrapper from "@/components/client-wrappers/roofus-preload-wrapper"
-import dynamic from "next/dynamic"
+// Removed the problematic preload wrapper
 
 const inter = Inter({ subsets: ["latin"] })
-
-// Dynamically import the model fix component
-const RoofusModelFix = dynamic(() => import("@/components/client-wrappers/roofus-model-fix"), {
-  ssr: false,
-})
 
 export const metadata: Metadata = {
   title: "RoofFax - Know Your Roof",
@@ -31,8 +25,6 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <RoofusPreloadWrapper />
-          <RoofusModelFix />
           {children}
         </ThemeProvider>
       </body>

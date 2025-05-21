@@ -53,15 +53,16 @@ function RoofusCharacter() {
   const { camera, viewport } = useThree()
   const [modelLoaded, setModelLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const gltfResult = useGLTF("/models/roofus-character.glb")
 
-  // Create a simple box geometry as a fallback
-  const createFallbackMesh = () => {
-    const geometry = new THREE.BoxGeometry(1, 2, 1)
-    const material = new THREE.MeshStandardMaterial({ color: "#FFD700" })
-    const mesh = new THREE.Mesh(geometry, material)
-    return mesh
-  }
+  // Define the model path explicitly
+  const MODEL_PATH = "/models/roofus-character.glb"
+  console.log("Loading Roofus model from:", MODEL_PATH)
+
+  // Load model with error handling
+  const { scene, animations } = useGLTF(MODEL_PATH, true, undefined, (e) => {
+    console.error("Error loading model:", e)
+    setError("Failed to load character model")
+  }) as any
 
   // Set up physics for falling
   const [ref, api] = useSphere(() => ({
@@ -79,64 +80,27 @@ function RoofusCharacter() {
     },
   }))
 
-  // Try to load the model with error handling
-  useEffect(() => {
-    const loadModel = async () => {
-      try {
-        // First, check if the file exists and is a valid GLB
-        const response = await fetch("/models/roofus-character.glb")
-
-        if (!response.ok) {
-          throw new Error(`Failed to load model: ${response.status} ${response.statusText}`)
-        }
-
-        // Check content type
-        const contentType = response.headers.get("content-type")
-        if (
-          contentType &&
-          !contentType.includes("model/gltf-binary") &&
-          !contentType.includes("application/octet-stream")
-        ) {
-          console.warn(`Unexpected content type for GLB file: ${contentType}`)
-        }
-
-        // If we got here, the file exists and should be loadable
-        console.log("Model file exists and is accessible")
-      } catch (err) {
-        console.error("Error pre-checking model:", err)
-        setError(`Failed to load model: ${err instanceof Error ? err.message : String(err)}`)
-      }
-    }
-
-    loadModel()
-  }, [])
-
-  // Load model with error handling
-  // let gltfResult: any = null
-  // try {
-  //   gltfResult = useGLTF("/models/roofus-character.glb", true, undefined, (e) => {
-  //     console.error("Error loading model:", e)
-  //     setError("Failed to load character model")
-  //   })
-  // } catch (err) {
-  //   console.error("Exception loading model:", err)
-  //   setError(`Exception loading model: ${err instanceof Error ? err.message : String(err)}`)
-  // }
-
-  // Set up animations if model loaded successfully
-  const { actions, names } = useAnimations(gltfResult?.animations || [], group)
-
   // Check if model is loaded
   useEffect(() => {
-    if (gltfResult?.scene) {
-      console.log("3D Model loaded successfully")
+    if (scene) {
+      console.log("3D Model loaded successfully:", scene)
       setModelLoaded(true)
     }
-  }, [gltfResult?.scene])
+  }, [scene])
+
+  // Set up animations
+  const { actions, names } = useAnimations(animations, group)
+
+  // Log available animations
+  useEffect(() => {
+    if (names.length > 0) {
+      console.log("Available animations:", names)
+    }
+  }, [names])
 
   // Handle animation changes
   useEffect(() => {
-    if (!modelLoaded || !actions || Object.keys(actions).length === 0) return
+    if (!modelLoaded || !actions || names.length === 0) return
 
     // Stop all animations
     Object.values(actions).forEach((action) => action?.stop())
@@ -188,10 +152,10 @@ function RoofusCharacter() {
     console.error("Error in RoofusCharacter:", error)
     return (
       <mesh position={[viewport.width / 2 - 1, -viewport.height / 2 + 2, 0]} onClick={handleClick}>
-        <boxGeometry args={[1, 2, 1]} />
+        <sphereGeometry args={[0.5, 16, 16]} />
         <meshStandardMaterial color="#FFD700" />
         {showChatBubble && (
-          <Html position={[0, 1.5, 0]} center>
+          <Html position={[0, 1, 0]} center>
             <div className="bg-white p-3 rounded-lg shadow-lg text-black text-sm w-48 border-2 border-neon-gold/30">
               <p className="font-medium">Hi, I'm Roofus. Need help with your roof?</p>
             </div>
@@ -202,14 +166,14 @@ function RoofusCharacter() {
   }
 
   // If model is not loaded yet, show nothing
-  if (!modelLoaded || !gltfResult?.scene) {
+  if (!modelLoaded) {
     return null
   }
 
   return (
     <>
       <group ref={group} onClick={handleClick} scale={[0.5, 0.5, 0.5]}>
-        <primitive object={gltfResult.scene.clone()} />
+        <primitive object={scene.clone()} />
 
         {/* Chat bubble */}
         {showChatBubble && hasLanded && (
@@ -250,6 +214,10 @@ export function ThreeDRoofus() {
 
   useEffect(() => {
     setMounted(true)
+
+    // Preload the model
+    useGLTF.preload("/models/roofus-character.glb")
+
     return () => {
       // Clean up resources
       useGLTF.clear()

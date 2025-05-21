@@ -8,8 +8,14 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CheckCircle, XCircle, AlertCircle } from "lucide-react"
 import dynamic from "next/dynamic"
 
-// Fix double slashes in URLs
-const fixUrl = (url: string) => url.replace("//", "/")
+// Fix URL formatting function
+const fixUrl = (url: string) => {
+  // Ensure protocol has double slashes
+  let fixedUrl = url.replace("https:/", "https://")
+  // Fix double slashes in the path (but not in the protocol)
+  fixedUrl = fixedUrl.replace("//roofus-models//", "/roofus-models/")
+  return fixedUrl
+}
 
 // Animation states and URLs
 type AnimationState = "idle" | "walk" | "run" | "jump" | "climb" | "death" | "somersault"
@@ -25,6 +31,9 @@ const ANIMATIONS = {
     "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//soumersault.glb",
   ),
 }
+
+// Log all URLs to verify they're correct
+console.log("Animation URLs:", ANIMATIONS)
 
 // Dynamically import the 3D Roofus component with no SSR
 const Roofus3DSupabase = dynamic(() => import("@/components/roofus-3d-supabase").then((mod) => mod.Roofus3DSupabase), {
@@ -56,20 +65,32 @@ export default function AnimationTestPage() {
     setCurrentTest(animation)
     setTestResults((prev) => ({ ...prev, [animation]: "loading" }))
 
-    // Create an image to test if the URL is accessible
-    const img = new Image()
-    img.crossOrigin = "anonymous"
-    img.onload = () => {
-      setTestResults((prev) => ({ ...prev, [animation]: "success" }))
-      setCurrentTest(null)
-    }
-    img.onerror = (e) => {
-      console.error(`Error loading animation: ${animation}`, e)
-      setTestResults((prev) => ({ ...prev, [animation]: "error" }))
-      setErrorMessages((prev) => ({ ...prev, [animation]: `Failed to load: ${ANIMATIONS[animation]}` }))
-      setCurrentTest(null)
-    }
-    img.src = ANIMATIONS[animation]
+    // Test if the URL is accessible
+    fetch(ANIMATIONS[animation], { method: "HEAD" })
+      .then((response) => {
+        if (!response.ok) {
+          console.error(`URL not accessible: ${ANIMATIONS[animation]}, status: ${response.status}`)
+          setTestResults((prev) => ({ ...prev, [animation]: "error" }))
+          setErrorMessages((prev) => ({
+            ...prev,
+            [animation]: `URL not accessible: ${response.status} - ${ANIMATIONS[animation]}`,
+          }))
+          setCurrentTest(null)
+        } else {
+          console.log(`URL verified: ${ANIMATIONS[animation]}`)
+          setTestResults((prev) => ({ ...prev, [animation]: "success" }))
+          setCurrentTest(null)
+        }
+      })
+      .catch((error) => {
+        console.error(`Error checking URL: ${ANIMATIONS[animation]}`, error)
+        setTestResults((prev) => ({ ...prev, [animation]: "error" }))
+        setErrorMessages((prev) => ({
+          ...prev,
+          [animation]: `Error checking URL: ${error.message} - ${ANIMATIONS[animation]}`,
+        }))
+        setCurrentTest(null)
+      })
   }
 
   // Auto test all animations
@@ -100,19 +121,21 @@ export default function AnimationTestPage() {
     }
   }, [autoTest])
 
-  // Handle errors
-  useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      if (currentTest) {
-        setTestResults((prev) => ({ ...prev, [currentTest]: "error" }))
-        setErrorMessages((prev) => ({ ...prev, [currentTest]: event.message }))
-        setCurrentTest(null)
-      }
-    }
+  // Handle animation load success
+  const handleAnimationLoad = (animation: AnimationState) => {
+    console.log(`Animation loaded successfully: ${animation}`)
+    setTestResults((prev) => ({ ...prev, [animation]: "success" }))
+  }
 
-    window.addEventListener("error", handleError)
-    return () => window.removeEventListener("error", handleError)
-  }, [currentTest])
+  // Handle animation load error
+  const handleAnimationError = (animation: AnimationState, error: any) => {
+    console.error(`Error loading animation: ${animation}`, error)
+    setTestResults((prev) => ({ ...prev, [animation]: "error" }))
+    setErrorMessages((prev) => ({
+      ...prev,
+      [animation]: `Error loading: ${error.message || "Unknown error"} - ${ANIMATIONS[animation]}`,
+    }))
+  }
 
   return (
     <div className="container mx-auto py-8">
@@ -131,6 +154,8 @@ export default function AnimationTestPage() {
               scale={0.7}
               showEnvironment={true}
               className="w-full h-full"
+              onAnimationLoad={handleAnimationLoad}
+              onAnimationError={handleAnimationError}
             />
           </CardContent>
           <CardFooter className="flex justify-between">

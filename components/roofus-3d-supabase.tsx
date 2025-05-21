@@ -7,8 +7,14 @@ import { Canvas, useFrame } from "@react-three/fiber"
 import { useGLTF, useAnimations, Environment, Html } from "@react-three/drei"
 import type * as THREE from "three"
 
-// Fix double slashes in URLs
-const fixUrl = (url: string) => url.replace("//", "/")
+// Fix URL formatting function
+const fixUrl = (url: string) => {
+  // Ensure protocol has double slashes
+  let fixedUrl = url.replace("https:/", "https://")
+  // Fix double slashes in the path (but not in the protocol)
+  fixedUrl = fixedUrl.replace("//roofus-models//", "/roofus-models/")
+  return fixedUrl
+}
 
 // Character model and animations from Supabase public URLs
 const MODELS = {
@@ -35,6 +41,11 @@ const TEXTURES = {
 const HDR_URL = fixUrl(
   "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//color_121212.hdr",
 )
+
+// Log all URLs to verify they're correct
+console.log("Model URLs:", MODELS)
+console.log("Texture URLs:", TEXTURES)
+console.log("HDR URL:", HDR_URL)
 
 // Animation states
 type AnimationState = "idle" | "walk" | "run" | "jump" | "climb" | "death" | "somersault"
@@ -86,6 +97,25 @@ function RoofusModel({
 
   // Get the animation URL
   const animationUrl = getAnimationUrl(animation)
+
+  // Verify URL before loading
+  useEffect(() => {
+    console.log(`Loading animation: ${animation} from URL: ${animationUrl}`)
+
+    // Test if the URL is accessible
+    fetch(animationUrl, { method: "HEAD" })
+      .then((response) => {
+        if (!response.ok) {
+          console.error(`URL not accessible: ${animationUrl}, status: ${response.status}`)
+          onAnimationError?.(animation, new Error(`URL not accessible: ${response.status}`))
+        } else {
+          console.log(`URL verified: ${animationUrl}`)
+        }
+      })
+      .catch((error) => {
+        console.error(`Error checking URL: ${animationUrl}`, error)
+      })
+  }, [animation, animationUrl, onAnimationError])
 
   // Load the model and animation with error handling
   const { scene, animations } = useGLTF(
@@ -244,7 +274,7 @@ export function Roofus3DSupabase({
 
               {showEnvironment && (
                 <>
-                  <Environment files={HDR_URL} />
+                  <Environment preset="sunset" />
                   <ambientLight intensity={0.5} />
                   <directionalLight position={[10, 10, 5]} intensity={1} castShadow shadow-mapSize={[1024, 1024]} />
                 </>

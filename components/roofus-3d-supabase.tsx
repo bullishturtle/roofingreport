@@ -16,56 +16,24 @@ const fixUrl = (url: string) => {
   return fixedUrl
 }
 
-// Character model and animations from Supabase public URLs
-const MODELS = {
-  CHARACTER: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/character.glb"),
-  IDLE: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/idle.glb"),
-  WALK: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/walk.glb"),
-  RUN: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/run.glb"),
-  JUMP: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/jump.glb"),
-  CLIMB: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/climb.glb"),
-  DEATH: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/death.glb"),
-  SOMERSAULT: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/soumersault.glb"),
+// Animation URLs
+const ANIMATION_URLS = {
+  idle: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//idle.glb"),
+  walk: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//walk.glb"),
+  run: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//run.glb"),
+  jump: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//jump.glb"),
+  climb: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//climb.glb"),
 }
-
-// Texture URLs from Supabase
-const TEXTURES = {
-  BASE_COLOR: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/Image_0.jpg"),
-  ROUGHNESS: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/Image_1.jpg"),
-  NORMAL_MAP: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/Image_2.jpg"),
-}
-
-// HDR environment URL from Supabase
-const HDR_URL = fixUrl(
-  "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models/color_121212.hdr",
-)
 
 // Animation states
 type AnimationState = "idle" | "walk" | "run" | "jump" | "climb" | "death" | "somersault"
 
-// Map animation states to URLs
-const getAnimationUrl = (animation: AnimationState): string => {
-  switch (animation) {
-    case "idle":
-      return MODELS.IDLE
-    case "walk":
-      return MODELS.WALK
-    case "run":
-      return MODELS.RUN
-    case "jump":
-      return MODELS.JUMP
-    case "climb":
-      return MODELS.CLIMB
-    case "death":
-      return MODELS.DEATH
-    case "somersault":
-      return MODELS.SOMERSAULT
-    default:
-      return MODELS.IDLE
-  }
-}
+// Global state to track which animations have been successfully loaded
+const loadedAnimations = new Set<string>(["idle"]) // Start with idle as the default
+const failedAnimations = new Set<string>()
+let isLoadingAnimation = false
 
-// Roofus character component with separate animation files
+// Simplified Roofus model component with progressive animation loading
 function RoofusModel({
   position = [0, 0, 0],
   rotation = [0, 0, 0],
@@ -80,41 +48,100 @@ function RoofusModel({
   scale?: number
   animation?: AnimationState
   onClick?: () => void
-  onAnimationLoad?: (animation: AnimationState) => void
-  onAnimationError?: (animation: AnimationState, error: any) => void
+  onAnimationLoad?: (animation: string) => void
+  onAnimationError?: (animation: string, error: any) => void
 }) {
   const group = useRef<THREE.Group>(null)
   const [modelLoaded, setModelLoaded] = useState(false)
   const [modelError, setModelError] = useState(false)
-  const [currentAnimation, setCurrentAnimation] = useState<string>(animation)
+  const [currentAnimation, setCurrentAnimation] = useState<string>("idle")
+  const [animationData, setAnimationData] = useState<Record<string, { scene: THREE.Group; animations: any[] }>>({})
 
-  // Get the animation URL
-  const animationUrl = getAnimationUrl(animation)
+  // Use the requested animation if it's loaded, otherwise fall back to idle
+  const animationToUse = loadedAnimations.has(animation) ? animation : "idle"
 
-  // Load the model and animation with error handling
-  const { scene, animations } = useGLTF(
-    animationUrl,
+  // Load the idle animation first
+  const { scene: idleScene, animations: idleAnimations } = useGLTF(
+    ANIMATION_URLS.idle,
     undefined,
     () => {
-      console.log(`Animation loaded successfully: ${animation}`)
+      console.log("Idle animation loaded successfully")
+      loadedAnimations.add("idle")
       setModelLoaded(true)
-      onAnimationLoad?.(animation)
+      onAnimationLoad?.("idle")
+
+      // After idle loads successfully, try to load other animations
+      if (!isLoadingAnimation) {
+        loadNextAnimation()
+      }
     },
     (error) => {
-      console.error(`Error loading animation: ${animation}`, error)
+      console.error("Error loading idle animation:", error)
       setModelError(true)
-      onAnimationError?.(animation, error)
+      failedAnimations.add("idle")
+      onAnimationError?.("idle", error)
     },
   ) as any
 
+  // Function to load the next animation in sequence
+  const loadNextAnimation = async () => {
+    if (isLoadingAnimation) return
+
+    const animationsToLoad = ["walk", "run", "jump", "climb"]
+    const nextAnimation = animationsToLoad.find((anim) => !loadedAnimations.has(anim) && !failedAnimations.has(anim))
+
+    if (!nextAnimation) {
+      console.log("All animations have been processed")
+      return
+    }
+
+    isLoadingAnimation = true
+    console.log(`Loading next animation: ${nextAnimation}`)
+
+    try {
+      // Use a dynamic import to load the animation
+      const gltf = await new Promise<any>((resolve, reject) => {
+        useGLTF.load(ANIMATION_URLS[nextAnimation as keyof typeof ANIMATION_URLS], resolve, undefined, reject)
+      })
+
+      console.log(`Animation ${nextAnimation} loaded successfully`)
+      loadedAnimations.add(nextAnimation)
+      setAnimationData((prev) => ({
+        ...prev,
+        [nextAnimation]: { scene: gltf.scene, animations: gltf.animations },
+      }))
+      onAnimationLoad?.(nextAnimation)
+    } catch (error) {
+      console.error(`Error loading animation ${nextAnimation}:`, error)
+      failedAnimations.add(nextAnimation)
+      onAnimationError?.(nextAnimation, error)
+    } finally {
+      isLoadingAnimation = false
+      // Continue loading the next animation
+      setTimeout(loadNextAnimation, 1000)
+    }
+  }
+
+  // Initialize with the idle animation
+  useEffect(() => {
+    if (idleScene && idleAnimations) {
+      setAnimationData({
+        idle: { scene: idleScene, animations: idleAnimations },
+      })
+    }
+  }, [idleScene, idleAnimations])
+
   // Set up animations
-  const { actions, names } = useAnimations(animations, group)
+  const { actions, names } = useAnimations(animationData[animationToUse]?.animations || idleAnimations, group)
 
   // Handle animation changes
   useEffect(() => {
     if (!modelLoaded || modelError || !actions || !names || names.length === 0) return
 
-    console.log(`Available animations for ${animation}:`, names)
+    // Stop all current animations
+    Object.values(actions).forEach((action: any) => action?.stop())
+
+    console.log(`Available animations for ${animationToUse}:`, names)
 
     // Play the first animation
     const animationName = names[0]
@@ -122,15 +149,19 @@ function RoofusModel({
       console.log(`Playing animation: ${animationName}`)
       actions[animationName].reset().fadeIn(0.5).play()
       setCurrentAnimation(animationName)
-    } else {
-      console.warn(`Animation ${animationName} not found in model`)
     }
-  }, [animation, actions, names, modelLoaded, modelError])
+  }, [animationToUse, modelLoaded, modelError, actions, names])
 
   // Simple animation for fallback cube
   useFrame(({ clock }) => {
-    if (modelError && group.current) {
-      group.current.rotation.y = Math.sin(clock.getElapsedTime()) * 0.3
+    if (group.current) {
+      // Gentle bobbing motion for both the model and fallback
+      group.current.position.y = position[1] + Math.sin(clock.getElapsedTime()) * 0.05
+
+      // Additional rotation for the fallback cube
+      if (modelError) {
+        group.current.rotation.y = Math.sin(clock.getElapsedTime() * 0.5) * 0.3
+      }
     }
   })
 
@@ -146,9 +177,12 @@ function RoofusModel({
     )
   }
 
+  // Get the scene to use based on the current animation
+  const sceneToUse = animationData[animationToUse]?.scene || idleScene
+
   return (
     <group ref={group} position={position} rotation={rotation as any} onClick={onClick}>
-      {scene && <primitive object={scene.clone()} scale={[scale, scale, scale]} />}
+      {sceneToUse && <primitive object={sceneToUse.clone()} scale={[scale, scale, scale]} />}
     </group>
   )
 }
@@ -207,18 +241,28 @@ export function Roofus3DSupabase({
   showEnvironment?: boolean
   className?: string
   onClick?: () => void
-  onAnimationLoad?: (animation: AnimationState) => void
-  onAnimationError?: (animation: AnimationState, error: any) => void
+  onAnimationLoad?: (animation: string) => void
+  onAnimationError?: (animation: string, error: any) => void
 }) {
   const [mounted, setMounted] = useState(false)
   const [showSpeechBubble, setShowSpeechBubble] = useState(false)
   const [speechText, setSpeechText] = useState("Hi, I'm Roofus! Need help with your roof?")
+  const [availableAnimations, setAvailableAnimations] = useState<string[]>(["idle"])
 
   // Handle client-side rendering
   useEffect(() => {
     setMounted(true)
+
+    // Update available animations when they're loaded
+    const updateAvailableAnimations = () => {
+      setAvailableAnimations(Array.from(loadedAnimations))
+    }
+
+    // Check for new animations every second
+    const interval = setInterval(updateAvailableAnimations, 1000)
+
     return () => {
-      // Clean up any resources
+      clearInterval(interval)
     }
   }, [])
 
@@ -228,7 +272,22 @@ export function Roofus3DSupabase({
     onClick?.()
   }
 
+  // Handle animation load success
+  const handleAnimationLoad = (anim: string) => {
+    console.log(`Animation loaded in main component: ${anim}`)
+    onAnimationLoad?.(anim)
+  }
+
+  // Handle animation load error
+  const handleAnimationError = (anim: string, error: any) => {
+    console.error(`Animation error in main component: ${anim}`, error)
+    onAnimationError?.(anim, error)
+  }
+
   if (!mounted) return null
+
+  // Use the requested animation if it's available, otherwise fall back to idle
+  const animationToUse = loadedAnimations.has(animation as string) ? animation : "idle"
 
   return (
     <div className={`relative ${className}`}>
@@ -240,10 +299,10 @@ export function Roofus3DSupabase({
                 position={position}
                 rotation={rotation}
                 scale={scale}
-                animation={animation}
+                animation={animationToUse}
                 onClick={handleClick}
-                onAnimationLoad={onAnimationLoad}
-                onAnimationError={onAnimationError}
+                onAnimationLoad={handleAnimationLoad}
+                onAnimationError={handleAnimationError}
               />
 
               {showEnvironment && (
@@ -264,14 +323,22 @@ export function Roofus3DSupabase({
           <p className="font-medium">{speechText}</p>
         </div>
       )}
+
+      {/* Debug info - remove in production */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="absolute bottom-0 left-0 bg-black/50 text-white text-xs p-1 rounded">
+          Available: {availableAnimations.join(", ")}
+          <br />
+          Current: {animationToUse}
+        </div>
+      )}
     </div>
   )
 }
 
-// Preload the most commonly used models
+// Preload the idle animation
 try {
-  useGLTF.preload(MODELS.IDLE)
-  useGLTF.preload(MODELS.WALK)
+  useGLTF.preload(ANIMATION_URLS.idle)
 } catch (error) {
-  console.error("Error preloading models:", error)
+  console.error("Error preloading idle animation:", error)
 }

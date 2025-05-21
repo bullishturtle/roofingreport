@@ -3,20 +3,49 @@
 import { useState, useEffect } from "react"
 import { Roofus3DSupabaseWrapper } from "./client-wrappers/roofus-3d-supabase-wrapper"
 
+// Global state to track which animations have been successfully loaded
+// This is declared in roofus-3d-supabase.tsx but we need to access it here
+const loadedAnimations = new Set<string>(["idle"])
+
 export function HeroRoofusSupabase() {
   const [mounted, setMounted] = useState(false)
-  const [animation, setAnimation] = useState<"idle" | "walk">("walk")
+  const [animation, setAnimation] = useState<"idle" | "walk" | "run">("idle")
+  const [availableAnimations, setAvailableAnimations] = useState<string[]>(["idle"])
 
   useEffect(() => {
     setMounted(true)
 
-    // Switch between idle and walking
-    const interval = setInterval(() => {
-      setAnimation((prev) => (prev === "idle" ? "walk" : "idle"))
+    // Update available animations
+    const updateAvailableAnimations = () => {
+      // Get the current loaded animations from the global state
+      const currentAnimations = Array.from(loadedAnimations)
+      setAvailableAnimations(currentAnimations)
+    }
+
+    // Check for new animations every second
+    const animationsInterval = setInterval(updateAvailableAnimations, 1000)
+
+    // Switch between idle and walk (if available) every 5 seconds
+    const animationInterval = setInterval(() => {
+      if (availableAnimations.includes("walk")) {
+        setAnimation((prev) => (prev === "idle" ? "walk" : "idle"))
+      } else if (availableAnimations.includes("run")) {
+        setAnimation((prev) => (prev === "idle" ? "run" : "idle"))
+      }
     }, 5000)
 
-    return () => clearInterval(interval)
-  }, [])
+    return () => {
+      clearInterval(animationsInterval)
+      clearInterval(animationInterval)
+    }
+  }, [availableAnimations])
+
+  // Handle animation load success
+  const handleAnimationLoad = (anim: string) => {
+    console.log(`Animation loaded in HeroRoofusSupabase: ${anim}`)
+    // Update our local state of available animations
+    setAvailableAnimations((prev) => (prev.includes(anim) ? prev : [...prev, anim]))
+  }
 
   if (!mounted) return null
 
@@ -29,6 +58,7 @@ export function HeroRoofusSupabase() {
         scale={0.6}
         showEnvironment={false}
         className="w-full h-full"
+        onAnimationLoad={handleAnimationLoad}
       />
     </div>
   )

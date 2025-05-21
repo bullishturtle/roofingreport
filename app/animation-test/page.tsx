@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { CheckCircle, XCircle, AlertCircle } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
+import { CheckCircle, XCircle, Loader2 } from "lucide-react"
 import dynamic from "next/dynamic"
 
 // Fix URL formatting function
@@ -18,7 +18,7 @@ const fixUrl = (url: string) => {
 }
 
 // Animation states and URLs
-type AnimationState = "idle" | "walk" | "run" | "jump" | "climb" | "death" | "somersault"
+type AnimationState = "idle" | "walk" | "run" | "jump" | "climb"
 
 const ANIMATIONS = {
   idle: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//idle.glb"),
@@ -26,14 +26,7 @@ const ANIMATIONS = {
   run: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//run.glb"),
   jump: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//jump.glb"),
   climb: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//climb.glb"),
-  death: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//death.glb"),
-  somersault: fixUrl(
-    "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//soumersault.glb",
-  ),
 }
-
-// Log all URLs to verify they're correct
-console.log("Animation URLs:", ANIMATIONS)
 
 // Dynamically import the 3D Roofus component with no SSR
 const Roofus3DSupabase = dynamic(() => import("@/components/roofus-3d-supabase").then((mod) => mod.Roofus3DSupabase), {
@@ -47,99 +40,38 @@ const Roofus3DSupabase = dynamic(() => import("@/components/roofus-3d-supabase")
 
 export default function AnimationTestPage() {
   const [currentAnimation, setCurrentAnimation] = useState<AnimationState>("idle")
-  const [autoTest, setAutoTest] = useState(false)
-  const [testResults, setTestResults] = useState<Record<AnimationState, "loading" | "success" | "error" | "pending">>({
-    idle: "pending",
-    walk: "pending",
-    run: "pending",
-    jump: "pending",
-    climb: "pending",
-    death: "pending",
-    somersault: "pending",
-  })
-  const [currentTest, setCurrentTest] = useState<AnimationState | null>(null)
-  const [errorMessages, setErrorMessages] = useState<Record<string, string>>({})
-
-  // Function to test a specific animation
-  const testAnimation = (animation: AnimationState) => {
-    setCurrentTest(animation)
-    setTestResults((prev) => ({ ...prev, [animation]: "loading" }))
-
-    // Test if the URL is accessible
-    fetch(ANIMATIONS[animation], { method: "HEAD" })
-      .then((response) => {
-        if (!response.ok) {
-          console.error(`URL not accessible: ${ANIMATIONS[animation]}, status: ${response.status}`)
-          setTestResults((prev) => ({ ...prev, [animation]: "error" }))
-          setErrorMessages((prev) => ({
-            ...prev,
-            [animation]: `URL not accessible: ${response.status} - ${ANIMATIONS[animation]}`,
-          }))
-          setCurrentTest(null)
-        } else {
-          console.log(`URL verified: ${ANIMATIONS[animation]}`)
-          setTestResults((prev) => ({ ...prev, [animation]: "success" }))
-          setCurrentTest(null)
-        }
-      })
-      .catch((error) => {
-        console.error(`Error checking URL: ${ANIMATIONS[animation]}`, error)
-        setTestResults((prev) => ({ ...prev, [animation]: "error" }))
-        setErrorMessages((prev) => ({
-          ...prev,
-          [animation]: `Error checking URL: ${error.message} - ${ANIMATIONS[animation]}`,
-        }))
-        setCurrentTest(null)
-      })
-  }
-
-  // Auto test all animations
-  useEffect(() => {
-    if (!autoTest) return
-
-    const animations: AnimationState[] = ["idle", "walk", "run", "jump", "climb", "death", "somersault"]
-    let currentIndex = 0
-
-    const testNext = () => {
-      if (currentIndex >= animations.length) {
-        setAutoTest(false)
-        return
-      }
-
-      const animation = animations[currentIndex]
-      setCurrentAnimation(animation)
-      testAnimation(animation)
-      currentIndex++
-
-      setTimeout(testNext, 3000)
-    }
-
-    testNext()
-
-    return () => {
-      setAutoTest(false)
-    }
-  }, [autoTest])
+  const [loadedAnimations, setLoadedAnimations] = useState<string[]>(["idle"])
+  const [failedAnimations, setFailedAnimations] = useState<string[]>([])
+  const [loadingAnimation, setLoadingAnimation] = useState<string | null>(null)
+  const [progress, setProgress] = useState(0)
 
   // Handle animation load success
-  const handleAnimationLoad = (animation: AnimationState) => {
+  const handleAnimationLoad = (animation: string) => {
     console.log(`Animation loaded successfully: ${animation}`)
-    setTestResults((prev) => ({ ...prev, [animation]: "success" }))
+    setLoadedAnimations((prev) => (prev.includes(animation) ? prev : [...prev, animation]))
+    setLoadingAnimation(null)
+
+    // Update progress
+    const totalAnimations = Object.keys(ANIMATIONS).length
+    const loadedCount = loadedAnimations.length + 1 // +1 for the one that just loaded
+    setProgress(Math.round((loadedCount / totalAnimations) * 100))
   }
 
   // Handle animation load error
-  const handleAnimationError = (animation: AnimationState, error: any) => {
+  const handleAnimationError = (animation: string, error: any) => {
     console.error(`Error loading animation: ${animation}`, error)
-    setTestResults((prev) => ({ ...prev, [animation]: "error" }))
-    setErrorMessages((prev) => ({
-      ...prev,
-      [animation]: `Error loading: ${error.message || "Unknown error"} - ${ANIMATIONS[animation]}`,
-    }))
+    setFailedAnimations((prev) => (prev.includes(animation) ? prev : [...prev, animation]))
+    setLoadingAnimation(null)
+
+    // Update progress
+    const totalAnimations = Object.keys(ANIMATIONS).length
+    const processedCount = loadedAnimations.length + failedAnimations.length + 1 // +1 for the one that just failed
+    setProgress(Math.round((processedCount / totalAnimations) * 100))
   }
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6 text-center">Roofus Animation Test</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">Progressive Animation Loading</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card className="col-span-1">
@@ -158,84 +90,60 @@ export default function AnimationTestPage() {
               onAnimationError={handleAnimationError}
             />
           </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setAutoTest(!autoTest)
-              }}
-            >
-              {autoTest ? "Stop Auto Test" : "Start Auto Test"}
-            </Button>
-            <div className="text-sm text-gray-400">Click an animation below to test it</div>
+          <CardFooter>
+            <div className="w-full">
+              <div className="flex justify-between mb-2">
+                <span>Loading Progress</span>
+                <span>{progress}%</span>
+              </div>
+              <Progress value={progress} className="w-full" />
+            </div>
           </CardFooter>
         </Card>
 
         <Card className="col-span-1">
           <CardHeader>
-            <CardTitle>Animation Status</CardTitle>
-            <CardDescription>Test results for each animation</CardDescription>
+            <CardTitle>Available Animations</CardTitle>
+            <CardDescription>Click an animation to preview it</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="manual" className="w-full">
-              <TabsList className="grid grid-cols-2 mb-4">
-                <TabsTrigger value="manual">Manual Test</TabsTrigger>
-                <TabsTrigger value="results">Test Results</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="manual" className="space-y-2">
-                {(Object.keys(ANIMATIONS) as AnimationState[]).map((animation) => (
-                  <Button
-                    key={animation}
-                    variant={currentAnimation === animation ? "default" : "outline"}
-                    className="w-full justify-between"
-                    onClick={() => {
+            <div className="space-y-4">
+              {(Object.keys(ANIMATIONS) as AnimationState[]).map((animation) => (
+                <Button
+                  key={animation}
+                  variant={currentAnimation === animation ? "default" : "outline"}
+                  className="w-full justify-between"
+                  onClick={() => {
+                    if (loadedAnimations.includes(animation)) {
                       setCurrentAnimation(animation)
-                      testAnimation(animation)
-                    }}
-                  >
-                    <span className="capitalize">{animation}</span>
-                    {testResults[animation] === "loading" && <span className="animate-spin ml-2">⟳</span>}
-                    {testResults[animation] === "success" && <CheckCircle className="h-4 w-4 text-green-500" />}
-                    {testResults[animation] === "error" && <XCircle className="h-4 w-4 text-red-500" />}
-                    {testResults[animation] === "pending" && <AlertCircle className="h-4 w-4 text-gray-400" />}
-                  </Button>
-                ))}
-              </TabsContent>
-
-              <TabsContent value="results">
-                <div className="space-y-4">
-                  {(Object.keys(ANIMATIONS) as AnimationState[]).map((animation) => (
-                    <div key={animation}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium capitalize">{animation}</span>
-                        {testResults[animation] === "loading" && <span className="text-yellow-500">Testing...</span>}
-                        {testResults[animation] === "success" && <span className="text-green-500">Success</span>}
-                        {testResults[animation] === "error" && <span className="text-red-500">Failed</span>}
-                        {testResults[animation] === "pending" && <span className="text-gray-400">Not Tested</span>}
-                      </div>
-
-                      {testResults[animation] === "error" && errorMessages[animation] && (
-                        <Alert variant="destructive" className="mb-2">
-                          <AlertTitle>Error</AlertTitle>
-                          <AlertDescription className="text-xs break-all">{errorMessages[animation]}</AlertDescription>
-                        </Alert>
-                      )}
-
-                      <div className="text-xs text-gray-400 break-all">{ANIMATIONS[animation]}</div>
-                    </div>
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
+                    }
+                  }}
+                  disabled={!loadedAnimations.includes(animation)}
+                >
+                  <span className="capitalize">{animation}</span>
+                  {loadingAnimation === animation && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {loadedAnimations.includes(animation) && <CheckCircle className="h-4 w-4 text-green-500" />}
+                  {failedAnimations.includes(animation) && <XCircle className="h-4 w-4 text-red-500" />}
+                  {!loadedAnimations.includes(animation) &&
+                    !failedAnimations.includes(animation) &&
+                    loadingAnimation !== animation && (
+                      <Badge variant="outline" className="ml-2">
+                        Pending
+                      </Badge>
+                    )}
+                </Button>
+              ))}
+            </div>
           </CardContent>
+          <CardFooter className="flex flex-col items-start gap-2">
+            <div className="text-sm text-gray-500">
+              Animations are loaded progressively after the idle animation is confirmed to work.
+            </div>
+            <Button variant="outline" onClick={() => window.history.back()} className="mt-4">
+              Back to Home
+            </Button>
+          </CardFooter>
         </Card>
-      </div>
-
-      <div className="mt-8 text-center">
-        <Button variant="outline" onClick={() => window.history.back()}>
-          Back to Home
-        </Button>
       </div>
     </div>
   )

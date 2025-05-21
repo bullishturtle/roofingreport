@@ -24,6 +24,8 @@ export function Roofus3DSupabaseWrapper({
   showEnvironment = true,
   className = "",
   onClick,
+  onAnimationLoad,
+  onAnimationError,
 }: {
   position?: [number, number, number]
   rotation?: [number, number, number]
@@ -32,23 +34,47 @@ export function Roofus3DSupabaseWrapper({
   showEnvironment?: boolean
   className?: string
   onClick?: () => void
+  onAnimationLoad?: (animation: string) => void
+  onAnimationError?: (animation: string, error: any) => void
 }) {
   const [mounted, setMounted] = useState(false)
   const [hasError, setHasError] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
+  const maxRetries = 2
 
   useEffect(() => {
     setMounted(true)
-    console.log("Roofus3DSupabaseWrapper mounted, attempting to load model")
 
     // Error handling
     const handleError = (event: ErrorEvent) => {
-      console.error("Error in Roofus3DSupabaseWrapper:", event.error)
-      setHasError(true)
+      if (event.message.includes("Roofus") || event.message.includes("GLB") || event.message.includes("3D")) {
+        console.error("Error in Roofus3DSupabaseWrapper:", event.error)
+
+        // Retry loading a few times before giving up
+        if (retryCount < maxRetries) {
+          console.log(`Retrying (${retryCount + 1}/${maxRetries})...`)
+          setRetryCount((prev) => prev + 1)
+        } else {
+          setHasError(true)
+        }
+      }
     }
 
     window.addEventListener("error", handleError)
     return () => window.removeEventListener("error", handleError)
-  }, [])
+  }, [retryCount])
+
+  // Handle animation load success
+  const handleAnimationLoad = (anim: string) => {
+    console.log(`Animation loaded in wrapper: ${anim}`)
+    onAnimationLoad?.(anim)
+  }
+
+  // Handle animation load error
+  const handleAnimationError = (anim: string, error: any) => {
+    console.error(`Animation error in wrapper: ${anim}`, error)
+    onAnimationError?.(anim, error)
+  }
 
   if (!mounted) {
     return null
@@ -58,7 +84,7 @@ export function Roofus3DSupabaseWrapper({
     console.log("Rendering fallback due to error")
     return (
       <div className={`${className} flex items-center justify-center bg-black/20 rounded-lg`}>
-        <div className="text-neon-gold text-sm">Failed to load Roofus</div>
+        <div className="text-neon-gold text-sm">Roofus will be back soon!</div>
       </div>
     )
   }
@@ -72,6 +98,8 @@ export function Roofus3DSupabaseWrapper({
       showEnvironment={showEnvironment}
       className={className}
       onClick={onClick}
+      onAnimationLoad={handleAnimationLoad}
+      onAnimationError={handleAnimationError}
     />
   )
 }

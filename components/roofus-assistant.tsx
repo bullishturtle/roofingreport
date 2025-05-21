@@ -31,7 +31,7 @@ export function RoofusAssistant() {
       <Roofus3DSupabaseWrapper
         animation="idle"
         position={[0, -1, 0]}
-        rotation={[0, Math.PI * 0.75, 0]} // Rotate to face toward the center
+        rotation={[0, Math.PI * 0.25, 0]} // Rotate to face toward the center-left
         scale={0.5}
         showEnvironment={false}
         className="w-full h-full"

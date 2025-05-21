@@ -26,7 +26,7 @@ export function HeroSearch() {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto text-center">
+    <div id="hero-search" className="w-full max-w-4xl mx-auto text-center">
       <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-neon-gold to-amber-300">
         Get Your Roof's History Report
       </h1>

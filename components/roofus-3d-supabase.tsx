@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, useRef, Suspense } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
-import { useGLTF, useAnimations, Environment, Html } from "@react-three/drei"
+import { useGLTF, useAnimations, Environment, Html, OrbitControls } from "@react-three/drei"
 import type * as THREE from "three"
 
 // Fix URL formatting function
@@ -139,7 +139,7 @@ function LoadingFallback() {
 // Main component
 export function Roofus3DSupabase({
   position = [0, -1, 0],
-  rotation = [0, Math.PI, 0], // Rotate 180 degrees to face forward
+  rotation = [0, Math.PI, 0], // Default rotation to face forward
   scale = 0.5,
   animation = "idle", // This is ignored for now since we're only using the idle animation
   showEnvironment = true,
@@ -147,6 +147,7 @@ export function Roofus3DSupabase({
   onClick,
   onAnimationLoad,
   onAnimationError,
+  debug = false,
 }: {
   position?: [number, number, number]
   rotation?: [number, number, number]
@@ -157,6 +158,7 @@ export function Roofus3DSupabase({
   onClick?: () => void
   onAnimationLoad?: (animation: string) => void
   onAnimationError?: (animation: string, error: any) => void
+  debug?: boolean
 }) {
   const [mounted, setMounted] = useState(false)
   const [showSpeechBubble, setShowSpeechBubble] = useState(false)
@@ -181,18 +183,27 @@ export function Roofus3DSupabase({
   return (
     <div className={`relative ${className}`}>
       <div className="w-full h-full">
-        <Canvas shadows camera={{ position: [0, 0, 5], fov: 50 }} gl={{ antialias: true, alpha: true }}>
+        <Canvas
+          shadows
+          camera={{ position: [0, 0, 5], fov: 50 }}
+          gl={{ antialias: true, alpha: true }}
+          dpr={[1, 2]} // Optimize for performance and quality
+        >
           <ErrorBoundary>
             <Suspense fallback={<LoadingFallback />}>
               <RoofusModel position={position} rotation={rotation} scale={scale} onClick={handleClick} />
 
-              {/* Improved lighting setup */}
-              <ambientLight intensity={0.8} />
-              <directionalLight position={[5, 5, 5]} intensity={1} castShadow />
-              <directionalLight position={[-5, 5, -5]} intensity={0.5} />
-              <directionalLight position={[0, 5, -10]} intensity={0.7} />
+              {/* Enhanced lighting setup for better visibility */}
+              <ambientLight intensity={1.2} />
+              <directionalLight position={[5, 5, 5]} intensity={1.5} castShadow />
+              <directionalLight position={[-5, 5, -5]} intensity={0.8} />
+              <directionalLight position={[0, 5, -10]} intensity={1} />
+              <pointLight position={[0, 2, 2]} intensity={0.5} color="#FFD700" />
 
               {showEnvironment && <Environment preset="sunset" />}
+
+              {/* Debug controls - only in development */}
+              {debug && <OrbitControls />}
             </Suspense>
           </ErrorBoundary>
         </Canvas>

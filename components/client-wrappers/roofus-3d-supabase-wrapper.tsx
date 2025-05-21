@@ -18,7 +18,7 @@ const Roofus3DSupabaseDynamic = dynamic(() => import("../roofus-3d-supabase").th
 
 export function Roofus3DSupabaseWrapper({
   position = [0, -1, 0],
-  rotation = [0, 0, 0],
+  rotation = [0, Math.PI, 0], // Default to facing forward
   scale = 0.5,
   animation = "idle",
   showEnvironment = true,
@@ -26,6 +26,7 @@ export function Roofus3DSupabaseWrapper({
   onClick,
   onAnimationLoad,
   onAnimationError,
+  debug = false,
 }: {
   position?: [number, number, number]
   rotation?: [number, number, number]
@@ -36,6 +37,7 @@ export function Roofus3DSupabaseWrapper({
   onClick?: () => void
   onAnimationLoad?: (animation: string) => void
   onAnimationError?: (animation: string, error: any) => void
+  debug?: boolean
 }) {
   const [mounted, setMounted] = useState(false)
   const [hasError, setHasError] = useState(false)
@@ -100,6 +102,7 @@ export function Roofus3DSupabaseWrapper({
       onClick={onClick}
       onAnimationLoad={handleAnimationLoad}
       onAnimationError={handleAnimationError}
+      debug={debug}
     />
   )
 }

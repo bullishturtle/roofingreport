@@ -11,18 +11,12 @@ const StarsBackground = dynamic(() => import("./stars-background"), {
   ssr: false,
 })
 
-const RoofusAssistant = dynamic(() => import("../roofus-assistant").then((mod) => mod.RoofusAssistant), {
-  ssr: false,
-  loading: () => null,
-})
+// We don't need to import RoofusAssistant here since it's conditionally rendered in its own component
 
 export default function PageClientWrapper({ children }: { children?: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
   const [hasError, setHasError] = useState(false)
   const pathname = usePathname()
-
-  // Don't show Roofus on login/signup pages
-  const hideRoofus = pathname === "/login" || pathname === "/signup"
 
   useEffect(() => {
     setMounted(true)
@@ -46,7 +40,6 @@ export default function PageClientWrapper({ children }: { children?: React.React
   return (
     <>
       <StarsBackground />
-      {!hideRoofus && !hasError && <RoofusAssistant />}
       {children}
     </>
   )

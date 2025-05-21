@@ -16,141 +16,58 @@ const fixUrl = (url: string) => {
   return fixedUrl
 }
 
-// Animation URLs
-const ANIMATION_URLS = {
-  idle: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//idle.glb"),
-  walk: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//walk.glb"),
-  run: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//run.glb"),
-  jump: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//jump.glb"),
-  climb: fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//climb.glb"),
-}
+// We'll use only the idle animation for now to simplify
+const IDLE_URL = fixUrl("https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/public/roofus-models//idle.glb")
 
 // Animation states
 type AnimationState = "idle" | "walk" | "run" | "jump" | "climb" | "death" | "somersault"
 
-// Global state to track which animations have been successfully loaded
-const loadedAnimations = new Set<string>(["idle"]) // Start with idle as the default
-const failedAnimations = new Set<string>()
-let isLoadingAnimation = false
-
-// Simplified Roofus model component with progressive animation loading
+// Simplified Roofus model component that only uses the idle animation
 function RoofusModel({
   position = [0, 0, 0],
   rotation = [0, 0, 0],
   scale = 0.5,
-  animation = "idle",
   onClick,
-  onAnimationLoad,
-  onAnimationError,
 }: {
   position?: [number, number, number]
   rotation?: [number, number, number]
   scale?: number
-  animation?: AnimationState
   onClick?: () => void
-  onAnimationLoad?: (animation: string) => void
-  onAnimationError?: (animation: string, error: any) => void
 }) {
   const group = useRef<THREE.Group>(null)
   const [modelLoaded, setModelLoaded] = useState(false)
   const [modelError, setModelError] = useState(false)
-  const [currentAnimation, setCurrentAnimation] = useState<string>("idle")
-  const [animationData, setAnimationData] = useState<Record<string, { scene: THREE.Group; animations: any[] }>>({})
 
-  // Use the requested animation if it's loaded, otherwise fall back to idle
-  const animationToUse = loadedAnimations.has(animation) ? animation : "idle"
-
-  // Load the idle animation first
-  const { scene: idleScene, animations: idleAnimations } = useGLTF(
-    ANIMATION_URLS.idle,
+  // Load the model with error handling
+  const { scene, animations } = useGLTF(
+    IDLE_URL,
     undefined,
     () => {
-      console.log("Idle animation loaded successfully")
-      loadedAnimations.add("idle")
+      console.log("Roofus model loaded successfully")
       setModelLoaded(true)
-      onAnimationLoad?.("idle")
-
-      // After idle loads successfully, try to load other animations
-      if (!isLoadingAnimation) {
-        loadNextAnimation()
-      }
     },
     (error) => {
-      console.error("Error loading idle animation:", error)
+      console.error("Error loading Roofus model:", error)
       setModelError(true)
-      failedAnimations.add("idle")
-      onAnimationError?.("idle", error)
     },
   ) as any
 
-  // Function to load the next animation in sequence
-  const loadNextAnimation = async () => {
-    if (isLoadingAnimation) return
+  // Set up animations if available
+  const { actions, names } = useAnimations(animations, group)
 
-    const animationsToLoad = ["walk", "run", "jump", "climb"]
-    const nextAnimation = animationsToLoad.find((anim) => !loadedAnimations.has(anim) && !failedAnimations.has(anim))
-
-    if (!nextAnimation) {
-      console.log("All animations have been processed")
-      return
-    }
-
-    isLoadingAnimation = true
-    console.log(`Loading next animation: ${nextAnimation}`)
-
-    try {
-      // Use a dynamic import to load the animation
-      const gltf = await new Promise<any>((resolve, reject) => {
-        useGLTF.load(ANIMATION_URLS[nextAnimation as keyof typeof ANIMATION_URLS], resolve, undefined, reject)
-      })
-
-      console.log(`Animation ${nextAnimation} loaded successfully`)
-      loadedAnimations.add(nextAnimation)
-      setAnimationData((prev) => ({
-        ...prev,
-        [nextAnimation]: { scene: gltf.scene, animations: gltf.animations },
-      }))
-      onAnimationLoad?.(nextAnimation)
-    } catch (error) {
-      console.error(`Error loading animation ${nextAnimation}:`, error)
-      failedAnimations.add(nextAnimation)
-      onAnimationError?.(nextAnimation, error)
-    } finally {
-      isLoadingAnimation = false
-      // Continue loading the next animation
-      setTimeout(loadNextAnimation, 1000)
-    }
-  }
-
-  // Initialize with the idle animation
-  useEffect(() => {
-    if (idleScene && idleAnimations) {
-      setAnimationData({
-        idle: { scene: idleScene, animations: idleAnimations },
-      })
-    }
-  }, [idleScene, idleAnimations])
-
-  // Set up animations
-  const { actions, names } = useAnimations(animationData[animationToUse]?.animations || idleAnimations, group)
-
-  // Handle animation changes
+  // Play animation if available
   useEffect(() => {
     if (!modelLoaded || modelError || !actions || !names || names.length === 0) return
 
-    // Stop all current animations
-    Object.values(actions).forEach((action: any) => action?.stop())
-
-    console.log(`Available animations for ${animationToUse}:`, names)
+    console.log("Available animations:", names)
 
     // Play the first animation
     const animationName = names[0]
     if (actions[animationName]) {
       console.log(`Playing animation: ${animationName}`)
       actions[animationName].reset().fadeIn(0.5).play()
-      setCurrentAnimation(animationName)
     }
-  }, [animationToUse, modelLoaded, modelError, actions, names])
+  }, [modelLoaded, modelError, actions, names])
 
   // Simple animation for fallback cube
   useFrame(({ clock }) => {
@@ -177,12 +94,9 @@ function RoofusModel({
     )
   }
 
-  // Get the scene to use based on the current animation
-  const sceneToUse = animationData[animationToUse]?.scene || idleScene
-
   return (
     <group ref={group} position={position} rotation={rotation as any} onClick={onClick}>
-      {sceneToUse && <primitive object={sceneToUse.clone()} scale={[scale, scale, scale]} />}
+      {scene && <primitive object={scene.clone()} scale={[scale, scale, scale]} />}
     </group>
   )
 }
@@ -225,9 +139,9 @@ function LoadingFallback() {
 // Main component
 export function Roofus3DSupabase({
   position = [0, -1, 0],
-  rotation = [0, 0, 0],
+  rotation = [0, Math.PI, 0], // Rotate 180 degrees to face forward
   scale = 0.5,
-  animation = "idle",
+  animation = "idle", // This is ignored for now since we're only using the idle animation
   showEnvironment = true,
   className = "",
   onClick,
@@ -247,22 +161,12 @@ export function Roofus3DSupabase({
   const [mounted, setMounted] = useState(false)
   const [showSpeechBubble, setShowSpeechBubble] = useState(false)
   const [speechText, setSpeechText] = useState("Hi, I'm Roofus! Need help with your roof?")
-  const [availableAnimations, setAvailableAnimations] = useState<string[]>(["idle"])
 
   // Handle client-side rendering
   useEffect(() => {
     setMounted(true)
-
-    // Update available animations when they're loaded
-    const updateAvailableAnimations = () => {
-      setAvailableAnimations(Array.from(loadedAnimations))
-    }
-
-    // Check for new animations every second
-    const interval = setInterval(updateAvailableAnimations, 1000)
-
     return () => {
-      clearInterval(interval)
+      // Clean up any resources
     }
   }, [])
 
@@ -272,22 +176,7 @@ export function Roofus3DSupabase({
     onClick?.()
   }
 
-  // Handle animation load success
-  const handleAnimationLoad = (anim: string) => {
-    console.log(`Animation loaded in main component: ${anim}`)
-    onAnimationLoad?.(anim)
-  }
-
-  // Handle animation load error
-  const handleAnimationError = (anim: string, error: any) => {
-    console.error(`Animation error in main component: ${anim}`, error)
-    onAnimationError?.(anim, error)
-  }
-
   if (!mounted) return null
-
-  // Use the requested animation if it's available, otherwise fall back to idle
-  const animationToUse = loadedAnimations.has(animation as string) ? animation : "idle"
 
   return (
     <div className={`relative ${className}`}>
@@ -295,23 +184,15 @@ export function Roofus3DSupabase({
         <Canvas shadows camera={{ position: [0, 0, 5], fov: 50 }} gl={{ antialias: true, alpha: true }}>
           <ErrorBoundary>
             <Suspense fallback={<LoadingFallback />}>
-              <RoofusModel
-                position={position}
-                rotation={rotation}
-                scale={scale}
-                animation={animationToUse}
-                onClick={handleClick}
-                onAnimationLoad={handleAnimationLoad}
-                onAnimationError={handleAnimationError}
-              />
+              <RoofusModel position={position} rotation={rotation} scale={scale} onClick={handleClick} />
 
-              {showEnvironment && (
-                <>
-                  <Environment preset="sunset" />
-                  <ambientLight intensity={0.5} />
-                  <directionalLight position={[10, 10, 5]} intensity={1} castShadow shadow-mapSize={[1024, 1024]} />
-                </>
-              )}
+              {/* Improved lighting setup */}
+              <ambientLight intensity={0.8} />
+              <directionalLight position={[5, 5, 5]} intensity={1} castShadow />
+              <directionalLight position={[-5, 5, -5]} intensity={0.5} />
+              <directionalLight position={[0, 5, -10]} intensity={0.7} />
+
+              {showEnvironment && <Environment preset="sunset" />}
             </Suspense>
           </ErrorBoundary>
         </Canvas>
@@ -323,22 +204,13 @@ export function Roofus3DSupabase({
           <p className="font-medium">{speechText}</p>
         </div>
       )}
-
-      {/* Debug info - remove in production */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="absolute bottom-0 left-0 bg-black/50 text-white text-xs p-1 rounded">
-          Available: {availableAnimations.join(", ")}
-          <br />
-          Current: {animationToUse}
-        </div>
-      )}
     </div>
   )
 }
 
-// Preload the idle animation
+// Preload the idle model
 try {
-  useGLTF.preload(ANIMATION_URLS.idle)
+  useGLTF.preload(IDLE_URL)
 } catch (error) {
-  console.error("Error preloading idle animation:", error)
+  console.error("Error preloading model:", error)
 }

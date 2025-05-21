@@ -5,11 +5,11 @@ import dynamic from "next/dynamic"
 import { HeroSearch } from "../hero-search"
 
 // Dynamically import the HeroRoofus component
-const HeroRoofus = dynamic(() => import("../hero-roofus").then((mod) => mod.HeroRoofus), {
+const HeroRoofusSupabase = dynamic(() => import("../hero-roofus-supabase").then((mod) => mod.HeroRoofusSupabase), {
   ssr: false,
 })
 
-export function HeroSearchWrapper() {
+export default function HeroSearchWrapper() {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export function HeroSearchWrapper() {
   return (
     <div className="relative">
       <HeroSearch />
-      <HeroRoofus />
+      <HeroRoofusSupabase />
     </div>
   )
 }

@@ -5,6 +5,7 @@ import dynamic from "next/dynamic"
 
 const RoofusAssistant = dynamic(() => import("../roofus-assistant").then((mod) => mod.RoofusAssistant), {
   loading: () => null,
+  ssr: false,
 })
 
 export default function RoofusAssistantWrapper() {

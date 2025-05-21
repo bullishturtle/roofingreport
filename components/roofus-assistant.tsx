@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { useMediaQuery } from "@/hooks/use-media-query"
-import { Roofus3DWrapper } from "./client-wrappers/roofus-3d-wrapper"
+import { Roofus3DSupabaseWrapper } from "./client-wrappers/roofus-3d-supabase-wrapper"
 
 export function RoofusAssistant() {
   const [mounted, setMounted] = useState(false)
   const isMobile = useMediaQuery("(max-width: 768px)")
   const [showRoofus, setShowRoofus] = useState(true)
-  const [animation, setAnimation] = useState<"idle" | "running" | "jumping" | "pointing" | "waving" | "climbing">(
+  const [animation, setAnimation] = useState<"idle" | "walk" | "run" | "jump" | "climb" | "death" | "somersault">(
     "idle",
   )
 
@@ -22,14 +22,7 @@ export function RoofusAssistant() {
 
     // Randomly change animation every 10 seconds
     const animationInterval = setInterval(() => {
-      const animations: ("idle" | "running" | "jumping" | "pointing" | "waving" | "climbing")[] = [
-        "idle",
-        "running",
-        "jumping",
-        "pointing",
-        "waving",
-        "climbing",
-      ]
+      const animations: ("idle" | "walk" | "run" | "jump" | "climb")[] = ["idle", "walk", "run", "jump", "climb"]
       const randomAnimation = animations[Math.floor(Math.random() * animations.length)]
       setAnimation(randomAnimation)
     }, 10000)
@@ -41,7 +34,7 @@ export function RoofusAssistant() {
 
   return (
     <div className="fixed bottom-0 right-0 w-64 h-64 z-50 pointer-events-auto">
-      <Roofus3DWrapper
+      <Roofus3DSupabaseWrapper
         animation={animation}
         position={[0, -1, 0]}
         scale={0.5}

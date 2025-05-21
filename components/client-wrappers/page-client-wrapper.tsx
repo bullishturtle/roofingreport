@@ -11,7 +11,7 @@ const StarsBackground = dynamic(() => import("./stars-background"), {
   ssr: false,
 })
 
-const RoofusAssistantClient = dynamic(() => import("../roofus-assistant").then((mod) => mod.RoofusAssistant), {
+const RoofusAssistant = dynamic(() => import("../roofus-assistant").then((mod) => mod.RoofusAssistant), {
   ssr: false,
 })
 
@@ -33,7 +33,7 @@ export default function PageClientWrapper({ children }: { children?: React.React
   return (
     <>
       <StarsBackground />
-      {!hideRoofus && <RoofusAssistantClient />}
+      {!hideRoofus && <RoofusAssistant />}
       {children}
     </>
   )

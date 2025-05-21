@@ -3,20 +3,26 @@
 import { useEffect } from "react"
 import { useGLTF } from "@react-three/drei"
 
-// Define the path to the GLB model
-const ROOFUS_MODEL_PATH = "/models/roofus-character.glb"
+// Animation URLs from Supabase
+const ANIMATIONS = {
+  IDLE: "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/sign/roofus-models/idle.glb",
+  WALK: "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/sign/roofus-models/walk.glb",
+  RUN: "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/sign/roofus-models/run.glb",
+  JUMP: "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/sign/roofus-models/jump.glb",
+  CLIMB: "https://xpnbjrooptxutbcgufra.supabase.co/storage/v1/object/sign/roofus-models/climb.glb",
+}
 
 export default function Preload() {
   useEffect(() => {
-    // Preload the 3D model
+    // Preload the 3D models
     try {
-      useGLTF.preload(ROOFUS_MODEL_PATH)
-      console.log("Preloaded Roofus 3D model")
+      // Only preload the most commonly used animations to save bandwidth
+      useGLTF.preload(ANIMATIONS.IDLE)
+      useGLTF.preload(ANIMATIONS.WALK)
+      console.log("Preloaded Roofus 3D models from Supabase")
     } catch (error) {
-      console.error("Failed to preload Roofus 3D model:", error)
+      console.error("Failed to preload Roofus 3D models:", error)
     }
-
-    // Preload any other assets here
   }, [])
 
   return null

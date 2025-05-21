@@ -9,7 +9,7 @@ const HeroRoofusSupabase = dynamic(() => import("../hero-roofus-supabase").then(
   ssr: false,
 })
 
-export default function HeroSearchWrapper() {
+export function HeroSearchWrapper() {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {

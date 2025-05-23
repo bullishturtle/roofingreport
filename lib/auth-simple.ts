@@ -1,16 +1,9 @@
 import type { NextAuthOptions } from "next-auth"
-import { PrismaAdapter } from "@next-auth/prisma-adapter"
-import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { db } from "@/lib/server-db"
+import { simpleDb } from "@/lib/simple-db"
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(db),
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-    }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -22,7 +15,18 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        const user = await db.user.findUnique({
+        // For demo purposes, we'll accept any login with admin@rooffax.com
+        if (credentials.email === "admin@rooffax.com") {
+          return {
+            id: "1",
+            email: "admin@rooffax.com",
+            name: "Admin User",
+            role: "admin",
+          }
+        }
+
+        // For other users, check the simple database
+        const user = await simpleDb.user.findUnique({
           where: { email: credentials.email },
         })
 
@@ -30,12 +34,11 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        // For demo purposes, we'll skip password verification
-        // In production, you'd verify the hashed password
+        // For demo purposes, we'll accept any password
         return {
           id: user.id,
           email: user.email,
-          name: user.name,
+          name: user.name || undefined,
           role: user.role,
         }
       },

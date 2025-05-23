@@ -12,6 +12,7 @@
     "@auth/core": "latest",
     "@emotion/is-prop-valid": "latest",
     "@hookform/resolvers": "^3.9.1",
+    "@next-auth/prisma-adapter": "latest",
     "@playwright/test": "latest",
     "@prisma/client": "latest",
     "@radix-ui/react-accordion": "1.2.2",

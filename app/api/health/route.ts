@@ -1,33 +1,16 @@
 import { NextResponse } from "next/server"
-import { getAppVersion, getAppUrl } from "@/lib/env"
 
 export async function GET() {
   try {
     const health = {
       status: "healthy",
       timestamp: new Date().toISOString(),
-      version: getAppVersion(),
-      environment: process.env.NODE_ENV,
-      url: getAppUrl(),
-      uptime: process.uptime(),
-      memory: process.memoryUsage(),
-      checks: {
-        database: "healthy", // You can add actual DB health check here
-        auth: "healthy",
-        api: "healthy",
-      },
+      version: process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0",
+      environment: process.env.NODE_ENV || "development",
     }
 
-    return NextResponse.json(health, { status: 200 })
+    return NextResponse.json(health)
   } catch (error) {
-    return NextResponse.json(
-      {
-        status: "unhealthy",
-        error: "Health check failed",
-        timestamp: new Date().toISOString(),
-        version: getAppVersion(),
-      },
-      { status: 500 },
-    )
+    return NextResponse.json({ status: "unhealthy", error: "Health check failed" }, { status: 500 })
   }
 }

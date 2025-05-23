@@ -1,7 +1,10 @@
-// This file provides a browser-safe version of database operations
-// It uses API routes instead of direct Prisma calls when in the browser
+/**
+ * This file provides a browser-safe database client
+ * It uses API routes instead of direct Prisma calls when in browser
+ */
 
-import { isBrowser } from "./utils"
+// Helper to detect browser environment
+export const isBrowser = () => typeof window !== "undefined"
 
 // Type definitions for our database models
 export type User = {
@@ -35,6 +38,7 @@ export async function getUser(id: string): Promise<User | null> {
     return response.json()
   } else {
     // Server-side, we can use Prisma directly
+    // This import is only executed on the server
     const { prisma } = await import("./prisma")
     return prisma.user.findUnique({ where: { id } })
   }
@@ -48,8 +52,9 @@ export async function getAuditLogs(params: any): Promise<AuditLog[]> {
     if (!response.ok) return []
     return response.json()
   } else {
-    // Server-side, we can use Prisma directly
     const { prisma } = await import("./prisma")
     return prisma.auditLog.findMany(params)
   }
 }
+
+// Add more database operations as needed, following the same pattern

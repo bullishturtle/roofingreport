@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { SessionProvider } from "next-auth/react"
+import { SessionProvider as NextAuthSessionProvider } from "next-auth/react"
 import type { Session } from "next-auth"
 
 interface SessionProviderWrapperProps {
@@ -11,5 +10,9 @@ interface SessionProviderWrapperProps {
 }
 
 export function SessionProviderWrapper({ children, session }: SessionProviderWrapperProps) {
-  return <SessionProvider session={session}>{children}</SessionProvider>
+  return <NextAuthSessionProvider session={session}>{children}</NextAuthSessionProvider>
 }
+
+// Export SessionProvider for direct import - this fixes the import error
+export { SessionProvider } from "next-auth/react"
+export default SessionProviderWrapper

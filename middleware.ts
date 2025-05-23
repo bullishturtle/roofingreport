@@ -5,42 +5,51 @@ import { getToken } from "next-auth/jwt"
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Paths that are accessible to the public
-  const publicPaths = ["/", "/login", "/signup", "/forgot-password", "/reset-password", "/api/auth"]
-  const isPublicPath = publicPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`))
+  // Security headers
+  const response = NextResponse.next()
 
-  // Check if the path is for API routes that don't need authentication
-  const isPublicApiPath = pathname.startsWith("/api/public")
+  // Add security headers
+  response.headers.set("X-Frame-Options", "DENY")
+  response.headers.set("X-Content-Type-Options", "nosniff")
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
+  response.headers.set("X-XSS-Protection", "1; mode=block")
 
-  // Check if the path is for static files
-  const isStaticFile =
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon.ico") ||
-    pathname.startsWith("/images") ||
-    pathname.startsWith("/fonts")
+  // Content Security Policy
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data: https: blob:",
+    "media-src 'self' https:",
+    "connect-src 'self' https: wss:",
+    "frame-src 'self' https://vercel.live",
+  ].join("; ")
 
-  if (isPublicPath || isPublicApiPath || isStaticFile) {
-    return NextResponse.next()
+  response.headers.set("Content-Security-Policy", csp)
+
+  // Protected routes
+  const protectedPaths = ["/dashboard", "/admin"]
+  const isProtectedPath = protectedPaths.some((path) => pathname.startsWith(path))
+
+  if (isProtectedPath) {
+    const token = await getToken({ req: request })
+
+    if (!token) {
+      const loginUrl = new URL("/login", request.url)
+      loginUrl.searchParams.set("callbackUrl", pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    // Admin routes require admin role
+    if (pathname.startsWith("/admin") && token.role !== "admin") {
+      return NextResponse.redirect(new URL("/dashboard", request.url))
+    }
   }
 
-  // Get the token from the request
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
-
-  // If there's no token and the path isn't public, redirect to login
-  if (!token) {
-    const url = new URL("/login", request.url)
-    url.searchParams.set("callbackUrl", encodeURI(request.url))
-    return NextResponse.redirect(url)
-  }
-
-  // If there's a token but the user is trying to access auth pages, redirect to dashboard
-  if (token && (pathname === "/login" || pathname === "/signup")) {
-    return NextResponse.redirect(new URL("/dashboard", request.url))
-  }
-
-  return NextResponse.next()
+  return response
 }
 
 export const config = {
-  matcher: ["/((?!api/public|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|manifest.json|sw.js|robots.txt|sitemap.xml).*)"],
 }

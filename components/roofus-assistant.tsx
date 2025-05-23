@@ -5,35 +5,32 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import { AnimatePresence, motion } from "framer-motion"
-import { X, Zap, Lightbulb, Send } from "lucide-react"
+import { X, Zap, Lightbulb } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/components/ui/use-toast"
-
-type Message = {
-  role: "user" | "assistant"
-  content: string
-}
 
 export function RoofusAssistant() {
-  const [windowAvailable, setWindowAvailable] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([
+  const [messages, setMessages] = useState<{ text: string; sender: "user" | "roofus" }[]>([
     {
-      role: "assistant",
-      content:
-        "Hey there! I'm Roofus, your Florida roofing expert. I know all about Florida Building Code, storm claims, and insurance tactics. How can I help you today?",
+      text: "Hey there! I'm Roofus, your Florida roofing expert. I know all about Florida Building Code, storm claims, and insurance tactics. How can I help you today?",
+      sender: "roofus",
     },
   ])
   const [input, setInput] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
   const [showTip, setShowTip] = useState(false)
   const [tipIndex, setTipIndex] = useState(0)
   const [showSpaceship, setShowSpaceship] = useState(false)
   const [spaceshipPosition, setSpaceshipPosition] = useState({ x: 0, y: 0 })
   const [spaceshipDirection, setSpaceshipDirection] = useState(1) // 1 for right, -1 for left
-  const { toast } = useToast()
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -44,10 +41,6 @@ export function RoofusAssistant() {
     "I can help you find the property owner's contact info!",
     "Need a proposal for a client? I can draft one for you!",
   ]
-
-  useEffect(() => {
-    setWindowAvailable(true)
-  }, [])
 
   useEffect(() => {
     const tipTimer = setTimeout(() => {
@@ -68,8 +61,6 @@ export function RoofusAssistant() {
 
   // Spaceship animation
   useEffect(() => {
-    if (!windowAvailable) return
-
     const spaceshipInterval = setInterval(() => {
       const shouldShow = Math.random() > 0.7
       if (shouldShow) {
@@ -84,65 +75,53 @@ export function RoofusAssistant() {
     }, 20000)
 
     return () => clearInterval(spaceshipInterval)
-  }, [windowAvailable, spaceshipDirection])
+  }, [spaceshipDirection])
 
   // Auto-scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim() || isLoading) return
+    if (!input.trim()) return
 
     // Add user message
-    const userMessage: Message = { role: "user", content: input }
-    setMessages((prev) => [...prev, userMessage])
+    setMessages((prev) => [...prev, { text: input, sender: "user" }])
     setInput("")
-    setIsLoading(true)
+    setIsTyping(true)
     setShowTip(false)
 
-    try {
-      // Send message to API
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: [...messages, userMessage],
-        }),
-      })
+    // Simulate Roofus response
+    setTimeout(() => {
+      let response = ""
 
-      if (!response.ok) {
-        throw new Error("Failed to get response from Roofus")
+      if (input.toLowerCase().includes("code") || input.toLowerCase().includes("building")) {
+        response =
+          "Florida Building Code is my specialty! The current code requires a minimum wind resistance of 130mph for most counties. For your specific ZIP code, I can check if you qualify for any special provisions or code upgrades. Want me to look that up for you?"
+      } else if (input.toLowerCase().includes("storm") || input.toLowerCase().includes("damage")) {
+        response =
+          "I track all Florida storms! We've had 3 major events in your area this year. I can generate a detailed storm damage report with dates, wind speeds, and potential impact areas. This can be super helpful for insurance claims. Want me to create one for your property?"
+      } else if (input.toLowerCase().includes("insurance") || input.toLowerCase().includes("claim")) {
+        response =
+          "Florida insurance claims can be tricky! I know all the tactics adjusters use. Make sure you document everything and don't accept the first offer. I can help you prepare documentation that highlights code upgrades required by law. Want me to walk you through the process?"
+      } else if (input.toLowerCase().includes("owner") || input.toLowerCase().includes("contact")) {
+        response =
+          "I can find property owner information for any address in Florida! Just give me the address, and I'll pull the owner's name, phone number, email, and mailing address. This is great for direct outreach. Want me to look up an address for you?"
+      } else if (input.toLowerCase().includes("proposal") || input.toLowerCase().includes("quote")) {
+        response =
+          "I can draft professional proposals in seconds! I'll include all the measurements, materials, code requirements, and even customize it with your branding. Just tell me the address and what type of work you're proposing. Want me to create one for you?"
+      } else {
+        response =
+          "Thanks for your question! As your Florida roofing expert, I can help with building codes, storm tracking, insurance claims, finding property owners, or creating proposals. What specific information do you need about Florida roofing? Want me to handle something for you?"
       }
 
-      const data = await response.json()
-
-      // Add assistant response
-      setMessages((prev) => [...prev, { role: "assistant", content: data.response }])
-    } catch (error) {
-      console.error("Error sending message:", error)
-      toast({
-        title: "Error",
-        description: "Failed to get a response from Roofus. Please try again.",
-        variant: "destructive",
-      })
-
-      // Add fallback response
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            "I'm having trouble connecting right now. Please try again in a moment or contact support if the issue persists.",
-        },
-      ])
-    } finally {
-      setIsLoading(false)
-    }
+      setMessages((prev) => [...prev, { text: response, sender: "roofus" }])
+      setIsTyping(false)
+    }, 1500)
   }
+
+  if (!isClient) return null
 
   return (
     <>
@@ -318,9 +297,9 @@ export function RoofusAssistant() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 * (index % 3) }}
-                      className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                      className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
                     >
-                      {message.role === "assistant" && (
+                      {message.sender === "roofus" && (
                         <div className="h-8 w-8 mr-2 flex-shrink-0">
                           <Image
                             src="/images/roofus.png"
@@ -333,16 +312,16 @@ export function RoofusAssistant() {
                       )}
                       <div
                         className={`max-w-[80%] rounded-lg p-3 ${
-                          message.role === "user"
+                          message.sender === "user"
                             ? "bg-neon-blue/30 border border-neon-blue/30"
                             : "bg-neon-gold/20 border border-neon-gold/30"
                         }`}
                       >
-                        <p className="text-sm">{message.content}</p>
+                        <p className="text-sm">{message.text}</p>
                       </div>
                     </motion.div>
                   ))}
-                  {isLoading && (
+                  {isTyping && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -387,25 +366,15 @@ export function RoofusAssistant() {
                     placeholder="Ask Roofus anything about Florida roofing..."
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    disabled={isLoading}
                     className="bg-black/30 border-neon-gold/30 text-white placeholder:text-white/50 focus:border-neon-gold focus:ring-neon-gold/20"
                   />
                   <Button
                     type="submit"
                     size="icon"
                     className="bg-gradient-to-r from-neon-gold to-neon-orange hover:from-neon-orange hover:to-neon-gold text-black shadow-neon-glow"
-                    disabled={!input.trim() || isLoading}
+                    disabled={!input.trim() || isTyping}
                   >
-                    {isLoading ? (
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                      >
-                        <Zap className="h-4 w-4" />
-                      </motion.div>
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
+                    <Zap className="h-4 w-4" />
                     <span className="sr-only">Send</span>
                   </Button>
                 </form>

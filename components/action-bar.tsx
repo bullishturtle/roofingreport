@@ -8,6 +8,7 @@ import Link from "next/link"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
 export function ActionBar() {
+  const isClient = typeof window !== "undefined"
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   const isMobile = useMediaQuery("(max-width: 768px)")
 

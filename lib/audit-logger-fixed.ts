@@ -1,166 +1,80 @@
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
-import { headers } from "next/headers"
+// Remove any imports from next/headers
+// import { cookies, headers } from "next/headers" - REMOVE THIS
 
-export type AuditAction =
-  | "user.login"
-  | "user.logout"
-  | "user.register"
-  | "user.update"
-  | "user.delete"
-  | "data.create"
-  | "data.read"
-  | "data.update"
-  | "data.delete"
-  | "system.config.change"
-  | "system.error"
-  | "system.startup"
-  | "system.shutdown"
-  | "system.audit"
-  | "system.test"
-  | "report.generate"
-  | "report.view"
-  | "report.download"
-  | "payment.create"
-  | "payment.update"
-  | "payment.refund"
+import { v4 as uuidv4 } from "uuid"
 
-export type AuditEntityType =
-  | "user"
-  | "report"
-  | "property"
-  | "payment"
-  | "system"
-  | "config"
-  | "contractor"
-  | "verification"
-
-export type AuditStatus = "success" | "failure" | "warning"
-
-export interface AuditLogParams {
-  action: AuditAction
-  entityType: AuditEntityType
+export interface AuditLogEntry {
+  id?: string
+  timestamp?: string
+  userId?: string | null
+  action: string
+  entityType: string
   entityId?: string
-  details?: Record<string, any>
-  userId?: string
-  status?: AuditStatus
+  details?: any
+  status?: "success" | "failure" | "pending"
+  ipAddress?: string
+  userAgent?: string
 }
 
-// Fallback logging when database is not available
-function logToConsole(params: AuditLogParams & { timestamp: Date; ipAddress: string; userAgent: string }) {
-  console.log("AUDIT LOG:", {
-    timestamp: params.timestamp.toISOString(),
-    userId: params.userId || "system",
-    action: params.action,
-    entityType: params.entityType,
-    entityId: params.entityId,
-    status: params.status,
-    ipAddress: params.ipAddress,
-    userAgent: params.userAgent,
-    details: params.details,
-  })
-}
-
-export async function logAudit({
-  action,
-  entityType,
-  entityId,
-  details,
-  userId: explicitUserId,
-  status = "success",
-}: AuditLogParams): Promise<boolean> {
+export async function logAudit(entry: AuditLogEntry): Promise<boolean> {
   try {
-    // Get user from session if not explicitly provided
-    let userId = explicitUserId
+    const timestamp = new Date().toISOString()
+    const id = entry.id || uuidv4()
 
-    if (!userId) {
-      try {
-        const session = await getServerSession(authOptions)
-        userId = session?.user?.id
-      } catch (sessionError) {
-        // Session might not be available during build or in certain contexts
-        console.warn("Could not get session for audit log:", sessionError)
-      }
+    // Create the complete log entry
+    const logEntry: AuditLogEntry = {
+      ...entry,
+      id,
+      timestamp,
+      status: entry.status || "success",
     }
 
-    // Get IP and user agent safely
-    let ipAddress = "unknown"
-    let userAgent = "unknown"
-
+    // Try to log to the database
     try {
-      const headersList = headers()
-      ipAddress = headersList.get("x-forwarded-for") || headersList.get("x-real-ip") || "unknown"
-      userAgent = headersList.get("user-agent") || "unknown"
-    } catch (headerError) {
-      // Headers might not be available in all contexts
-      console.warn("Could not get headers for audit log:", headerError)
-    }
-
-    const timestamp = new Date()
-
-    // Try to log to database first
-    try {
-      // Dynamic import to avoid build-time issues
-      const { PrismaClient } = await import("@prisma/client")
-      const prisma = new PrismaClient()
-
-      await prisma.auditLog.create({
-        data: {
-          userId,
-          action,
-          entityType,
-          entityId,
-          details: details || {},
-          ipAddress,
-          userAgent,
-          status,
-          timestamp,
-        },
-      })
-
-      await prisma.$disconnect()
-      return true
+      await logToDatabase(logEntry)
     } catch (dbError) {
-      // If database logging fails, fall back to console logging
-      console.warn("Database audit logging failed, falling back to console:", dbError)
-      logToConsole({
-        action,
-        entityType,
-        entityId,
-        details,
-        userId,
-        status,
-        timestamp,
-        ipAddress,
-        userAgent,
-      })
-      return false
-    }
-  } catch (error) {
-    console.error("Audit logging completely failed:", error)
-    // Even if everything fails, don't throw - audit logging should not break main functionality
-    return false
-  }
-}
-
-// Client-side audit logging (less detailed but useful for UI actions)
-export async function logClientAudit(params: AuditLogParams): Promise<boolean> {
-  try {
-    const response = await fetch("/api/audit/log", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(params),
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      // If database logging fails, log to console as fallback
+      console.warn("Failed to log audit to database, using console fallback:", dbError)
+      logToConsole(logEntry)
     }
 
     return true
   } catch (error) {
-    console.error("Failed to log client audit:", error)
+    console.error("Audit logging failed:", error)
     return false
   }
+}
+
+async function logToDatabase(entry: AuditLogEntry): Promise<void> {
+  try {
+    // Try to import and use Prisma
+    const { PrismaClient } = await import("@prisma/client")
+    const prisma = new PrismaClient()
+
+    // Log to database
+    await prisma.auditLog.create({
+      data: {
+        id: entry.id!,
+        timestamp: new Date(entry.timestamp!),
+        userId: entry.userId || null,
+        action: entry.action,
+        entityType: entry.entityType,
+        entityId: entry.entityId || null,
+        details: entry.details ? JSON.stringify(entry.details) : null,
+        status: entry.status || "success",
+        ipAddress: entry.ipAddress || null,
+        userAgent: entry.userAgent || null,
+      },
+    })
+
+    await prisma.$disconnect()
+  } catch (error) {
+    throw error
+  }
+}
+
+function logToConsole(entry: AuditLogEntry): void {
+  console.log(
+    `[AUDIT] ${entry.timestamp} | ${entry.action} | ${entry.status} | ${entry.entityType}${entry.entityId ? ` | ${entry.entityId}` : ""} | ${entry.userId || "anonymous"} | ${JSON.stringify(entry.details || {})}`,
+  )
 }

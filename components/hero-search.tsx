@@ -8,28 +8,47 @@ import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
+import { EnhancedLoadingSpinner } from "@/components/ui/enhanced-loading"
 
 export function HeroSearch() {
   const [address, setAddress] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const { showToast } = useToast()
+  const { toast } = useToast()
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!address.trim()) {
-      showToast("Please enter a valid address", "error")
+      toast({
+        title: "Invalid Address",
+        description: "Please enter a valid address",
+        variant: "destructive",
+      })
       return
     }
 
     setIsLoading(true)
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
+    try {
+      // Simulate API call with realistic timing
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+
+      toast({
+        title: "Search Complete",
+        description: "Redirecting to your roof report...",
+      })
+
       router.push(`/report?address=${encodeURIComponent(address)}`)
-    }, 1500)
+    } catch (error) {
+      toast({
+        title: "Search Failed",
+        description: "Unable to process your request. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -56,10 +75,7 @@ export function HeroSearch() {
             disabled={isLoading}
           >
             {isLoading ? (
-              <>
-                <span className="animate-pulse mr-2">●</span>
-                Searching...
-              </>
+              <EnhancedLoadingSpinner size="sm" text="Searching" className="text-black" />
             ) : (
               <>
                 <Search className="mr-2 h-4 w-4" />

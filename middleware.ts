@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
-import { auditMiddleware } from "./middleware/audit-middleware"
 
 export async function middleware(request: NextRequest) {
-  // First, run the audit middleware
-  await auditMiddleware(request)
-
   const { pathname } = request.nextUrl
 
   // Paths that are accessible to the public

@@ -2,21 +2,20 @@
 
 import type React from "react"
 
-import { SessionProvider } from "next-auth/react"
 import { ThemeProvider } from "@/components/theme-provider"
-import type { Session } from "next-auth"
+import { SessionProvider } from "@/components/providers/session-provider"
+import { AccessibilityProvider } from "@/components/ui/accessibility-provider"
+import { SkipLink } from "@/components/ui/skip-link"
 
-interface ProvidersProps {
-  children: React.ReactNode
-  session?: Session | null
-}
-
-export function Providers({ children, session }: ProvidersProps) {
+export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider session={session}>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-        {children}
-      </ThemeProvider>
-    </SessionProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <SessionProvider>
+        <AccessibilityProvider>
+          <SkipLink />
+          {children}
+        </AccessibilityProvider>
+      </SessionProvider>
+    </ThemeProvider>
   )
 }

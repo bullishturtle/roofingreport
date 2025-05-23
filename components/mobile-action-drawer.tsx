@@ -19,11 +19,6 @@ import { motion } from "framer-motion"
 export function MobileActionDrawer() {
   const [open, setOpen] = useState(false)
 
-  // Return null during server-side rendering
-  if (typeof window === "undefined") {
-    return null
-  }
-
   const actions = [
     {
       icon: <Search className="h-5 w-5" />,

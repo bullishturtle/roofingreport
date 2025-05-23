@@ -8,14 +8,7 @@ import Link from "next/link"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
 export function AnimatedCharacters() {
-  const pathname = usePathname()
-  const isMobile = useMediaQuery("(max-width: 768px)")
-
-  // Return null during server-side rendering or on specific pages
-  if (typeof window === "undefined" || pathname === "/login" || pathname === "/signup") {
-    return null
-  }
-
+  const [windowAvailable, setWindowAvailable] = useState(false)
   const [roofusPosition, setRoofusPosition] = useState({ x: 0, y: 0 })
   const [landonPosition, setLandonPosition] = useState({ x: -100, y: 0 })
   const [isRoofusVisible, setIsRoofusVisible] = useState(false)
@@ -29,11 +22,17 @@ export function AnimatedCharacters() {
   const [roofusAnimation, setRoofusAnimation] = useState<"idle" | "running" | "jumping" | "pointing">("idle")
   const [roofusDirection, setRoofusDirection] = useState<"left" | "right">("right")
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null)
+  const pathname = usePathname()
+  const isMobile = useMediaQuery("(max-width: 768px)")
+
+  useEffect(() => {
+    setWindowAvailable(true)
+  }, [])
 
   // Random positions within viewport bounds
   const getRandomPosition = () => {
-    const maxX = window.innerWidth - 150
-    const maxY = window.innerHeight - 150
+    const maxX = windowAvailable ? window.innerWidth - 150 : 500
+    const maxY = windowAvailable ? window.innerHeight - 150 : 500
     return {
       x: Math.random() * maxX,
       y: Math.max(100, Math.random() * (maxY - 300)), // Keep characters in upper part of screen
@@ -55,6 +54,8 @@ export function AnimatedCharacters() {
 
   // Initialize event listeners and timers
   useEffect(() => {
+    if (!windowAvailable) return
+
     // Set up event listeners for user activity
     window.addEventListener("mousemove", resetInactivityTimer)
     window.addEventListener("keydown", resetInactivityTimer)
@@ -107,7 +108,7 @@ export function AnimatedCharacters() {
 
       clearInterval(appearanceInterval)
     }
-  }, [isRoofusVisible, userInactive, isMobile])
+  }, [windowAvailable, isRoofusVisible, userInactive, isMobile])
 
   // Handle user inactivity - Landon whistles for Roofus
   useEffect(() => {
@@ -213,6 +214,11 @@ export function AnimatedCharacters() {
       return () => clearInterval(animationInterval)
     }
   }, [isRoofusVisible, isChasing])
+
+  // Don't show on certain pages
+  if (pathname === "/login" || pathname === "/signup") {
+    return null
+  }
 
   // Adjust size for mobile
   const characterSize = isMobile ? 80 : 120

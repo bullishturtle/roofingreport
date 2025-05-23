@@ -1,83 +1,87 @@
 "use client"
 
-import { TrendingUp, Users, FileText, Calendar, ArrowUpRight, ArrowDownRight } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ArrowUpRight, Building, FileText, Home, Users } from "lucide-react"
+import { motion } from "framer-motion"
 
-export function StatsCards() {
-  const stats = [
-    {
-      title: "Total Reports",
-      value: "1,234",
-      change: "+12.5%",
-      trend: "up",
-      icon: FileText,
-      color: "blue",
-    },
-    {
-      title: "Active Customers",
-      value: "567",
-      change: "+5.2%",
-      trend: "up",
-      icon: Users,
-      color: "green",
-    },
-    {
-      title: "Monthly Revenue",
-      value: "$12,345",
-      change: "+8.1%",
-      trend: "up",
-      icon: TrendingUp,
-      color: "purple",
-    },
-    {
-      title: "Upcoming Appointments",
-      value: "23",
-      change: "-3.4%",
-      trend: "down",
-      icon: Calendar,
-      color: "amber",
-    },
-  ]
-
+export default function StatsCards() {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat) => (
-        <div key={stat.title} className="bg-white dark:bg-gray-800 overflow-hidden rounded-lg shadow">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className={`p-2 rounded-md bg-${stat.color}-100 dark:bg-${stat.color}-900/30`}>
-                  <stat.icon className={`h-5 w-5 text-${stat.color}-600 dark:text-${stat.color}-400`} />
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{stat.title}</dt>
-                  <dd>
-                    <div className="text-lg font-medium text-gray-900 dark:text-white">{stat.value}</div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-          <div className={`bg-gray-50 dark:bg-gray-700/50 px-5 py-3`}>
-            <div className="text-sm flex items-center">
-              {stat.trend === "up" ? (
-                <ArrowUpRight className="mr-1 h-4 w-4 text-green-500" />
-              ) : (
-                <ArrowDownRight className="mr-1 h-4 w-4 text-red-500" />
-              )}
-              <span
-                className={`font-medium ${
-                  stat.trend === "up" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
-                }`}
-              >
-                {stat.change}
-              </span>
-              <span className="ml-2 text-gray-500 dark:text-gray-400">from last month</span>
-            </div>
-          </div>
-        </div>
-      ))}
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-white">Total Reports</CardTitle>
+            <FileText className="h-4 w-4 text-blue-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">1,284</div>
+            <p className="text-xs text-white/70 flex items-center">
+              <ArrowUpRight className="mr-1 h-3 w-3 text-green-500" />
+              <span className="text-green-500 font-medium">18%</span> from last month
+            </p>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-white">Active Leads</CardTitle>
+            <Users className="h-4 w-4 text-purple-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">342</div>
+            <p className="text-xs text-white/70 flex items-center">
+              <ArrowUpRight className="mr-1 h-3 w-3 text-green-500" />
+              <span className="text-green-500 font-medium">12%</span> from last month
+            </p>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-white">Pending Projects</CardTitle>
+            <Building className="h-4 w-4 text-cyan-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">86</div>
+            <p className="text-xs text-white/70 flex items-center">
+              <ArrowUpRight className="mr-1 h-3 w-3 text-green-500" />
+              <span className="text-green-500 font-medium">7%</span> from last month
+            </p>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
+        <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-white">Completed Jobs</CardTitle>
+            <Home className="h-4 w-4 text-green-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">624</div>
+            <p className="text-xs text-white/70 flex items-center">
+              <ArrowUpRight className="mr-1 h-3 w-3 text-green-500" />
+              <span className="text-green-500 font-medium">24%</span> from last month
+            </p>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   )
 }

@@ -10,13 +10,13 @@ export interface User {
   email: string
   name?: string | null
   role: string
-  createdAt: string
-  updatedAt: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface AuditLog {
   id: string
-  timestamp: string
+  timestamp: Date
   userId?: string | null
   action: string
   entityType: string
@@ -35,8 +35,8 @@ export interface Property {
   zipCode: string
   latitude?: number | null
   longitude?: number | null
-  createdAt: string
-  updatedAt: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface Report {
@@ -45,8 +45,8 @@ export interface Report {
   reportType: string
   status: string
   data: any
-  createdAt: string
-  updatedAt: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 // Sample data
@@ -56,28 +56,40 @@ const users: User[] = [
     email: "admin@rooffax.com",
     name: "Admin User",
     role: "admin",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date("2024-01-01"),
+    updatedAt: new Date("2024-01-01"),
   },
   {
     id: "2",
     email: "user@example.com",
     name: "Regular User",
     role: "user",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date("2024-01-02"),
+    updatedAt: new Date("2024-01-02"),
   },
 ]
 
 const auditLogs: AuditLog[] = [
   {
     id: "1",
-    timestamp: new Date().toISOString(),
+    timestamp: new Date(),
     userId: "1",
     action: "user.login",
     entityType: "user",
     entityId: "1",
     details: { method: "credentials" },
+    ipAddress: "127.0.0.1",
+    userAgent: "Mozilla/5.0",
+    status: "success",
+  },
+  {
+    id: "2",
+    timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
+    userId: "2",
+    action: "report.view",
+    entityType: "report",
+    entityId: "1",
+    details: { reportType: "inspection" },
     ipAddress: "127.0.0.1",
     userAgent: "Mozilla/5.0",
     status: "success",
@@ -89,12 +101,12 @@ const properties: Property[] = [
     id: "1",
     address: "123 Main St",
     city: "Anytown",
-    state: "CA",
+    state: "FL",
     zipCode: "12345",
-    latitude: 37.7749,
-    longitude: -122.4194,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    latitude: 27.7663,
+    longitude: -82.6404,
+    createdAt: new Date("2024-01-01"),
+    updatedAt: new Date("2024-01-01"),
   },
 ]
 
@@ -109,10 +121,13 @@ const reports: Report[] = [
       estimatedAge: 5,
       recommendations: ["Clean gutters", "Trim overhanging branches"],
     },
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date("2024-01-01"),
+    updatedAt: new Date("2024-01-01"),
   },
 ]
+
+// Helper function to generate IDs
+const generateId = () => Math.random().toString(36).substring(2, 15)
 
 // Simple database operations
 export const simpleDb = {
@@ -131,13 +146,13 @@ export const simpleDb = {
       return [...users]
     },
     create: async ({ data }: { data: Partial<User> }) => {
-      const newUser = {
-        id: String(users.length + 1),
+      const newUser: User = {
+        id: generateId(),
         email: data.email || "",
         name: data.name || null,
         role: data.role || "user",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       }
       users.push(newUser)
       return newUser
@@ -149,7 +164,7 @@ export const simpleDb = {
       users[index] = {
         ...users[index],
         ...data,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       }
       return users[index]
     },
@@ -165,27 +180,35 @@ export const simpleDb = {
     }: {
       take?: number
       skip?: number
-      where?: { userId?: string }
+      where?: { userId?: string; action?: string; entityType?: string }
       orderBy?: { timestamp?: string }
     } = {}) => {
       let result = [...auditLogs]
 
+      // Apply filters
       if (where?.userId) {
         result = result.filter((log) => log.userId === where.userId)
       }
+      if (where?.action) {
+        result = result.filter((log) => log.action === where.action)
+      }
+      if (where?.entityType) {
+        result = result.filter((log) => log.entityType === where.entityType)
+      }
 
+      // Apply sorting
       if (orderBy?.timestamp) {
         result.sort((a, b) => {
           return orderBy.timestamp === "desc"
-            ? new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-            : new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+            ? b.timestamp.getTime() - a.timestamp.getTime()
+            : a.timestamp.getTime() - b.timestamp.getTime()
         })
       }
 
+      // Apply pagination
       if (skip) {
         result = result.slice(skip)
       }
-
       if (take) {
         result = result.slice(0, take)
       }
@@ -193,9 +216,9 @@ export const simpleDb = {
       return result
     },
     create: async ({ data }: { data: Partial<AuditLog> }) => {
-      const newLog = {
-        id: String(auditLogs.length + 1),
-        timestamp: new Date().toISOString(),
+      const newLog: AuditLog = {
+        id: generateId(),
+        timestamp: new Date(),
         userId: data.userId || null,
         action: data.action || "",
         entityType: data.entityType || "",
@@ -208,6 +231,22 @@ export const simpleDb = {
       auditLogs.push(newLog)
       return newLog
     },
+    count: async ({ where }: { where?: any } = {}) => {
+      // Simple count implementation
+      let result = [...auditLogs]
+
+      if (where?.userId) {
+        result = result.filter((log) => log.userId === where.userId)
+      }
+      if (where?.action) {
+        result = result.filter((log) => log.action === where.action)
+      }
+      if (where?.entityType) {
+        result = result.filter((log) => log.entityType === where.entityType)
+      }
+
+      return result.length
+    },
   },
 
   // Property operations
@@ -218,8 +257,8 @@ export const simpleDb = {
       if (orderBy?.createdAt) {
         result.sort((a, b) => {
           return orderBy.createdAt === "desc"
-            ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            ? b.createdAt.getTime() - a.createdAt.getTime()
+            : a.createdAt.getTime() - b.createdAt.getTime()
         })
       }
 
@@ -248,8 +287,8 @@ export const simpleDb = {
       if (orderBy?.createdAt) {
         result.sort((a, b) => {
           return orderBy.createdAt === "desc"
-            ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            ? b.createdAt.getTime() - a.createdAt.getTime()
+            : a.createdAt.getTime() - b.createdAt.getTime()
         })
       }
 

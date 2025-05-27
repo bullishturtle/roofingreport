@@ -41,9 +41,8 @@ const envSchema = z.object({
   EMAIL_PASSWORD: z.string().min(1).optional(),
   EMAIL_FROM: z.string().email().optional(),
 
-  // Analytics
+  // Analytics (Server-side only - removed client key)
   STATSIG_SERVER_API_KEY: z.string().min(1).optional(),
-  NEXT_PUBLIC_STATSIG_CLIENT_KEY: z.string().min(1).optional(),
 
   // App configuration
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),

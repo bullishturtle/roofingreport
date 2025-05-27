@@ -18,10 +18,9 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
-    // Initialize analytics
+    // Initialize analytics (client-side only, no sensitive keys)
     if (typeof window !== "undefined" && !isInitialized) {
-      // Initialize analytics services here
-      console.log("Analytics initialized")
+      console.log("Client analytics initialized")
       setIsInitialized(true)
     }
   }, [isInitialized])
@@ -34,13 +33,23 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     trackPageView(url)
   }, [pathname, searchParams, isInitialized])
 
-  const trackEvent = (eventName: string, properties?: Record<string, any>) => {
+  const trackEvent = async (eventName: string, properties?: Record<string, any>) => {
     if (!isInitialized) return
 
-    // Track event in analytics services
-    console.log(`Analytics Event: ${eventName}`, properties)
+    // Send to server-side analytics endpoint
+    try {
+      await fetch("/api/analytics", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ eventName, properties }),
+      })
+    } catch (error) {
+      console.error("Failed to track event:", error)
+    }
 
-    // Google Analytics
+    // Also track in Google Analytics if available
     if (typeof window !== "undefined" && window.gtag) {
       window.gtag("event", eventName, properties)
     }
@@ -49,7 +58,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
   const trackPageView = (url: string, referrer?: string) => {
     if (!isInitialized) return
 
-    // Track page view in analytics services
+    // Track page view locally
     console.log(`Page View: ${url}`, { referrer })
 
     // Google Analytics
@@ -64,7 +73,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
   const setUserProperties = (properties: Record<string, any>) => {
     if (!isInitialized) return
 
-    // Set user properties in analytics services
+    // Set user properties locally
     console.log("User Properties:", properties)
 
     // Google Analytics

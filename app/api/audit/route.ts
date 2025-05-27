@@ -1,70 +1,36 @@
-import { NextResponse } from "next/server"
-import { simpleDb } from "@/lib/simple-db"
+import { type NextRequest, NextResponse } from "next/server"
+import { db } from "@/lib/simple-db"
 
-export const dynamic = "force-dynamic"
-
-export async function GET(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const url = new URL(req.url)
+    const { action, details, userId } = await request.json()
 
-    // If this is a simple health check
-    if (!url.searchParams.has("page")) {
-      const auditData = {
-        timestamp: new Date().toISOString(),
-        status: "healthy",
-        version: process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0",
-        checks: {
-          server: "operational",
-          database: "simple_db_active",
-          api: "responding",
-          frontend: "loaded",
-        },
-      }
-      return NextResponse.json(auditData)
-    }
+    const auditLog = await db.auditLog.create({
+      data: {
+        action,
+        details,
+        userId,
+        ip: request.ip || "unknown",
+      },
+    })
 
-    // Parse query parameters for audit logs
-    const page = Number.parseInt(url.searchParams.get("page") || "1")
-    const limit = Number.parseInt(url.searchParams.get("limit") || "50")
-    const userId = url.searchParams.get("userId") || undefined
-    const action = url.searchParams.get("action") || undefined
-    const entityType = url.searchParams.get("entityType") || undefined
-    const entityId = url.searchParams.get("entityId") || undefined
-    const status = url.searchParams.get("status") || undefined
-    const startDate = url.searchParams.get("startDate") ? new Date(url.searchParams.get("startDate")!) : undefined
-    const endDate = url.searchParams.get("endDate") ? new Date(url.searchParams.get("endDate")!) : undefined
-    const searchTerm = url.searchParams.get("search") || undefined
+    return NextResponse.json(auditLog)
+  } catch (error) {
+    console.error("Audit log error:", error)
+    return NextResponse.json({ error: "Failed to create audit log" }, { status: 500 })
+  }
+}
 
-    // Build filter for simple database
-    const filter: any = {}
-    if (userId) filter.userId = userId
-    if (action) filter.action = action
-    if (entityType) filter.entityType = entityType
-    if (entityId) filter.entityId = entityId
-    if (status) filter.status = status
-
-    // Get audit logs using simple database
-    const logs = await simpleDb.auditLog.findMany({
-      take: limit,
-      skip: (page - 1) * limit,
-      where: filter,
+export async function GET() {
+  try {
+    const logs = await db.auditLog.findMany({
+      take: 100,
       orderBy: { timestamp: "desc" },
     })
 
-    // Mock total count for pagination
-    const totalCount = logs.length
-
-    return NextResponse.json({
-      logs,
-      pagination: {
-        page,
-        limit,
-        totalCount,
-        totalPages: Math.ceil(totalCount / limit),
-      },
-    })
+    return NextResponse.json(logs)
   } catch (error) {
-    console.error("Failed to retrieve audit logs:", error)
-    return NextResponse.json({ error: "Failed to retrieve audit logs" }, { status: 500 })
+    console.error("Fetch audit logs error:", error)
+    return NextResponse.json({ error: "Failed to fetch audit logs" }, { status: 500 })
   }
 }

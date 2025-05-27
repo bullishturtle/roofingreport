@@ -5,45 +5,79 @@ import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
+import { Search, MapPin, Building } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
-import { EnhancedLoadingSpinner } from "@/components/ui/enhanced-loading"
+import { Card, CardContent } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export function HeroSearch() {
   const [address, setAddress] = useState("")
+  const [companyName, setCompanyName] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState("address")
   const router = useRouter()
   const { toast } = useToast()
 
-  const handleSearch = async (e: React.FormEvent) => {
+  const handleAddressSearch = async (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!address.trim()) {
       toast({
-        title: "Invalid Address",
-        description: "Please enter a valid address",
+        title: "Address Required",
+        description: "Please enter a property address",
         variant: "destructive",
       })
       return
     }
 
     setIsLoading(true)
-
     try {
-      // Simulate API call with realistic timing
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 2000))
 
       toast({
-        title: "Search Complete",
-        description: "Redirecting to your roof report...",
+        title: "Property Found!",
+        description: "Generating your roof report...",
       })
 
       router.push(`/report?address=${encodeURIComponent(address)}`)
     } catch (error) {
       toast({
         title: "Search Failed",
-        description: "Unable to process your request. Please try again.",
+        description: "Unable to find property. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleContractorSearch = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!companyName.trim()) {
+      toast({
+        title: "Company Name Required",
+        description: "Please enter a contractor or company name",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+
+      toast({
+        title: "Contractor Found!",
+        description: "Verifying credentials...",
+      })
+
+      router.push(`/contractor-check?company=${encodeURIComponent(companyName)}`)
+    } catch (error) {
+      toast({
+        title: "Verification Failed",
+        description: "Unable to verify contractor. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -52,42 +86,108 @@ export function HeroSearch() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="bg-black/40 backdrop-blur-md border border-neon-gold/30 rounded-xl p-6 shadow-neon-glow">
-        <h2 className="text-xl font-bold text-white mb-4">Get Your Roof Report</h2>
-        <form onSubmit={handleSearch} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="address" className="text-sm font-medium text-white">
-              Enter Property Address
-            </label>
-            <Input
-              id="address"
-              placeholder="123 Main St, City, State"
-              className="bg-black/50 border-white/20 text-white placeholder:text-white/50"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              disabled={isLoading}
-            />
-          </div>
-          <Button
-            type="submit"
-            className="w-full bg-gradient-to-r from-neon-gold to-neon-orange hover:from-neon-orange hover:to-neon-gold text-black border-none shadow-neon-glow"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <EnhancedLoadingSpinner size="sm" text="Searching" className="text-black" />
-            ) : (
-              <>
-                <Search className="mr-2 h-4 w-4" />
-                Search Property
-              </>
-            )}
-          </Button>
-        </form>
-        <div className="mt-4 text-center">
-          <p className="text-xs text-white/50">Instant access to roof measurements, condition, and storm history</p>
+    <Card className="bg-gray-800/50 backdrop-blur-md border-orange-500/30 shadow-2xl">
+      <CardContent className="p-8">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-white mb-2">Get Your Free Report</h2>
+          <p className="text-gray-300">Enter a property address or verify a contractor</p>
         </div>
-      </div>
-    </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-gray-700/50">
+            <TabsTrigger value="address" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white">
+              <MapPin className="w-4 h-4 mr-2" />
+              Property Lookup
+            </TabsTrigger>
+            <TabsTrigger
+              value="contractor"
+              className="data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+            >
+              <Building className="w-4 h-4 mr-2" />
+              Who Knocked?
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="address" className="mt-6">
+            <form onSubmit={handleAddressSearch} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="address" className="text-sm font-medium text-gray-300">
+                  Property Address
+                </label>
+                <Input
+                  id="address"
+                  placeholder="123 Main St, Miami, FL 33101"
+                  className="bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-orange-500 focus:ring-orange-500/20"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-semibold py-3"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Searching...
+                  </div>
+                ) : (
+                  <>
+                    <Search className="mr-2 h-4 w-4" />
+                    Get Property Report
+                  </>
+                )}
+              </Button>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="contractor" className="mt-6">
+            <form onSubmit={handleContractorSearch} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="company" className="text-sm font-medium text-gray-300">
+                  Contractor or Company Name
+                </label>
+                <Input
+                  id="company"
+                  placeholder="ABC Roofing Company"
+                  className="bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-orange-500 focus:ring-orange-500/20"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-semibold py-3"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Verifying...
+                  </div>
+                ) : (
+                  <>
+                    <Building className="mr-2 h-4 w-4" />
+                    Verify Contractor
+                  </>
+                )}
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
+
+        <div className="mt-6 text-center">
+          <p className="text-xs text-gray-400">
+            Free preview • Full reports available with{" "}
+            <a href="https://pro.therooffax.com" className="text-orange-400 hover:text-orange-300">
+              RoofFax Pro
+            </a>
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

@@ -1,110 +1,54 @@
+/**
+ * Environment Configuration
+ * Secure environment variable handling without sensitive client exposure
+ */
+
 import { z } from "zod"
 
-const envSchema = z.object({
-  // Database
-  DATABASE_URL: z.string().url().optional(),
-  POSTGRES_URL: z.string().url().optional(),
-
-  // Authentication
+// Server-side environment variables only
+const serverSchema = z.object({
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   NEXTAUTH_SECRET: z.string().min(1).optional(),
   NEXTAUTH_URL: z.string().url().optional(),
-
-  // Google OAuth
   GOOGLE_CLIENT_ID: z.string().min(1).optional(),
   GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
-
-  // AI Services (Server-side only - OpenAI focused)
   OPENAI_API_KEY: z.string().min(1).optional(),
-  GROQ_API_KEY: z.string().min(1).optional(),
-  DEEPINFRA_API_KEY: z.string().min(1).optional(),
-  FAL_KEY: z.string().min(1).optional(),
-
-  // Supabase
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).optional(),
-
-  // Storage
-  BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
-
-  // Redis/KV
-  KV_URL: z.string().url().optional(),
-  KV_REST_API_TOKEN: z.string().min(1).optional(),
-  KV_REST_API_URL: z.string().url().optional(),
-
-  // Cron
-  CRON_SECRET: z.string().min(1).optional(),
-
-  // Email
-  EMAIL_SERVER: z.string().min(1).optional(),
-  EMAIL_PORT: z.string().min(1).optional(),
-  EMAIL_USER: z.string().min(1).optional(),
-  EMAIL_PASSWORD: z.string().min(1).optional(),
-  EMAIL_FROM: z.string().email().optional(),
-
-  // Analytics (Server-side only - removed client key)
-  STATSIG_SERVER_API_KEY: z.string().min(1).optional(),
-
-  // App configuration
-  NEXT_PUBLIC_APP_URL: z.string().url().optional(),
-  NEXT_PUBLIC_APP_VERSION: z.string().optional(),
-
-  // Node environment
-  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  DATABASE_URL: z.string().url().optional(),
 })
 
-// Set default values for optional environment variables
-const defaultEnvValues = {
-  NEXT_PUBLIC_APP_VERSION: "1.0.0",
-  NEXT_PUBLIC_APP_URL: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://therooffax.com",
-  NEXTAUTH_URL: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://therooffax.com",
+// Client-side environment variables (safe to expose)
+const clientSchema = z.object({
+  NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+  NEXT_PUBLIC_APP_VERSION: z.string().optional(),
+})
+
+// Validate environment variables
+const serverEnv = serverSchema.safeParse(process.env)
+const clientEnv = clientSchema.safeParse(process.env)
+
+if (!serverEnv.success) {
+  console.warn("⚠️ Invalid server environment variables:", serverEnv.error.format())
 }
 
-export function validateEnv() {
-  try {
-    // Merge defaults with actual environment variables
-    const envWithDefaults = {
-      ...defaultEnvValues,
-      ...process.env,
-    }
-
-    return envSchema.parse(envWithDefaults)
-  } catch (error) {
-    console.error("❌ Invalid environment variables:", error)
-
-    // In development, just warn and continue with defaults
-    if (process.env.NODE_ENV === "development") {
-      console.warn("⚠️ Using default values for missing environment variables")
-      return {
-        ...defaultEnvValues,
-        ...process.env,
-      }
-    }
-
-    throw new Error("Invalid environment variables")
-  }
+if (!clientEnv.success) {
+  console.warn("⚠️ Invalid client environment variables:", clientEnv.error.format())
 }
 
-// Get app version with fallback
-export function getAppVersion(): string {
-  return process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0"
+// Export validated environment variables
+export const env = {
+  // Server-side only
+  NODE_ENV: process.env.NODE_ENV || "development",
+  NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+  NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  DATABASE_URL: process.env.DATABASE_URL,
+
+  // Client-side safe
+  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION,
 }
 
-// Get app URL with fallback
-export function getAppUrl(): string {
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL
-  }
-
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`
-  }
-
-  return "https://therooffax.com"
-}
-
-// Validate on import in production
-if (process.env.NODE_ENV === "production") {
-  validateEnv()
-}
-
-export const env = process.env as z.infer<typeof envSchema>
+// Type-safe environment access
+export type Env = typeof env

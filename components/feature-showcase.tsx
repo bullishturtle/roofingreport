@@ -1,8 +1,19 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Zap, Eye, Brain, Shield } from "lucide-react"
+import Image from "next/image"
+
+// TODO: Replace ALL placeholder image paths with actual image paths in /public/images/
+const featureImages = {
+  aerial: "/images/actual-aerial-analysis-demo.jpg", // Example: Replace with actual path
+  storm: "/images/actual-storm-tracking-demo.jpg", // Example: Replace with actual path
+  report: "/images/actual-ai-report-demo.jpg", // Example: Replace with actual path
+  contractor: "/images/actual-contractor-verification-demo.jpg", // Example: Replace with actual path
+}
 
 export function FeatureShowcase() {
+  const imageSizes = "(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 600px"
+
   return (
     <section className="py-20 bg-gradient-to-b from-gray-800 to-gray-900">
       <div className="container px-4 md:px-6">
@@ -46,30 +57,33 @@ export function FeatureShowcase() {
             </div>
           </div>
 
-          <div className="relative">
-            <img
-              src="/images/aerial-analysis-demo.png"
-              alt="Aerial Analysis Demo"
-              className="rounded-lg shadow-2xl"
-              width={600}
-              height={400}
+          <div className="relative aspect-video md:aspect-[4/3] rounded-lg overflow-hidden shadow-2xl">
+            <Image
+              src={featureImages.aerial || "/placeholder.svg"}
+              alt="Demonstration of Aerial Intelligence for roof analysis"
+              fill
+              className="object-cover"
+              sizes={imageSizes}
+              loading="lazy"
+              quality={75} // Default, can adjust
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-lg"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
           </div>
 
           {/* Feature 2 */}
-          <div className="relative lg:order-last">
-            <img
-              src="/images/storm-tracking-demo.png"
-              alt="Storm Tracking Demo"
-              className="rounded-lg shadow-2xl"
-              width={600}
-              height={400}
+          <div className="relative lg:order-last aspect-video md:aspect-[4/3] rounded-lg overflow-hidden shadow-2xl">
+            <Image
+              src={featureImages.storm || "/placeholder.svg"}
+              alt="Demonstration of Storm Tracking feature for property damage assessment"
+              fill
+              className="object-cover"
+              sizes={imageSizes}
+              loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-lg"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
           </div>
 
-          <div className="space-y-6 lg:order-last">
+          <div className="space-y-6 lg:order-first">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-blue-500/20 rounded-lg">
                 <Zap className="h-6 w-6 text-blue-500" />
@@ -124,30 +138,31 @@ export function FeatureShowcase() {
             </div>
           </div>
 
-          <div className="relative">
-            <img
-              src="/images/ai-report-demo.png"
-              alt="AI Report Demo"
-              className="rounded-lg shadow-2xl"
-              width={600}
-              height={400}
+          <div className="relative aspect-video md:aspect-[4/3] rounded-lg overflow-hidden shadow-2xl">
+            <Image
+              src={featureImages.report || "/placeholder.svg"}
+              alt="Example of an AI-Generated Roof Report"
+              fill
+              className="object-cover"
+              sizes={imageSizes}
+              loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-lg"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
           </div>
 
           {/* Feature 4 */}
-          <div className="relative lg:order-last">
-            <img
-              src="/images/contractor-verification-demo.png"
-              alt="Contractor Verification Demo"
-              className="rounded-lg shadow-2xl"
-              width={600}
-              height={400}
+          <div className="relative lg:order-last aspect-video md:aspect-[4/3] rounded-lg overflow-hidden shadow-2xl">
+            <Image
+              src={featureImages.contractor || "/placeholder.svg"}
+              alt="Contractor Verification tool in action"
+              fill
+              className="object-cover"
+              sizes={imageSizes}
+              loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-lg"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
           </div>
-
-          <div className="space-y-6 lg:order-last">
+          <div className="space-y-6 lg:order-first">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-green-500/20 rounded-lg">
                 <Shield className="h-6 w-6 text-green-500" />

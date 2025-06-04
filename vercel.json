@@ -2,7 +2,7 @@
   "version": 2,
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
-  "installCommand": "npm install",
+  "installCommand": "npm cache clean --force && rm -rf node_modules && npm install",
   "framework": "nextjs",
   "functions": {
     "app/api/**/*.ts": {
@@ -11,7 +11,8 @@
   },
   "build": {
     "env": {
-      "SKIP_ENV_VALIDATION": "1"
+      "SKIP_ENV_VALIDATION": "1",
+      "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
     }
   },
   "headers": [

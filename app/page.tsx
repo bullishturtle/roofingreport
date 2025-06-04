@@ -1,16 +1,47 @@
 import { HeroSearch } from "@/components/hero-search"
 import { HeroVisualization } from "@/components/hero-visualization"
-import { DemoTools } from "@/components/demo-tools"
-import { FeatureShowcase } from "@/components/feature-showcase"
-import { HowItWorks } from "@/components/how-it-works"
-import { TrustTheFoxSection } from "@/components/trust-the-fox-section"
-import { ProUpgradeSection } from "@/components/pro-upgrade-section"
-import { NewsletterSignupForm } from "@/components/newsletter-signup-form"
-import { TestimonialsSection } from "@/components/testimonials-section"
-import { PartnersSection } from "@/components/partners-section"
 import { StructuredData } from "@/components/seo/structured-data"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import dynamic from "next/dynamic"
+
+// Skeleton loader example (you can create more specific ones)
+const SkeletonLoader = ({ height = "200px" }: { height?: string }) => (
+  <div className="w-full bg-gray-700 animate-pulse rounded-md" style={{ height }} />
+)
+
+const DynamicPartnersSection = dynamic(
+  () => import("@/components/partners-section").then((mod) => mod.PartnersSection),
+  { loading: () => <SkeletonLoader height="100px" />, ssr: false },
+)
+const DynamicDemoTools = dynamic(() => import("@/components/demo-tools").then((mod) => mod.DemoTools), {
+  loading: () => <SkeletonLoader />,
+  ssr: false,
+})
+const DynamicFeatureShowcase = dynamic(
+  () => import("@/components/feature-showcase").then((mod) => mod.FeatureShowcase),
+  { loading: () => <SkeletonLoader height="400px" />, ssr: false },
+)
+const DynamicTestimonialsSection = dynamic(
+  () => import("@/components/testimonials-section").then((mod) => mod.TestimonialsSection),
+  { loading: () => <SkeletonLoader height="300px" />, ssr: false },
+)
+const DynamicHowItWorks = dynamic(() => import("@/components/how-it-works").then((mod) => mod.HowItWorks), {
+  loading: () => <SkeletonLoader />,
+  ssr: false,
+})
+const DynamicTrustTheFoxSection = dynamic(
+  () => import("@/components/trust-the-fox-section").then((mod) => mod.TrustTheFoxSection),
+  { loading: () => <SkeletonLoader />, ssr: false },
+)
+const DynamicProUpgradeSection = dynamic(
+  () => import("@/components/pro-upgrade-section").then((mod) => mod.ProUpgradeSection),
+  { loading: () => <SkeletonLoader />, ssr: false },
+)
+const DynamicNewsletterSignupForm = dynamic(
+  () => import("@/components/newsletter-signup-form").then((mod) => mod.NewsletterSignupForm),
+  { loading: () => <SkeletonLoader height="150px" />, ssr: false },
+)
 
 export default function Home() {
   return (
@@ -61,26 +92,13 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Partners Section */}
-        <PartnersSection />
-
-        {/* Demo Tools Section */}
-        <DemoTools />
-
-        {/* Feature Showcase */}
-        <FeatureShowcase />
-
-        {/* Testimonials Section */}
-        <TestimonialsSection />
-
-        {/* How It Works */}
-        <HowItWorks />
-
-        {/* Trust the Fox Section */}
-        <TrustTheFoxSection />
-
-        {/* Pro Upgrade Section */}
-        <ProUpgradeSection />
+        <DynamicPartnersSection />
+        <DynamicDemoTools />
+        <DynamicFeatureShowcase />
+        <DynamicTestimonialsSection />
+        <DynamicHowItWorks />
+        <DynamicTrustTheFoxSection />
+        <DynamicProUpgradeSection />
 
         {/* Newsletter Signup Section */}
         <section className="py-20 bg-gray-900 text-white">
@@ -91,7 +109,7 @@ export default function Home() {
                 Subscribe to our newsletter for the latest news, features, and insights on roof technology and property
                 trends.
               </p>
-              <NewsletterSignupForm className="mt-8" />
+              <DynamicNewsletterSignupForm className="mt-8" />
             </div>
           </div>
         </section>
@@ -105,16 +123,12 @@ export default function Home() {
                 Join thousands of professionals who trust RoofFax for reliable roof information.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                <Link href="/signup">
-                  <Button size="lg" variant="secondary" className="bg-white text-orange-600 hover:bg-gray-100">
-                    Start Free Trial
-                  </Button>
-                </Link>
-                <Link href="https://pro.therooffax.com">
-                  <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                    Go to RoofFax Pro
-                  </Button>
-                </Link>
+                <Button asChild size="lg" variant="secondary" className="bg-white text-orange-600 hover:bg-gray-100">
+                  <Link href="/signup">Start Free Trial</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                  <Link href="https://pro.therooffax.com">Go to RoofFax Pro</Link>
+                </Button>
               </div>
             </div>
           </div>

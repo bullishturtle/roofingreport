@@ -2,7 +2,7 @@
   "version": 2,
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
-  "installCommand": "npm cache clean --force && rm -rf node_modules && npm install",
+  "installCommand": "npm cache clean --force && rm -rf node_modules && npm install", // This line is the key change
   "framework": "nextjs",
   "functions": {
     "app/api/**/*.ts": {

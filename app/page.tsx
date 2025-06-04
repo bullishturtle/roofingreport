@@ -1,13 +1,19 @@
+"use client" // This page needs to be a client component to use useAnalytics
+
 import { HeroSearch } from "@/components/hero-search"
 import { DemoTools } from "@/components/demo-tools"
 import { FeatureShowcase } from "@/components/feature-showcase"
 import { HowItWorks } from "@/components/how-it-works"
 import { TrustTheFoxSection } from "@/components/trust-the-fox-section"
 import { ProUpgradeSection } from "@/components/pro-upgrade-section"
+import { NewsletterSignupForm } from "@/components/newsletter-signup-form"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { useAnalytics } from "@/components/analytics/analytics-provider" // Import useAnalytics
 
 export default function Home() {
+  const { trackEvent } = useAnalytics() // Use the analytics hook
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-black">
       {/* Hero Section with Centered Search */}
@@ -68,6 +74,20 @@ export default function Home() {
       {/* Pro Upgrade Section */}
       <ProUpgradeSection />
 
+      {/* Newsletter Signup Section */}
+      <section className="py-20 bg-gray-900 text-white">
+        <div className="container px-4 md:px-6 mx-auto text-center">
+          <div className="max-w-3xl mx-auto space-y-6">
+            <h2 className="text-3xl md:text-4xl font-bold">Stay Updated with RoofFax</h2>
+            <p className="text-lg text-gray-300">
+              Subscribe to our newsletter for the latest news, features, and insights on roof technology and property
+              trends.
+            </p>
+            <NewsletterSignupForm className="mt-8" />
+          </div>
+        </div>
+      </section>
+
       {/* Final CTA */}
       <section className="py-20 bg-gradient-to-r from-orange-600 to-orange-500">
         <div className="container px-4 md:px-6 text-center">
@@ -78,12 +98,22 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Link href="/signup">
-                <Button size="lg" variant="secondary" className="bg-white text-orange-600 hover:bg-gray-100">
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="bg-white text-orange-600 hover:bg-gray-100"
+                  onClick={() => trackEvent("start_free_trial_clicked", { location: "final_cta" })}
+                >
                   Start Free Trial
                 </Button>
               </Link>
               <Link href="https://pro.therooffax.com">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white text-white hover:bg-white/10"
+                  onClick={() => trackEvent("go_to_pro_clicked", { location: "final_cta" })}
+                >
                   Go to RoofFax Pro
                 </Button>
               </Link>

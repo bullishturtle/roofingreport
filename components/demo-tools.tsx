@@ -1,9 +1,14 @@
+"use client"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Satellite, CloudRain, FileText, Shield, MapPin, Camera } from "lucide-react"
 import Link from "next/link"
+import { useAnalytics } from "@/components/analytics/analytics-provider" // Import useAnalytics
 
 export function DemoTools() {
+  const { trackEvent } = useAnalytics() // Use the analytics hook
+
   const tools = [
     {
       icon: <Satellite className="h-8 w-8 text-orange-500" />,
@@ -11,6 +16,7 @@ export function DemoTools() {
       description: "Get precise roof measurements from satellite imagery",
       demo: "View sample measurements for 123 Main St",
       link: "/demo/measurements",
+      eventName: "demo_measurements_clicked",
     },
     {
       icon: <CloudRain className="h-8 w-8 text-blue-500" />,
@@ -18,6 +24,7 @@ export function DemoTools() {
       description: "Track weather events and potential damage dates",
       demo: "See Hurricane Ian impact timeline",
       link: "/demo/storm-timeline",
+      eventName: "demo_storm_timeline_clicked",
     },
     {
       icon: <FileText className="h-8 w-8 text-green-500" />,
@@ -25,6 +32,7 @@ export function DemoTools() {
       description: "Comprehensive AI-generated property analysis",
       demo: "View sample AI report",
       link: "/demo/ai-report",
+      eventName: "demo_ai_report_clicked",
     },
     {
       icon: <Shield className="h-8 w-8 text-purple-500" />,
@@ -32,6 +40,7 @@ export function DemoTools() {
       description: "Verify door-to-door contractors and their credentials",
       demo: "Check ABC Roofing Company",
       link: "/demo/contractor-check",
+      eventName: "demo_contractor_check_clicked",
     },
     {
       icon: <MapPin className="h-8 w-8 text-red-500" />,
@@ -39,6 +48,7 @@ export function DemoTools() {
       description: "Complete repair and ownership history",
       demo: "View property timeline",
       link: "/demo/property-history",
+      eventName: "demo_property_history_clicked",
     },
     {
       icon: <Camera className="h-8 w-8 text-yellow-500" />,
@@ -46,6 +56,7 @@ export function DemoTools() {
       description: "AI-powered damage detection from aerial photos",
       demo: "See damage analysis",
       link: "/demo/damage-assessment",
+      eventName: "demo_damage_assessment_clicked",
     },
   ]
 
@@ -80,7 +91,11 @@ export function DemoTools() {
                 <div className="bg-gray-700/30 rounded-lg p-3">
                   <p className="text-sm text-gray-300 italic">"{tool.demo}"</p>
                 </div>
-                <Button asChild className="w-full bg-orange-600 hover:bg-orange-700 text-white">
+                <Button
+                  asChild
+                  className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                  onClick={() => trackEvent(tool.eventName, { tool_title: tool.title, link: tool.link })}
+                >
                   <Link href={tool.link}>Try Demo</Link>
                 </Button>
               </CardContent>
@@ -94,6 +109,7 @@ export function DemoTools() {
             asChild
             size="lg"
             className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600"
+            onClick={() => trackEvent("upgrade_to_pro_from_demo_tools_clicked")}
           >
             <Link href="https://pro.therooffax.com">Upgrade to RoofFax Pro</Link>
           </Button>

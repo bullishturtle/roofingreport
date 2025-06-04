@@ -44,3 +44,11 @@ export async function getFeatureFlags(userId?: string) {
     enableRoofusChat: true,
   }
 }
+
+export async function trackFormSubmission(formName: string, data: Record<string, any>) {
+  if (typeof window !== "undefined") {
+    console.warn("Server analytics should not be called on client side")
+    return
+  }
+  console.log(`Server Form Submission: ${formName}`, data)
+}

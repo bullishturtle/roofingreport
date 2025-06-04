@@ -1,40 +1,9 @@
 /**
  * Environment Configuration
- * Secure environment variable handling without sensitive client exposure
+ * Handles environment variables and provides utility functions
  */
 
-import { z } from "zod"
-
-// Server-side environment variables only
-const serverSchema = z.object({
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  NEXTAUTH_SECRET: z.string().min(1).optional(),
-  NEXTAUTH_URL: z.string().url().optional(),
-  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
-  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
-  OPENAI_API_KEY: z.string().min(1).optional(),
-  DATABASE_URL: z.string().url().optional(),
-})
-
-// Client-side environment variables (safe to expose)
-const clientSchema = z.object({
-  NEXT_PUBLIC_APP_URL: z.string().url().optional(),
-  NEXT_PUBLIC_APP_VERSION: z.string().optional(),
-})
-
-// Validate environment variables
-const serverEnv = serverSchema.safeParse(process.env)
-const clientEnv = clientSchema.safeParse(process.env)
-
-if (!serverEnv.success) {
-  console.warn("⚠️ Invalid server environment variables:", serverEnv.error.format())
-}
-
-if (!clientEnv.success) {
-  console.warn("⚠️ Invalid client environment variables:", clientEnv.error.format())
-}
-
-// Export validated environment variables
+// Environment variable access
 export const env = {
   // Server-side only
   NODE_ENV: process.env.NODE_ENV || "development",
@@ -50,5 +19,32 @@ export const env = {
   NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION,
 }
 
-// Type-safe environment access
-export type Env = typeof env
+// Utility functions that other components expect
+export function getAppVersion(): string {
+  return process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0"
+}
+
+export function getAppUrl(): string {
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL
+  }
+
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+
+  return "https://therooffax.com"
+}
+
+export function validateEnv() {
+  // Simple validation - just warn if important vars are missing
+  if (!process.env.NEXTAUTH_SECRET && process.env.NODE_ENV === "production") {
+    console.warn("⚠️ NEXTAUTH_SECRET is missing in production")
+  }
+
+  if (!process.env.OPENAI_API_KEY) {
+    console.warn("⚠️ OPENAI_API_KEY is missing - AI features may not work")
+  }
+
+  return env
+}

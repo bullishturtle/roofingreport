@@ -3,191 +3,201 @@
 import type React from "react"
 
 import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, MapPin, Building } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useToast } from "@/components/ui/use-toast"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Search, MapPin, Shield, Loader2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 export function HeroSearch() {
-  const [address, setAddress] = useState("")
-  const [companyName, setCompanyName] = useState("")
+  const [activeTab, setActiveTab] = useState("property")
   const [isLoading, setIsLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState("address")
-  const router = useRouter()
+  const [propertyAddress, setPropertyAddress] = useState("")
+  const [contractorName, setContractorName] = useState("")
   const { toast } = useToast()
 
-  const handleAddressSearch = async (e: React.FormEvent) => {
+  const handlePropertySearch = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!address.trim()) {
-      toast({
-        title: "Address Required",
-        description: "Please enter a property address",
-        variant: "destructive",
-      })
-      return
-    }
+    if (!propertyAddress.trim()) return
 
     setIsLoading(true)
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      toast({
-        title: "Property Found!",
-        description: "Generating your roof report...",
-      })
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      router.push(`/report?address=${encodeURIComponent(address)}`)
-    } catch (error) {
-      toast({
-        title: "Search Failed",
-        description: "Unable to find property. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
+    toast({
+      title: "Property Found!",
+      description: `Generating comprehensive report for ${propertyAddress}`,
+    })
+
+    setIsLoading(false)
+
+    // Navigate to demo report
+    window.location.href = "/demo/ai-report"
   }
 
   const handleContractorSearch = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!companyName.trim()) {
-      toast({
-        title: "Company Name Required",
-        description: "Please enter a contractor or company name",
-        variant: "destructive",
-      })
-      return
-    }
+    if (!contractorName.trim()) return
 
     setIsLoading(true)
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
 
-      toast({
-        title: "Contractor Found!",
-        description: "Verifying credentials...",
-      })
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1500))
 
-      router.push(`/contractor-check?company=${encodeURIComponent(companyName)}`)
-    } catch (error) {
-      toast({
-        title: "Verification Failed",
-        description: "Unable to verify contractor. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
+    toast({
+      title: "Contractor Verified!",
+      description: `Found verification details for ${contractorName}`,
+    })
+
+    setIsLoading(false)
+
+    // Navigate to contractor verification demo
+    window.location.href = "/demo/contractor-check"
+  }
+
+  const tabVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -10 },
   }
 
   return (
-    <Card className="bg-gray-800/50 backdrop-blur-md border-orange-500/30 shadow-2xl">
-      <CardContent className="p-8">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-white mb-2">Get Your Free Report</h2>
-          <p className="text-gray-300">Enter a property address or verify a contractor</p>
-        </div>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+      className="w-full max-w-2xl mx-auto"
+    >
+      <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
+        <CardContent className="p-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="property" className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Property Lookup
+              </TabsTrigger>
+              <TabsTrigger value="contractor" className="flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                Who Knocked?
+              </TabsTrigger>
+            </TabsList>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-gray-700/50">
-            <TabsTrigger value="address" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white">
-              <MapPin className="w-4 h-4 mr-2" />
-              Property Lookup
-            </TabsTrigger>
-            <TabsTrigger
-              value="contractor"
-              className="data-[state=active]:bg-orange-500 data-[state=active]:text-white"
-            >
-              <Building className="w-4 h-4 mr-2" />
-              Who Knocked?
-            </TabsTrigger>
-          </TabsList>
+            <AnimatePresence mode="wait">
+              <TabsContent value="property" className="mt-0">
+                <motion.div
+                  key="property"
+                  variants={tabVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                >
+                  <form onSubmit={handlePropertySearch} className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">Enter Property Address</label>
+                      <div className="relative">
+                        <Input
+                          type="text"
+                          placeholder="123 Main St, Tampa, FL 33601"
+                          value={propertyAddress}
+                          onChange={(e) => setPropertyAddress(e.target.value)}
+                          className="pl-10 h-12 text-lg"
+                          disabled={isLoading}
+                        />
+                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      </div>
+                    </div>
 
-          <TabsContent value="address" className="mt-6">
-            <form onSubmit={handleAddressSearch} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="address" className="text-sm font-medium text-gray-300">
-                  Property Address
-                </label>
-                <Input
-                  id="address"
-                  placeholder="123 Main St, Miami, FL 33101"
-                  className="bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-orange-500 focus:ring-orange-500/20"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-semibold py-3"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Searching...
-                  </div>
-                ) : (
-                  <>
-                    <Search className="mr-2 h-4 w-4" />
-                    Get Property Report
-                  </>
-                )}
-              </Button>
-            </form>
-          </TabsContent>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        type="submit"
+                        size="lg"
+                        className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-semibold"
+                        disabled={isLoading || !propertyAddress.trim()}
+                      >
+                        {isLoading ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                          >
+                            <Loader2 className="h-5 w-5 mr-2" />
+                          </motion.div>
+                        ) : (
+                          <Search className="h-5 w-5 mr-2" />
+                        )}
+                        {isLoading ? "Analyzing Property..." : "Get Roof Report"}
+                      </Button>
+                    </motion.div>
+                  </form>
+                </motion.div>
+              </TabsContent>
 
-          <TabsContent value="contractor" className="mt-6">
-            <form onSubmit={handleContractorSearch} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="company" className="text-sm font-medium text-gray-300">
-                  Contractor or Company Name
-                </label>
-                <Input
-                  id="company"
-                  placeholder="ABC Roofing Company"
-                  className="bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-orange-500 focus:ring-orange-500/20"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-semibold py-3"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Verifying...
-                  </div>
-                ) : (
-                  <>
-                    <Building className="mr-2 h-4 w-4" />
-                    Verify Contractor
-                  </>
-                )}
-              </Button>
-            </form>
-          </TabsContent>
-        </Tabs>
+              <TabsContent value="contractor" className="mt-0">
+                <motion.div
+                  key="contractor"
+                  variants={tabVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                >
+                  <form onSubmit={handleContractorSearch} className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">Contractor or Company Name</label>
+                      <div className="relative">
+                        <Input
+                          type="text"
+                          placeholder="ABC Roofing Company"
+                          value={contractorName}
+                          onChange={(e) => setContractorName(e.target.value)}
+                          className="pl-10 h-12 text-lg"
+                          disabled={isLoading}
+                        />
+                        <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      </div>
+                    </div>
 
-        <div className="mt-6 text-center">
-          <p className="text-xs text-gray-400">
-            Free preview • Full reports available with{" "}
-            <a href="https://pro.therooffax.com" className="text-orange-400 hover:text-orange-300">
-              RoofFax Pro
-            </a>
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        type="submit"
+                        size="lg"
+                        className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-semibold"
+                        disabled={isLoading || !contractorName.trim()}
+                      >
+                        {isLoading ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                          >
+                            <Loader2 className="h-5 w-5 mr-2" />
+                          </motion.div>
+                        ) : (
+                          <Shield className="h-5 w-5 mr-2" />
+                        )}
+                        {isLoading ? "Verifying Contractor..." : "Verify Contractor"}
+                      </Button>
+                    </motion.div>
+                  </form>
+                </motion.div>
+              </TabsContent>
+            </AnimatePresence>
+          </Tabs>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="mt-6 text-center"
+          >
+            <p className="text-sm text-gray-600">
+              Try our demo with sample data or enter your own property information
+            </p>
+          </motion.div>
+        </CardContent>
+      </Card>
+    </motion.div>
   )
 }

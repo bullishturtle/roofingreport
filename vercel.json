@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "buildCommand": "npm ci && npm run build",
+  "buildCommand": "npm run build",
   "devCommand": "npm run dev",
-  "installCommand": "npm ci --legacy-peer-deps",
+  "installCommand": "npm install",
   "framework": "nextjs",
   "functions": {
     "app/api/**/*.ts": {
@@ -11,8 +11,7 @@
   },
   "build": {
     "env": {
-      "SKIP_ENV_VALIDATION": "1",
-      "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
+      "SKIP_ENV_VALIDATION": "1"
     }
   },
   "headers": [

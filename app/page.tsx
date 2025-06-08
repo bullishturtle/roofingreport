@@ -1,82 +1,92 @@
-import { HeroSearch } from "@/components/hero-search"
-import { HeroVisualization } from "@/components/hero-visualization"
-import { StructuredData } from "@/components/seo/structured-data"
+import { UserTypeRouter } from "@/components/user-type-router"
+import { HowItWorks } from "@/components/how-it-works"
+import { HomeownerFeatures } from "@/components/homeowner-features"
+import { ProFeatures } from "@/components/pro-features"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { ClientHomeSections } from "@/app/client-home-sections" // Import the new client component
 
 export default function Home() {
   return (
-    <>
-      <StructuredData />
-      <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-black">
-        {/* Hero Section with Centered Search */}
-        <section className="relative py-20 md:py-32 overflow-hidden">
-          {/* Background Pattern */}
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-gray-900/50"></div>
-          <div className="absolute inset-0 bg-[url('/images/roof-pattern.svg')] opacity-5"></div>
-          <HeroVisualization />
-
-          <div className="container relative px-4 md:px-6 mx-auto text-center">
-            <div className="max-w-4xl mx-auto space-y-8">
-              {/* Main Headline */}
-              <div className="space-y-4">
-                <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight">
-                  The <span className="text-orange-500">Trusted Source</span> for Roof Information
-                </h1>
-                <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                  Just like CarFax for cars, RoofFax provides comprehensive roof reports, storm history, and contractor
-                  verification for any property in Florida.
-                </p>
-              </div>
-
-              {/* Centered Property Search */}
-              <div className="max-w-2xl mx-auto">
-                <HeroSearch />
-              </div>
-
-              {/* Trust Indicators */}
-              <div className="flex flex-wrap justify-center items-center gap-8 pt-8 text-gray-400">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>Real-time data</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                  <span>AI-powered reports</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span>Storm tracking</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Render the new client component containing all dynamic sections */}
-        <ClientHomeSections />
-
-        {/* Final CTA */}
-        <section className="py-20 bg-gradient-to-r from-orange-600 to-orange-500">
-          <div className="container px-4 md:px-6 text-center">
-            <div className="max-w-3xl mx-auto space-y-6">
-              <h2 className="text-3xl md:text-5xl font-bold text-white">Ready to Get Started?</h2>
-              <p className="text-xl text-orange-100">
-                Join thousands of professionals who trust RoofFax for reliable roof information.
+    <div className="flex flex-col min-h-screen">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-b from-blue-50 to-white py-16 md:py-24">
+        <div className="container px-4 md:px-6">
+          <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
+            <div className="space-y-4">
+              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                The Trusted Source for Roof Information
+              </h1>
+              <p className="text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                RoofFax provides comprehensive roof reports, history, and condition assessments for any property. Just
+                like CarFax, but for your roof.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                <Button asChild size="lg" variant="secondary" className="bg-white text-orange-600 hover:bg-gray-100">
-                  <Link href="/signup">Start Free Trial</Link>
-                </Button>
-                <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                  <Link href="https://pro.therooffax.com">Go to RoofFax Pro</Link>
-                </Button>
+              <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                <Link href="/signup">
+                  <Button size="lg" className="w-full min-[400px]:w-auto">
+                    Get Started
+                  </Button>
+                </Link>
+                <Link href="/demo">
+                  <Button size="lg" variant="outline" className="w-full min-[400px]:w-auto">
+                    Request Demo
+                  </Button>
+                </Link>
               </div>
             </div>
+            <div className="flex items-center justify-center">
+              <img
+                src="/images/roofus.png"
+                alt="RoofFax Mascot"
+                className="mx-auto aspect-square overflow-hidden rounded-xl object-cover object-center sm:w-full lg:order-last"
+                width={500}
+                height={500}
+              />
+            </div>
           </div>
-        </section>
-      </div>
-    </>
+        </div>
+      </section>
+
+      {/* User Type Router */}
+      <UserTypeRouter />
+
+      {/* How It Works */}
+      <HowItWorks />
+
+      {/* Homeowner Features */}
+      <HomeownerFeatures />
+
+      {/* Pro Features */}
+      <ProFeatures />
+
+      {/* CTA Section */}
+      <section className="bg-primary py-16 md:py-24">
+        <div className="container px-4 md:px-6 text-center">
+          <div className="mx-auto max-w-3xl space-y-4">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-white">
+              Ready to Get Started with RoofFax?
+            </h2>
+            <p className="text-white/80 md:text-xl/relaxed">
+              Join thousands of homeowners and professionals who trust RoofFax for reliable roof information.
+            </p>
+            <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center pt-4">
+              <Link href="/signup">
+                <Button size="lg" variant="secondary" className="w-full min-[400px]:w-auto">
+                  Sign Up Now
+                </Button>
+              </Link>
+              <Link href="/contact">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full min-[400px]:w-auto bg-transparent text-white border-white hover:bg-white/10"
+                >
+                  Contact Sales
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   )
 }

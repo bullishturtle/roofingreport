@@ -44,7 +44,6 @@
     "@react-three/cannon": "latest",
     "@react-three/drei": "latest",
     "@react-three/fiber": "latest",
-    "@sentry/nextjs": "latest",
     "@supabase/supabase-js": "latest",
     "@testing-library/dom": "latest",
     "@testing-library/react": "latest",
@@ -67,7 +66,6 @@
     "next-auth": "latest",
     "next-themes": "^0.4.4",
     "nodemailer": "latest",
-    "openai": "latest",
     "prisma": "latest",
     "react": "^19",
     "react-day-picker": "8.10.1",
@@ -80,16 +78,14 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "three": "latest",
-    "uuid": "latest",
     "vaul": "^0.9.6",
-    "ws": "latest",
     "zod": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "postcss": "^8",
+    "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
   }

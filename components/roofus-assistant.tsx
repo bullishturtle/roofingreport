@@ -1,38 +1,36 @@
 "use client"
 
 import type React from "react"
+
 import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import { AnimatePresence, motion } from "framer-motion"
-import { X, Zap, Lightbulb, AlertCircle, CheckCircle } from "lucide-react"
+import { X, Zap, Lightbulb } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-
-interface Message {
-  text: string
-  sender: "user" | "roofus"
-  timestamp: Date
-  status?: "sending" | "sent" | "error"
-}
 
 export function RoofusAssistant() {
   const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([
+  const [messages, setMessages] = useState<{ text: string; sender: "user" | "roofus" }[]>([
     {
       text: "Hey there! I'm Roofus, your Florida roofing expert. I know all about Florida Building Code, storm claims, and insurance tactics. How can I help you today?",
       sender: "roofus",
-      timestamp: new Date(),
     },
   ])
   const [input, setInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
   const [showTip, setShowTip] = useState(false)
   const [tipIndex, setTipIndex] = useState(0)
-  const [connectionStatus, setConnectionStatus] = useState<"connected" | "connecting" | "error">("connected")
-  const [apiHealth, setApiHealth] = useState<boolean | null>(null)
+  const [showSpaceship, setShowSpaceship] = useState(false)
+  const [spaceshipPosition, setSpaceshipPosition] = useState({ x: 0, y: 0 })
+  const [spaceshipDirection, setSpaceshipDirection] = useState(1) // 1 for right, -1 for left
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -45,14 +43,10 @@ export function RoofusAssistant() {
   ]
 
   useEffect(() => {
-    setIsClient(true)
-    checkApiHealth()
-  }, [])
-
-  useEffect(() => {
     const tipTimer = setTimeout(() => {
       setShowTip(true)
     }, 15000)
+
     return () => clearTimeout(tipTimer)
   }, [])
 
@@ -65,85 +59,66 @@ export function RoofusAssistant() {
     }
   }, [showTip, tips.length])
 
+  // Spaceship animation
+  useEffect(() => {
+    const spaceshipInterval = setInterval(() => {
+      const shouldShow = Math.random() > 0.7
+      if (shouldShow) {
+        const startX = spaceshipDirection > 0 ? -100 : window.innerWidth + 100
+        const y = Math.random() * (window.innerHeight * 0.7)
+        setSpaceshipPosition({ x: startX, y })
+        setShowSpaceship(true)
+
+        // Change direction for next appearance
+        setSpaceshipDirection((prev) => prev * -1)
+      }
+    }, 20000)
+
+    return () => clearInterval(spaceshipInterval)
+  }, [spaceshipDirection])
+
+  // Auto-scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  const checkApiHealth = async () => {
-    try {
-      const response = await fetch("/api/chat/test")
-      const data = await response.json()
-      setApiHealth(data.status === "healthy")
-      setConnectionStatus(data.status === "healthy" ? "connected" : "error")
-    } catch (error) {
-      console.error("API health check failed:", error)
-      setApiHealth(false)
-      setConnectionStatus("error")
-    }
-  }
-
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim() || isTyping) return
+    if (!input.trim()) return
 
-    const userMessage: Message = {
-      text: input,
-      sender: "user",
-      timestamp: new Date(),
-      status: "sending",
-    }
-
-    setMessages((prev) => [...prev, userMessage])
+    // Add user message
+    setMessages((prev) => [...prev, { text: input, sender: "user" }])
     setInput("")
     setIsTyping(true)
     setShowTip(false)
-    setConnectionStatus("connecting")
 
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message: userMessage.text }),
-      })
+    // Simulate Roofus response
+    setTimeout(() => {
+      let response = ""
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      if (input.toLowerCase().includes("code") || input.toLowerCase().includes("building")) {
+        response =
+          "Florida Building Code is my specialty! The current code requires a minimum wind resistance of 130mph for most counties. For your specific ZIP code, I can check if you qualify for any special provisions or code upgrades. Want me to look that up for you?"
+      } else if (input.toLowerCase().includes("storm") || input.toLowerCase().includes("damage")) {
+        response =
+          "I track all Florida storms! We've had 3 major events in your area this year. I can generate a detailed storm damage report with dates, wind speeds, and potential impact areas. This can be super helpful for insurance claims. Want me to create one for your property?"
+      } else if (input.toLowerCase().includes("insurance") || input.toLowerCase().includes("claim")) {
+        response =
+          "Florida insurance claims can be tricky! I know all the tactics adjusters use. Make sure you document everything and don't accept the first offer. I can help you prepare documentation that highlights code upgrades required by law. Want me to walk you through the process?"
+      } else if (input.toLowerCase().includes("owner") || input.toLowerCase().includes("contact")) {
+        response =
+          "I can find property owner information for any address in Florida! Just give me the address, and I'll pull the owner's name, phone number, email, and mailing address. This is great for direct outreach. Want me to look up an address for you?"
+      } else if (input.toLowerCase().includes("proposal") || input.toLowerCase().includes("quote")) {
+        response =
+          "I can draft professional proposals in seconds! I'll include all the measurements, materials, code requirements, and even customize it with your branding. Just tell me the address and what type of work you're proposing. Want me to create one for you?"
+      } else {
+        response =
+          "Thanks for your question! As your Florida roofing expert, I can help with building codes, storm tracking, insurance claims, finding property owners, or creating proposals. What specific information do you need about Florida roofing? Want me to handle something for you?"
       }
 
-      const data = await response.json()
-
-      // Update user message status
-      setMessages((prev) => prev.map((msg) => (msg === userMessage ? { ...msg, status: "sent" } : msg)))
-
-      // Add Roofus response
-      const roofusMessage: Message = {
-        text: data.text || "I'm sorry, I couldn't process that request. Please try again.",
-        sender: "roofus",
-        timestamp: new Date(),
-      }
-
-      setMessages((prev) => [...prev, roofusMessage])
-      setConnectionStatus("connected")
-    } catch (error) {
-      console.error("Chat API error:", error)
-
-      // Update user message status to error
-      setMessages((prev) => prev.map((msg) => (msg === userMessage ? { ...msg, status: "error" } : msg)))
-
-      // Add error message
-      const errorMessage: Message = {
-        text: "I'm having trouble connecting right now. Please check your internet connection and try again.",
-        sender: "roofus",
-        timestamp: new Date(),
-      }
-
-      setMessages((prev) => [...prev, errorMessage])
-      setConnectionStatus("error")
-    } finally {
+      setMessages((prev) => [...prev, { text: response, sender: "roofus" }])
       setIsTyping(false)
-    }
+    }, 1500)
   }
 
   if (!isClient) return null
@@ -151,7 +126,6 @@ export function RoofusAssistant() {
   return (
     <>
       {/* Animated stars background */}
-      {/*
       <div className="fixed inset-0 pointer-events-none z-0">
         {Array.from({ length: 50 }).map((_, i) => (
           <motion.div
@@ -177,10 +151,8 @@ export function RoofusAssistant() {
           />
         ))}
       </div>
-      */}
 
       {/* Roofus flying in spaceship */}
-      {/*
       <AnimatePresence>
         {showSpaceship && (
           <motion.div
@@ -219,7 +191,6 @@ export function RoofusAssistant() {
           </motion.div>
         )}
       </AnimatePresence>
-      */}
 
       {/* Floating Roofus button */}
       <div className="fixed bottom-6 right-6 z-50">
@@ -270,13 +241,7 @@ export function RoofusAssistant() {
               <motion.div
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ repeat: Number.POSITIVE_INFINITY, duration: 2 }}
-                className={`absolute -top-1 -right-1 h-4 w-4 rounded-full border border-white ${
-                  connectionStatus === "connected"
-                    ? "bg-green-500"
-                    : connectionStatus === "connecting"
-                      ? "bg-yellow-500"
-                      : "bg-red-500"
-                }`}
+                className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-green-500 border border-white"
               />
             </div>
           </Button>
@@ -306,23 +271,12 @@ export function RoofusAssistant() {
                     <motion.div
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ repeat: Number.POSITIVE_INFINITY, duration: 2 }}
-                      className={`absolute -top-1 -right-1 h-3 w-3 rounded-full border border-white ${
-                        connectionStatus === "connected"
-                          ? "bg-green-500"
-                          : connectionStatus === "connecting"
-                            ? "bg-yellow-500"
-                            : "bg-red-500"
-                      }`}
+                      className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-green-500 border border-white"
                     />
                   </div>
                   <div>
                     <h3 className="font-bold text-neon-gold">Roofus</h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-white/70">Florida Roofing Expert</p>
-                      <Badge variant={apiHealth ? "default" : "destructive"} className="text-xs px-1 py-0">
-                        {apiHealth ? "Online" : "Offline"}
-                      </Badge>
-                    </div>
+                    <p className="text-xs text-white/70">Florida Roofing Expert</p>
                   </div>
                 </div>
                 <Button
@@ -356,32 +310,14 @@ export function RoofusAssistant() {
                           />
                         </div>
                       )}
-                      <div className="flex flex-col max-w-[80%]">
-                        <div
-                          className={`rounded-lg p-3 ${
-                            message.sender === "user"
-                              ? "bg-neon-blue/30 border border-neon-blue/30"
-                              : "bg-neon-gold/20 border border-neon-gold/30"
-                          }`}
-                        >
-                          <p className="text-sm">{message.text}</p>
-                        </div>
-                        {message.sender === "user" && message.status && (
-                          <div className="flex items-center justify-end mt-1 gap-1">
-                            {message.status === "sending" && (
-                              <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY }}
-                                className="h-3 w-3 border border-neon-blue border-t-transparent rounded-full"
-                              />
-                            )}
-                            {message.status === "sent" && <CheckCircle className="h-3 w-3 text-green-500" />}
-                            {message.status === "error" && <AlertCircle className="h-3 w-3 text-red-500" />}
-                            <span className="text-xs text-white/50">
-                              {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                            </span>
-                          </div>
-                        )}
+                      <div
+                        className={`max-w-[80%] rounded-lg p-3 ${
+                          message.sender === "user"
+                            ? "bg-neon-blue/30 border border-neon-blue/30"
+                            : "bg-neon-gold/20 border border-neon-gold/30"
+                        }`}
+                      >
+                        <p className="text-sm">{message.text}</p>
                       </div>
                     </motion.div>
                   ))}
@@ -427,21 +363,16 @@ export function RoofusAssistant() {
               <CardFooter className="p-3 border-t border-neon-gold/30">
                 <form onSubmit={handleSendMessage} className="flex w-full gap-2">
                   <Input
-                    placeholder={
-                      connectionStatus === "error"
-                        ? "Connection error - check your internet..."
-                        : "Ask Roofus anything about Florida roofing..."
-                    }
+                    placeholder="Ask Roofus anything about Florida roofing..."
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     className="bg-black/30 border-neon-gold/30 text-white placeholder:text-white/50 focus:border-neon-gold focus:ring-neon-gold/20"
-                    disabled={connectionStatus === "error"}
                   />
                   <Button
                     type="submit"
                     size="icon"
                     className="bg-gradient-to-r from-neon-gold to-neon-orange hover:from-neon-orange hover:to-neon-gold text-black shadow-neon-glow"
-                    disabled={!input.trim() || isTyping || connectionStatus === "error"}
+                    disabled={!input.trim() || isTyping}
                   >
                     <Zap className="h-4 w-4" />
                     <span className="sr-only">Send</span>

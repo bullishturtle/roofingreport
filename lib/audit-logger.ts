@@ -1,7 +1,7 @@
-import { getRequestInfo } from "@/lib/request-utils"
 import prisma from "@/lib/db"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
+import { headers } from "next/headers"
 
 export type AuditAction =
   | "user.login"
@@ -43,7 +43,6 @@ export interface AuditLogParams {
   details?: Record<string, any>
   userId?: string
   status?: AuditStatus
-  request?: Request
 }
 
 export async function logAudit({
@@ -53,7 +52,6 @@ export async function logAudit({
   details,
   userId: explicitUserId,
   status = "success",
-  request,
 }: AuditLogParams) {
   try {
     // Get user from session if not explicitly provided
@@ -64,8 +62,10 @@ export async function logAudit({
       userId = session?.user?.id
     }
 
-    // Get IP and user agent from request if provided
-    const { ip: ipAddress, userAgent } = getRequestInfo(request)
+    // Get IP and user agent
+    const headersList = headers()
+    const ipAddress = headersList.get("x-forwarded-for") || "unknown"
+    const userAgent = headersList.get("user-agent") || "unknown"
 
     // Create audit log entry
     await prisma.auditLog.create({

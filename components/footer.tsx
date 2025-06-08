@@ -1,119 +1,80 @@
 import Link from "next/link"
-import { getAppVersion } from "@/lib/env"
 
 export function Footer() {
-  const currentYear = new Date().getFullYear()
-  const appVersion = getAppVersion()
-
   return (
-    <footer className="bg-gray-50 border-t">
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Company Info */}
-          <div className="space-y-4">
-            <h3 className="font-bold text-lg">RoofFax</h3>
-            <p className="text-sm text-gray-600">
-              The trusted source for comprehensive roof information, history, and condition assessments.
-            </p>
-            <div className="text-sm text-gray-500">
-              <p>Email: Landon@rooffax.com</p>
-              <p>Phone: (850) 879-9172</p>
-            </div>
+    <footer className="border-t bg-background">
+      <div className="container py-8 md:py-12">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
+          <div className="flex flex-col gap-2">
+            <Link href="/" className="flex items-center space-x-2">
+              <img src="/images/trust-the-fox-logo.png" alt="RoofFax Logo" className="h-8 w-auto" />
+              <span className="font-bold">RoofFax</span>
+            </Link>
+            <p className="text-sm text-muted-foreground">The trusted source for roof information and history.</p>
           </div>
-
-          {/* Quick Links */}
-          <div className="space-y-4">
-            <h4 className="font-semibold">Quick Links</h4>
+          <div>
+            <h3 className="text-lg font-medium mb-4">Company</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/about" className="text-gray-600 hover:text-gray-900">
-                  About Us
+                <Link href="/about" className="text-muted-foreground hover:text-primary">
+                  About
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-gray-600 hover:text-gray-900">
+                <Link href="/contact" className="text-muted-foreground hover:text-primary">
                   Contact
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
-                  Dashboard
-                </Link>
-              </li>
-              <li>
-                <Link href="/report" className="text-gray-600 hover:text-gray-900">
-                  Get Report
+                <Link href="/careers" className="text-muted-foreground hover:text-primary">
+                  Careers
                 </Link>
               </li>
             </ul>
           </div>
-
-          {/* Ecosystem */}
-          <div className="space-y-4">
-            <h4 className="font-semibold">RoofFax Ecosystem</h4>
+          <div>
+            <h3 className="text-lg font-medium mb-4">Resources</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a
-                  href="https://therooffax.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  theRoofFax.com
-                </a>
+                <Link href="/blog" className="text-muted-foreground hover:text-primary">
+                  Blog
+                </Link>
               </li>
               <li>
-                <a
-                  href="https://trustthefox.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  trustthefox.com
-                </a>
+                <Link href="/help" className="text-muted-foreground hover:text-primary">
+                  Help Center
+                </Link>
               </li>
               <li>
-                <a
-                  href="https://rooffaxpro.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  rooffaxpro.com
-                </a>
+                <Link href="/faq" className="text-muted-foreground hover:text-primary">
+                  FAQ
+                </Link>
               </li>
             </ul>
           </div>
-
-          {/* Legal */}
-          <div className="space-y-4">
-            <h4 className="font-semibold">Legal</h4>
+          <div>
+            <h3 className="text-lg font-medium mb-4">Legal</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/terms" className="text-gray-600 hover:text-gray-900">
+                <Link href="/terms" className="text-muted-foreground hover:text-primary">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="text-gray-600 hover:text-gray-900">
+                <Link href="/privacy" className="text-muted-foreground hover:text-primary">
                   Privacy Policy
                 </Link>
               </li>
             </ul>
           </div>
         </div>
-
-        {/* Bottom Bar */}
-        <div className="border-t mt-8 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
-          <div className="mb-4 md:mb-0">
-            <p>Powered by RoofFax™ | All rights reserved © {currentYear}</p>
-          </div>
-          <div className="flex items-center space-x-4">
-            <span>Version {appVersion}</span>
-            <Link href="/terms" className="hover:text-gray-700">
+        <div className="mt-8 border-t pt-8 flex flex-col md:flex-row justify-between items-center">
+          <p className="text-sm text-muted-foreground">Powered by RoofFax™ | All rights reserved</p>
+          <div className="flex items-center space-x-4 mt-4 md:mt-0">
+            <Link href="/terms" className="text-xs text-muted-foreground hover:text-primary">
               Terms of Service
             </Link>
-            <Link href="/privacy" className="hover:text-gray-700">
+            <Link href="/privacy" className="text-xs text-muted-foreground hover:text-primary">
               Privacy Policy
             </Link>
           </div>

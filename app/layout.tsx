@@ -1,42 +1,27 @@
 import type React from "react"
-import "./globals.css"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import { Toaster } from "@/components/ui/toaster"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { Enhanced3DCharactersClient } from "@/components/client-wrappers/enhanced-3d-characters-client"
-import { Providers } from "@/components/providers/providers"
-
-const inter = Inter({ subsets: ["latin"] })
-
-export const metadata: Metadata = {
-  title: "RoofFax - The Trusted Source for Roof Information",
-  description: "Get comprehensive roof reports, history, and condition assessments for any property.",
-  icons: {
-    icon: "/favicon.ico",
-  },
-  generator: "v0.dev",
-}
+import "@/app/globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <Providers>
-          <div className="relative flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-          <Enhanced3DCharactersClient />
-          <Toaster />
-        </Providers>
+      <head>
+        <title>RoofFax - Welcome Back, Earthling</title>
+        <meta name="description" content="Your RoofFax guided you out of orbit. Let's finish the journey." />
+      </head>
+      <body>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )
 }
+
+export const metadata = {
+      generator: 'v0.app'
+    };

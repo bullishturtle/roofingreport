@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
 // Your Supabase project credentials
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -8,7 +8,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Missing Supabase environment variables")
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Create and export the client creation function
+export function createClient() {
+  return createSupabaseClient(supabaseUrl, supabaseAnonKey)
+}
+
+// Export the default client instance
+export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey)
 
 // Database Types
 export interface RoofFaxSignup {
@@ -50,5 +56,26 @@ export interface ContractorVerification {
   contractor_name: string
   user_ip?: string
   result_data: any
+  created_at?: string
+}
+
+export interface Signup {
+  id?: string
+  name: string
+  email: string
+  phone: string
+  company?: string
+  address?: string
+  verification_status?: "pending" | "verified" | "rejected"
+  created_at?: string
+}
+
+export interface DemoAnalysis {
+  id?: string
+  analysis_id: string
+  property_address: string
+  analysis_type?: string
+  overall_score?: number
+  findings?: any
   created_at?: string
 }

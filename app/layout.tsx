@@ -6,12 +6,12 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "RoofFax - Protect Your Home from Storm Damage",
+  title: "RoofFax - Built for Pros, Trusted by Homeowners",
   description:
     "Get instant roof damage reports using AI satellite analysis. Protect your home and avoid contractor scams with RoofFax.",
   keywords: "roof damage, storm damage, satellite analysis, contractor verification, home protection",
   openGraph: {
-    title: "RoofFax - Protect Your Home from Storm Damage",
+    title: "RoofFax - Built for Pros, Trusted by Homeowners",
     description:
       "Get instant roof damage reports using AI satellite analysis. Protect your home and avoid contractor scams with RoofFax.",
     url: "https://therooffax.com",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "RoofFax - Protect Your Home from Storm Damage",
+    title: "RoofFax - Built for Pros, Trusted by Homeowners",
     description:
       "Get instant roof damage reports using AI satellite analysis. Protect your home and avoid contractor scams with RoofFax.",
     images: ["/og-image.png"],

@@ -1,68 +1,98 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { supabaseAdmin } from "@/lib/supabase-admin"
+import { createClient } from "@/lib/supabase"
 
 export async function POST(request: NextRequest) {
   try {
-    const { address, userEmail } = await request.json()
+    const { address, analysisType } = await request.json()
 
-    // Log the demo analysis request
-    await supabaseAdmin.from("demo_analyses").insert([
-      {
-        address: address || "Demo Property",
-        user_email: userEmail || null,
-        analyzed_at: new Date().toISOString(),
-      },
-    ])
+    if (!address) {
+      return NextResponse.json({ error: "Address is required" }, { status: 400 })
+    }
 
-    // Generate realistic demo results based on address if provided
-    const generateDemoResults = (propertyAddress?: string) => {
-      const damageTypes = [
-        { type: "Missing Shingles", severity: "High", description: "Multiple shingles missing on south-facing slope" },
+    // Create Supabase client
+    const supabase = createClient()
+
+    // Generate realistic demo analysis based on address
+    const generateDemoAnalysis = (propertyAddress: string) => {
+      const analysisId = `DEMO-${Date.now()}`
+
+      // Generate property-specific findings
+      const findings = [
         {
-          type: "Gutter Damage",
-          severity: "Medium",
-          description: "Separation at corner joints, potential water damage",
+          category: "Roof Structure",
+          status: Math.random() > 0.7 ? "warning" : "good",
+          score: Math.floor(Math.random() * 30) + 70,
+          description: "Overall structural integrity assessment",
+          details: "Satellite imagery analysis shows roof framework condition",
         },
-        { type: "Flashing Issues", severity: "Medium", description: "Chimney flashing shows signs of weathering" },
-        { type: "Granule Loss", severity: "Low", description: "Normal aging pattern detected on asphalt shingles" },
-        { type: "Debris Accumulation", severity: "Low", description: "Leaves and debris in gutters and valleys" },
+        {
+          category: "Shingle Condition",
+          status: Math.random() > 0.5 ? "warning" : "good",
+          score: Math.floor(Math.random() * 40) + 60,
+          description: "Surface material condition evaluation",
+          details: "AI detection of potential shingle displacement or damage",
+        },
+        {
+          category: "Storm Impact",
+          status: Math.random() > 0.6 ? "alert" : "warning",
+          score: Math.floor(Math.random() * 50) + 40,
+          description: "Historical weather event analysis",
+          details: "Cross-reference with recent storm patterns in your area",
+        },
+        {
+          category: "Gutter System",
+          status: Math.random() > 0.4 ? "warning" : "alert",
+          score: Math.floor(Math.random() * 35) + 45,
+          description: "Drainage system evaluation",
+          details: "Potential debris accumulation and water flow concerns",
+        },
       ]
-
-      // Select 2-4 random damage types
-      const selectedDamage = damageTypes.sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 3) + 2)
-
-      const stormEvents = [
-        "Hurricane Sally (September 2020)",
-        "Severe Thunderstorm (June 2023)",
-        "Hail Storm (March 2024)",
-        "High Wind Event (August 2023)",
-      ]
-
-      const recentStorm = stormEvents[Math.floor(Math.random() * stormEvents.length)]
 
       return {
-        propertyAddress: propertyAddress || "123 Demo Street, Pensacola, FL 32501",
-        analysisDate: new Date().toLocaleDateString(),
-        roofAge: Math.floor(Math.random() * 20) + 5,
-        roofMaterial: "Asphalt Shingles",
-        lastStormEvent: recentStorm,
-        damageFindings: selectedDamage,
-        overallCondition: Math.random() > 0.6 ? "Needs Attention" : "Fair",
-        insuranceRecommendation: Math.random() > 0.5 ? "Claim Recommended" : "Monitor Condition",
-        estimatedRepairCost: `$${(Math.floor(Math.random() * 8000) + 2000).toLocaleString()}`,
-        urgencyLevel: Math.random() > 0.7 ? "High" : "Medium",
+        analysisId,
+        propertyAddress,
+        analysisDate: new Date().toISOString().split("T")[0],
+        overallScore: Math.floor(findings.reduce((sum, f) => sum + f.score, 0) / findings.length),
+        findings,
+        recommendations: [
+          "Professional inspection recommended within 30 days",
+          "Document any visible damage with photographs",
+          "Contact insurance company for potential claim assessment",
+          "Monitor for interior signs of water damage",
+          "Schedule gutter cleaning and maintenance",
+        ],
+        nextSteps: [
+          "Complete RoofFax signup for detailed report",
+          "Schedule professional contractor inspection",
+          "Review insurance policy coverage options",
+          "Get multiple quotes from verified contractors",
+        ],
       }
     }
 
-    const analysisResults = generateDemoResults(address)
+    const analysis = generateDemoAnalysis(address)
+
+    // Log demo usage to database
+    try {
+      await supabase.from("demo_analyses").insert({
+        analysis_id: analysis.analysisId,
+        property_address: address,
+        analysis_type: analysisType || "demo",
+        overall_score: analysis.overallScore,
+        findings: analysis.findings,
+        created_at: new Date().toISOString(),
+      })
+    } catch (dbError) {
+      console.error("Database logging error:", dbError)
+      // Continue even if logging fails
+    }
 
     return NextResponse.json({
       success: true,
-      analysis: analysisResults,
-      message: "Demo analysis complete. Sign up for your actual property report with full contractor protection.",
+      analysis,
     })
   } catch (error) {
     console.error("Demo analysis error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to generate analysis" }, { status: 500 })
   }
 }

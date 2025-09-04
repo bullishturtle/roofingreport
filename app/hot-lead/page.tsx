@@ -1,754 +1,406 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
-import { ArrowLeft, ArrowRight, Phone, Mail, Home, User, AlertTriangle, CheckCircle, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Progress } from "@/components/ui/progress"
-import { motion, AnimatePresence } from "framer-motion"
+import { ArrowLeft, AlertTriangle, Phone, Clock, CheckCircle } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 
-interface FormData {
-  // Step 1: Contact Info
-  fullName: string
-  phone: string
-  email: string
-  address: string
-
-  // Step 2: Roof Status
-  hasDamage: string
-  damageType: string[]
-  urgency: string
-
-  // Step 3: Insurance/Work
-  hasInsurance: string
-  hadInspection: string
-  suggestedWork: string
-
-  // Step 4: Preferences
-  contactMethod: string
-  bestTime: string
-  interestedIn: string[]
-
-  // Step 5: Additional
-  additionalConcerns: string
-}
-
-const initialFormData: FormData = {
-  fullName: "",
-  phone: "",
-  email: "",
-  address: "",
-  hasDamage: "",
-  damageType: [],
-  urgency: "",
-  hasInsurance: "",
-  hadInspection: "",
-  suggestedWork: "",
-  contactMethod: "",
-  bestTime: "",
-  interestedIn: [],
-  additionalConcerns: "",
-}
-
-export default function HotLeadForm() {
-  const router = useRouter()
-  const [currentStep, setCurrentStep] = useState(1)
-  const [formData, setFormData] = useState<FormData>(initialFormData)
-  const [errors, setErrors] = useState<Record<string, string>>({})
+export default function HotLeadPage() {
+  const [formData, setFormData] = useState({
+    fullName: "",
+    phone: "",
+    email: "",
+    address: "",
+    urgency: "medium",
+    interestedIn: [] as string[],
+    damageDescription: "",
+    insuranceClaim: false,
+    contractorContact: false,
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isComplete, setIsComplete] = useState(false)
-  const [routingResult, setRoutingResult] = useState<{
-    priority: "HIGH" | "MEDIUM" | "LOW"
-    action: string
-    message: string
-    nextSteps: string[]
-  } | null>(null)
+  const [submitted, setSubmitted] = useState(false)
 
-  const totalSteps = 5
-  const progress = (currentStep / totalSteps) * 100
+  const services = [
+    "Emergency Roof Repair",
+    "Insurance Claim Assistance",
+    "Full Roof Replacement",
+    "Storm Damage Assessment",
+    "Leak Repair",
+    "Gutter Repair/Replacement",
+    "Contractor Verification",
+    "Free Roof Inspection",
+  ]
 
-  const validateStep = (step: number): boolean => {
-    const newErrors: Record<string, string> = {}
-
-    switch (step) {
-      case 1:
-        if (!formData.fullName.trim()) newErrors.fullName = "Name is required"
-        if (!formData.phone.trim()) newErrors.phone = "Phone is required"
-        else if (formData.phone.replace(/\D/g, "").length < 10) newErrors.phone = "Valid phone required"
-        if (!formData.email.trim()) newErrors.email = "Email is required"
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "Valid email required"
-        if (!formData.address.trim()) newErrors.address = "Address is required"
-        break
-      case 2:
-        if (!formData.hasDamage) newErrors.hasDamage = "Please select an option"
-        if (formData.hasDamage === "yes" && formData.damageType.length === 0)
-          newErrors.damageType = "Please select damage type"
-        if (formData.hasDamage === "yes" && !formData.urgency) newErrors.urgency = "Please select urgency level"
-        break
-      case 3:
-        if (!formData.hasInsurance) newErrors.hasInsurance = "Please select an option"
-        if (!formData.hadInspection) newErrors.hadInspection = "Please select an option"
-        break
-      case 4:
-        if (!formData.contactMethod) newErrors.contactMethod = "Please select contact method"
-        if (!formData.bestTime) newErrors.bestTime = "Please select best time"
-        if (formData.interestedIn.length === 0) newErrors.interestedIn = "Please select at least one option"
-        break
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+  const handleServiceChange = (service: string, checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      interestedIn: checked ? [...prev.interestedIn, service] : prev.interestedIn.filter((s) => s !== service),
+    }))
   }
 
-  const handleNext = () => {
-    if (validateStep(currentStep)) {
-      if (currentStep < totalSteps) {
-        setCurrentStep(currentStep + 1)
-      } else {
-        handleSubmit()
-      }
-    }
-  }
-
-  const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
-    }
-  }
-
-  const updateFormData = (field: keyof FormData, value: string | string[]) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }))
-    }
-  }
-
-  const toggleArrayValue = (field: keyof FormData, value: string) => {
-    const currentArray = formData[field] as string[]
-    const newArray = currentArray.includes(value)
-      ? currentArray.filter((item) => item !== value)
-      : [...currentArray, value]
-    updateFormData(field, newArray)
-  }
-
-  const formatPhoneNumber = (value: string) => {
-    const phoneNumber = value.replace(/\D/g, "")
-    if (phoneNumber.length < 4) return phoneNumber
-    if (phoneNumber.length < 7) {
-      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`
-    }
-    return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`
-  }
-
-  const determineRouting = () => {
-    let priority: "HIGH" | "MEDIUM" | "LOW" = "LOW"
-    let action = ""
-    let message = ""
-    let nextSteps: string[] = []
-
-    // High priority routing
-    if (formData.hasDamage === "yes" && formData.urgency === "immediate") {
-      priority = "HIGH"
-      action = "IMMEDIATE_CALL"
-      message = "🚨 URGENT: We'll call you within 15 minutes!"
-      nextSteps = [
-        "Keep your phone nearby - we're calling within 15 minutes",
-        "Take photos of any visible damage if safe to do so",
-        "Don't let any contractors start work until we speak",
-        "Check your email for emergency contact info",
-      ]
-    }
-    // Medium priority routing
-    else if (formData.hasDamage === "yes" && formData.urgency === "week") {
-      priority = "MEDIUM"
-      action = "SCHEDULE_INSPECTION"
-      message = "We'll schedule your professional inspection within 24 hours"
-      nextSteps = [
-        "Expect a call within 24 hours to schedule inspection",
-        "We'll coordinate with your insurance if needed",
-        "Download your free roof report while you wait",
-        "Avoid any door-to-door contractors until we inspect",
-      ]
-    }
-    // Low priority - report focused
-    else {
-      priority = "LOW"
-      action = "FREE_REPORT"
-      message = "Your free AI roof report is being generated"
-      nextSteps = [
-        "Check your email for the report within 2 hours",
-        "Review the findings and recommendations",
-        "Call us if you have questions: (850) 879-9172",
-        "Use our contractor verification tool if anyone visits",
-      ]
-    }
-
-    return { priority, action, message, nextSteps }
-  }
-
-  const handleSubmit = async () => {
-    if (!validateStep(currentStep)) return
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     setIsSubmitting(true)
 
     try {
-      const routing = determineRouting()
-
-      // Submit to API
       const response = await fetch("/api/hot-lead", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          priority: routing.priority,
-          action: routing.action,
-          timestamp: new Date().toISOString(),
-        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
       })
 
-      if (!response.ok) throw new Error("Submission failed")
-
-      setRoutingResult(routing)
-      setIsComplete(true)
+      if (response.ok) {
+        setSubmitted(true)
+      } else {
+        throw new Error("Failed to submit")
+      }
     } catch (error) {
-      setErrors({ submit: "Something went wrong. Please try again." })
+      console.error("Error submitting form:", error)
+      alert("There was an error submitting your information. Please try again or call us directly.")
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  if (isComplete && routingResult) {
+  if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#050714] to-[#0a1128] text-white">
-        <div className="container mx-auto px-4 py-8">
-          <header className="flex justify-between items-center mb-8">
-            <div className="flex items-center">
-              <Link href="/" className="mr-4">
-                <Button variant="ghost" size="sm" className="text-white">
-                  <ArrowLeft size={16} className="mr-2" />
-                  Back to Home
-                </Button>
-              </Link>
-              <div className="flex items-center">
-                <div className="bg-yellow-500 rounded-full w-10 h-10 flex items-center justify-center mr-2">
-                  <span className="text-black font-bold text-xl">R</span>
-                </div>
-                <span className="text-xl font-bold">
-                  Roof<span className="text-yellow-500">Fax</span>
-                </span>
-              </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
+        <Card className="bg-slate-800/50 border-slate-700 max-w-md w-full">
+          <CardContent className="pt-6 text-center">
+            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-white" />
             </div>
-          </header>
-
-          <div className="max-w-2xl mx-auto text-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8 }}
-            >
-              <div
-                className={`rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6 ${
-                  routingResult.priority === "HIGH"
-                    ? "bg-red-500/20"
-                    : routingResult.priority === "MEDIUM"
-                      ? "bg-yellow-500/20"
-                      : "bg-green-500/20"
-                }`}
-              >
-                {routingResult.priority === "HIGH" ? (
-                  <AlertTriangle className="text-red-400" size={48} />
-                ) : routingResult.priority === "MEDIUM" ? (
-                  <Clock className="text-yellow-400" size={48} />
-                ) : (
-                  <CheckCircle className="text-green-400" size={48} />
-                )}
-              </div>
-
-              <h1 className="text-3xl font-bold mb-4">Thank You, {formData.fullName.split(" ")[0]}!</h1>
-              <p className="text-xl text-gray-300 mb-8">{routingResult.message}</p>
-
-              <Card
-                className={`border backdrop-blur-sm mb-8 ${
-                  routingResult.priority === "HIGH"
-                    ? "bg-red-500/10 border-red-500/30"
-                    : routingResult.priority === "MEDIUM"
-                      ? "bg-yellow-500/10 border-yellow-500/30"
-                      : "bg-green-500/10 border-green-500/30"
-                }`}
-              >
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-bold mb-4">What Happens Next:</h3>
-                  <ul className="text-left space-y-2">
-                    {routingResult.nextSteps.map((step, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <CheckCircle className="text-green-400 mt-1 flex-shrink-0" size={16} />
-                        <span className="text-gray-300">{step}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium">
-                  <Phone size={16} className="mr-2" />
-                  Call Us: (850) 879-9172
-                </Button>
-                <Link href="/demo">
-                  <Button
-                    variant="outline"
-                    className="border-blue-500 text-blue-500 hover:bg-blue-500/10 bg-transparent"
-                  >
-                    Try Contractor Verification
-                  </Button>
-                </Link>
-              </div>
-            </motion.div>
-          </div>
-        </div>
+            <h2 className="text-2xl font-bold text-white mb-4">We've Got You!</h2>
+            <p className="text-slate-300 mb-6">
+              {formData.urgency === "high"
+                ? "Our emergency team will call you within 15 minutes. Keep your phone nearby!"
+                : formData.urgency === "medium"
+                  ? "We'll contact you within 24 hours to schedule your inspection."
+                  : "Check your email for your free roof report within 2 hours."}
+            </p>
+            <div className="space-y-2 text-sm text-slate-400">
+              <p>Reference ID: HL-{Date.now().toString().slice(-6)}</p>
+              <p>Questions? Call (850) 879-9172</p>
+            </div>
+            <Link href="/" className="mt-6 inline-block">
+              <Button className="bg-yellow-400 hover:bg-yellow-500 text-black">Return Home</Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#050714] to-[#0a1128] text-white">
-      <div className="container mx-auto px-4 py-8">
-        <header className="flex justify-between items-center mb-8">
-          <div className="flex items-center">
-            <Link href="/" className="mr-4">
-              <Button variant="ghost" size="sm" className="text-white">
-                <ArrowLeft size={16} className="mr-2" />
-                Back
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+      {/* Header */}
+      <header className="border-b border-slate-700 bg-slate-900/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
+                <span className="text-black font-bold text-sm">R</span>
+              </div>
+              <span className="text-xl font-bold text-white">
+                <span className="text-yellow-400">Roof</span>Fax
+              </span>
+            </Link>
+            <Link href="/">
+              <Button variant="ghost" className="text-white hover:text-yellow-400">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Home
               </Button>
             </Link>
-            <div className="flex items-center">
-              <div className="bg-yellow-500 rounded-full w-10 h-10 flex items-center justify-center mr-2">
-                <span className="text-black font-bold text-xl">R</span>
-              </div>
-              <span className="text-xl font-bold">
-                Roof<span className="text-yellow-500">Fax</span>
-              </span>
-            </div>
           </div>
-        </header>
+        </div>
+      </header>
 
+      <div className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto">
+          {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-4">Get Your Roof Protection Plan</h1>
-            <p className="text-gray-300">
-              Quick assessment to protect your home and connect you with the right solution
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
+                <AlertTriangle className="w-8 h-8 text-white" />
+              </div>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">Emergency Roof Help</h1>
+            <p className="text-lg text-slate-300">
+              Get immediate assistance for storm damage, leaks, or roofing emergencies
             </p>
           </div>
 
-          {/* Progress Bar */}
-          <div className="mb-8">
-            <div className="flex justify-between text-sm text-gray-400 mb-2">
-              <span>
-                Step {currentStep} of {totalSteps}
-              </span>
-              <span>{Math.round(progress)}% Complete</span>
-            </div>
-            <Progress value={progress} className="h-2" />
-          </div>
+          {/* Urgency Alert */}
+          <Alert className="mb-8 border-red-500 bg-red-500/10">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="text-red-300">
+              <strong>Emergency?</strong> If you have active leaks or dangerous conditions, call us immediately at{" "}
+              <a href="tel:8508799172" className="text-yellow-400 font-semibold">
+                (850) 879-9172
+              </a>
+            </AlertDescription>
+          </Alert>
 
-          {errors.submit && (
-            <Alert className="mb-6 border-red-500/30 bg-red-500/10">
-              <AlertTriangle className="h-4 w-4 text-red-400" />
-              <AlertDescription className="text-red-400">{errors.submit}</AlertDescription>
-            </Alert>
-          )}
+          {/* Form */}
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white">Tell Us About Your Situation</CardTitle>
+              <CardDescription className="text-slate-400">
+                The more details you provide, the faster we can help you
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Contact Information */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName" className="text-white">
+                      Full Name *
+                    </Label>
+                    <Input
+                      id="fullName"
+                      required
+                      value={formData.fullName}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, fullName: e.target.value }))}
+                      className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="Your full name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-white">
+                      Phone Number *
+                    </Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      required
+                      value={formData.phone}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
+                      className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="(850) 555-0123"
+                    />
+                  </div>
+                </div>
 
-          <Card className="bg-black/40 border border-gray-800 backdrop-blur-sm">
-            <CardContent className="p-8">
-              <AnimatePresence mode="wait">
-                {/* Step 1: Contact Info */}
-                {currentStep === 1 && (
-                  <motion.div
-                    key="step1"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
-                  >
-                    <h2 className="text-xl font-bold mb-4">Contact Information</h2>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-white">
+                      Email Address *
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                      className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="address" className="text-white">
+                      Property Address *
+                    </Label>
+                    <Input
+                      id="address"
+                      required
+                      value={formData.address}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
+                      className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="123 Main St, City, FL 32501"
+                    />
+                  </div>
+                </div>
 
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Full Name *</label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                        <Input
-                          type="text"
-                          placeholder="John Doe"
-                          className={`pl-10 bg-gray-900 border-gray-700 text-white ${errors.fullName ? "border-red-500" : ""}`}
-                          value={formData.fullName}
-                          onChange={(e) => updateFormData("fullName", e.target.value)}
+                {/* Urgency Level */}
+                <div className="space-y-3">
+                  <Label className="text-white">How urgent is your situation? *</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {[
+                      {
+                        value: "high",
+                        label: "🚨 EMERGENCY",
+                        desc: "Active leaks, dangerous conditions",
+                        color: "border-red-500 bg-red-500/10",
+                      },
+                      {
+                        value: "medium",
+                        label: "⚡ URGENT",
+                        desc: "Recent storm damage, needs inspection",
+                        color: "border-yellow-500 bg-yellow-500/10",
+                      },
+                      {
+                        value: "low",
+                        label: "📊 STANDARD",
+                        desc: "General assessment, no immediate danger",
+                        color: "border-green-500 bg-green-500/10",
+                      },
+                    ].map((option) => (
+                      <label
+                        key={option.value}
+                        className={`cursor-pointer border-2 rounded-lg p-4 transition-all ${
+                          formData.urgency === option.value ? option.color : "border-slate-600 bg-slate-700/30"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="urgency"
+                          value={option.value}
+                          checked={formData.urgency === option.value}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, urgency: e.target.value }))}
+                          className="sr-only"
                         />
-                      </div>
-                      {errors.fullName && <p className="text-red-400 text-sm mt-1">{errors.fullName}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Phone Number *</label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                        <Input
-                          type="tel"
-                          placeholder="(555) 123-4567"
-                          className={`pl-10 bg-gray-900 border-gray-700 text-white ${errors.phone ? "border-red-500" : ""}`}
-                          value={formData.phone}
-                          onChange={(e) => updateFormData("phone", formatPhoneNumber(e.target.value))}
-                          maxLength={14}
-                        />
-                      </div>
-                      {errors.phone && <p className="text-red-400 text-sm mt-1">{errors.phone}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Email Address *</label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                        <Input
-                          type="email"
-                          placeholder="john@example.com"
-                          className={`pl-10 bg-gray-900 border-gray-700 text-white ${errors.email ? "border-red-500" : ""}`}
-                          value={formData.email}
-                          onChange={(e) => updateFormData("email", e.target.value)}
-                        />
-                      </div>
-                      {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Property Address *</label>
-                      <div className="relative">
-                        <Home className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                        <Input
-                          type="text"
-                          placeholder="123 Main Street, City, State, ZIP"
-                          className={`pl-10 bg-gray-900 border-gray-700 text-white ${errors.address ? "border-red-500" : ""}`}
-                          value={formData.address}
-                          onChange={(e) => updateFormData("address", e.target.value)}
-                        />
-                      </div>
-                      {errors.address && <p className="text-red-400 text-sm mt-1">{errors.address}</p>}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Step 2: Roof Status */}
-                {currentStep === 2 && (
-                  <motion.div
-                    key="step2"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
-                  >
-                    <h2 className="text-xl font-bold mb-4">Roof Status & Urgency</h2>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-3">Is there current damage to your roof? *</label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {["yes", "no"].map((option) => (
-                          <Button
-                            key={option}
-                            type="button"
-                            variant={formData.hasDamage === option ? "default" : "outline"}
-                            className={`${formData.hasDamage === option ? "bg-yellow-500 text-black" : "border-gray-600 text-white bg-transparent"}`}
-                            onClick={() => updateFormData("hasDamage", option)}
-                          >
-                            {option === "yes" ? "Yes, there's damage" : "No visible damage"}
-                          </Button>
-                        ))}
-                      </div>
-                      {errors.hasDamage && <p className="text-red-400 text-sm mt-1">{errors.hasDamage}</p>}
-                    </div>
-
-                    {formData.hasDamage === "yes" && (
-                      <>
-                        <div>
-                          <label className="block text-sm font-medium mb-3">
-                            What type of damage? (Select all that apply) *
-                          </label>
-                          <div className="grid grid-cols-2 gap-3">
-                            {["Leak", "Missing Shingles", "Storm Damage", "Other"].map((type) => (
-                              <Button
-                                key={type}
-                                type="button"
-                                variant={formData.damageType.includes(type) ? "default" : "outline"}
-                                className={`${formData.damageType.includes(type) ? "bg-yellow-500 text-black" : "border-gray-600 text-white bg-transparent"}`}
-                                onClick={() => toggleArrayValue("damageType", type)}
-                              >
-                                {type}
-                              </Button>
-                            ))}
-                          </div>
-                          {errors.damageType && <p className="text-red-400 text-sm mt-1">{errors.damageType}</p>}
+                        <div className="text-center">
+                          <div className="font-semibold text-white mb-1">{option.label}</div>
+                          <div className="text-xs text-slate-300">{option.desc}</div>
                         </div>
-
-                        <div>
-                          <label className="block text-sm font-medium mb-3">How urgent is this issue? *</label>
-                          <div className="space-y-2">
-                            {[
-                              { value: "immediate", label: "🚨 Immediate - Need help now", color: "bg-red-500" },
-                              { value: "week", label: "⚡ Within 1 Week", color: "bg-yellow-500" },
-                              { value: "month", label: "📅 Within 1 Month", color: "bg-green-500" },
-                            ].map((option) => (
-                              <Button
-                                key={option.value}
-                                type="button"
-                                variant={formData.urgency === option.value ? "default" : "outline"}
-                                className={`w-full justify-start ${formData.urgency === option.value ? `${option.color} text-black` : "border-gray-600 text-white bg-transparent"}`}
-                                onClick={() => updateFormData("urgency", option.value)}
-                              >
-                                {option.label}
-                              </Button>
-                            ))}
-                          </div>
-                          {errors.urgency && <p className="text-red-400 text-sm mt-1">{errors.urgency}</p>}
-                        </div>
-                      </>
-                    )}
-                  </motion.div>
-                )}
-
-                {/* Step 3: Insurance/Work */}
-                {currentStep === 3 && (
-                  <motion.div
-                    key="step3"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
-                  >
-                    <h2 className="text-xl font-bold mb-4">Insurance & Previous Work</h2>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-3">Is your roof covered by insurance? *</label>
-                      <div className="grid grid-cols-3 gap-3">
-                        {[
-                          { value: "yes", label: "Yes" },
-                          { value: "no", label: "No" },
-                          { value: "unsure", label: "Not Sure" },
-                        ].map((option) => (
-                          <Button
-                            key={option.value}
-                            type="button"
-                            variant={formData.hasInsurance === option.value ? "default" : "outline"}
-                            className={`${formData.hasInsurance === option.value ? "bg-yellow-500 text-black" : "border-gray-600 text-white bg-transparent"}`}
-                            onClick={() => updateFormData("hasInsurance", option.value)}
-                          >
-                            {option.label}
-                          </Button>
-                        ))}
-                      </div>
-                      {errors.hasInsurance && <p className="text-red-400 text-sm mt-1">{errors.hasInsurance}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-3">
-                        Have you had a roofer inspect it already? *
                       </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {["yes", "no"].map((option) => (
-                          <Button
-                            key={option}
-                            type="button"
-                            variant={formData.hadInspection === option ? "default" : "outline"}
-                            className={`${formData.hadInspection === option ? "bg-yellow-500 text-black" : "border-gray-600 text-white bg-transparent"}`}
-                            onClick={() => updateFormData("hadInspection", option)}
-                          >
-                            {option === "yes" ? "Yes" : "No"}
-                          </Button>
-                        ))}
-                      </div>
-                      {errors.hadInspection && <p className="text-red-400 text-sm mt-1">{errors.hadInspection}</p>}
-                    </div>
+                    ))}
+                  </div>
+                </div>
 
-                    {formData.hadInspection === "yes" && (
-                      <div>
-                        <label className="block text-sm font-medium mb-2">What type of work was suggested?</label>
-                        <textarea
-                          placeholder="Describe what the roofer recommended..."
-                          className="w-full p-3 bg-gray-900 border border-gray-700 rounded-md text-white resize-none"
-                          rows={3}
-                          value={formData.suggestedWork}
-                          onChange={(e) => updateFormData("suggestedWork", e.target.value)}
+                {/* Services Interested In */}
+                <div className="space-y-3">
+                  <Label className="text-white">What services do you need? (Select all that apply)</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {services.map((service) => (
+                      <div key={service} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={service}
+                          checked={formData.interestedIn.includes(service)}
+                          onCheckedChange={(checked) => handleServiceChange(service, checked as boolean)}
+                          className="border-slate-600 data-[state=checked]:bg-yellow-400 data-[state=checked]:border-yellow-400"
                         />
+                        <Label htmlFor={service} className="text-slate-300 text-sm cursor-pointer">
+                          {service}
+                        </Label>
                       </div>
-                    )}
-                  </motion.div>
-                )}
+                    ))}
+                  </div>
+                </div>
 
-                {/* Step 4: Preferences */}
-                {currentStep === 4 && (
-                  <motion.div
-                    key="step4"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
-                  >
-                    <h2 className="text-xl font-bold mb-4">Contact Preferences</h2>
+                {/* Damage Description */}
+                <div className="space-y-2">
+                  <Label htmlFor="damageDescription" className="text-white">
+                    Describe the damage or issue (Optional)
+                  </Label>
+                  <Textarea
+                    id="damageDescription"
+                    value={formData.damageDescription}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, damageDescription: e.target.value }))}
+                    className="bg-slate-700 border-slate-600 text-white min-h-[100px]"
+                    placeholder="Tell us about any visible damage, leaks, missing shingles, etc."
+                  />
+                </div>
 
-                    <div>
-                      <label className="block text-sm font-medium mb-3">Preferred method of contact? *</label>
-                      <div className="grid grid-cols-3 gap-3">
-                        {[
-                          { value: "phone", label: "📞 Phone" },
-                          { value: "email", label: "📧 Email" },
-                          { value: "text", label: "💬 Text" },
-                        ].map((option) => (
-                          <Button
-                            key={option.value}
-                            type="button"
-                            variant={formData.contactMethod === option.value ? "default" : "outline"}
-                            className={`${formData.contactMethod === option.value ? "bg-yellow-500 text-black" : "border-gray-600 text-white bg-transparent"}`}
-                            onClick={() => updateFormData("contactMethod", option.value)}
-                          >
-                            {option.label}
-                          </Button>
-                        ))}
-                      </div>
-                      {errors.contactMethod && <p className="text-red-400 text-sm mt-1">{errors.contactMethod}</p>}
-                    </div>
+                {/* Additional Questions */}
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="insuranceClaim"
+                      checked={formData.insuranceClaim}
+                      onCheckedChange={(checked) =>
+                        setFormData((prev) => ({ ...prev, insuranceClaim: checked as boolean }))
+                      }
+                      className="border-slate-600 data-[state=checked]:bg-yellow-400 data-[state=checked]:border-yellow-400"
+                    />
+                    <Label htmlFor="insuranceClaim" className="text-slate-300">
+                      I need help filing an insurance claim
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="contractorContact"
+                      checked={formData.contractorContact}
+                      onCheckedChange={(checked) =>
+                        setFormData((prev) => ({ ...prev, contractorContact: checked as boolean }))
+                      }
+                      className="border-slate-600 data-[state=checked]:bg-yellow-400 data-[state=checked]:border-yellow-400"
+                    />
+                    <Label htmlFor="contractorContact" className="text-slate-300">
+                      A contractor has already contacted me about this damage
+                    </Label>
+                  </div>
+                </div>
 
-                    <div>
-                      <label className="block text-sm font-medium mb-3">Best time to contact you? *</label>
-                      <div className="grid grid-cols-3 gap-3">
-                        {[
-                          { value: "morning", label: "🌅 Morning" },
-                          { value: "afternoon", label: "☀️ Afternoon" },
-                          { value: "evening", label: "🌙 Evening" },
-                        ].map((option) => (
-                          <Button
-                            key={option.value}
-                            type="button"
-                            variant={formData.bestTime === option.value ? "default" : "outline"}
-                            className={`${formData.bestTime === option.value ? "bg-yellow-500 text-black" : "border-gray-600 text-white bg-transparent"}`}
-                            onClick={() => updateFormData("bestTime", option.value)}
-                          >
-                            {option.label}
-                          </Button>
-                        ))}
-                      </div>
-                      {errors.bestTime && <p className="text-red-400 text-sm mt-1">{errors.bestTime}</p>}
-                    </div>
+                {/* Response Time Indicator */}
+                <div className="bg-slate-700/50 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Clock className="w-5 h-5 text-yellow-400" />
+                    <span className="font-semibold text-white">Expected Response Time:</span>
+                  </div>
+                  <div className="text-slate-300 text-sm">
+                    {formData.urgency === "high" && "🚨 Emergency: We'll call within 15 minutes"}
+                    {formData.urgency === "medium" && "⚡ Urgent: We'll contact you within 24 hours"}
+                    {formData.urgency === "low" && "📊 Standard: Free report within 2 hours, call within 48 hours"}
+                  </div>
+                </div>
 
-                    <div>
-                      <label className="block text-sm font-medium mb-3">
-                        What are you most interested in? (Select all that apply) *
-                      </label>
-                      <div className="space-y-2">
-                        {[
-                          { value: "immediate_call", label: "🚨 Immediate call from RoofFax team" },
-                          { value: "inspection", label: "🔍 Schedule a professional roof inspection" },
-                          { value: "ai_report", label: "📊 Download a free AI roof report" },
-                          { value: "contractor_verification", label: "✅ Verify contractors at my door" },
-                        ].map((option) => (
-                          <Button
-                            key={option.value}
-                            type="button"
-                            variant={formData.interestedIn.includes(option.value) ? "default" : "outline"}
-                            className={`w-full justify-start ${formData.interestedIn.includes(option.value) ? "bg-yellow-500 text-black" : "border-gray-600 text-white bg-transparent"}`}
-                            onClick={() => toggleArrayValue("interestedIn", option.value)}
-                          >
-                            {option.label}
-                          </Button>
-                        ))}
-                      </div>
-                      {errors.interestedIn && <p className="text-red-400 text-sm mt-1">{errors.interestedIn}</p>}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Step 5: Additional Details */}
-                {currentStep === 5 && (
-                  <motion.div
-                    key="step5"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
-                  >
-                    <h2 className="text-xl font-bold mb-4">Additional Information</h2>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Any other concerns or info we should know? (Optional)
-                      </label>
-                      <textarea
-                        placeholder="Tell us about any specific concerns, previous experiences with contractors, or anything else that would help us serve you better..."
-                        className="w-full p-3 bg-gray-900 border border-gray-700 rounded-md text-white resize-none"
-                        rows={4}
-                        value={formData.additionalConcerns}
-                        onChange={(e) => updateFormData("additionalConcerns", e.target.value)}
-                      />
-                    </div>
-
-                    <div className="bg-blue-900/20 border border-blue-800 rounded-md p-4">
-                      <h4 className="font-semibold text-blue-400 mb-2">📋 Review Your Information</h4>
-                      <div className="text-sm text-gray-300 space-y-1">
-                        <p>
-                          <strong>Name:</strong> {formData.fullName}
-                        </p>
-                        <p>
-                          <strong>Contact:</strong> {formData.phone} • {formData.email}
-                        </p>
-                        <p>
-                          <strong>Address:</strong> {formData.address}
-                        </p>
-                        <p>
-                          <strong>Damage:</strong>{" "}
-                          {formData.hasDamage === "yes"
-                            ? `Yes (${formData.damageType.join(", ")})`
-                            : "No visible damage"}
-                        </p>
-                        {formData.hasDamage === "yes" && (
-                          <p>
-                            <strong>Urgency:</strong> {formData.urgency}
-                          </p>
-                        )}
-                        <p>
-                          <strong>Interested in:</strong> {formData.interestedIn.join(", ")}
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Navigation Buttons */}
-              <div className="flex justify-between mt-8">
+                {/* Submit Button */}
                 <Button
-                  type="button"
-                  variant="outline"
-                  className="border-gray-600 text-white bg-transparent"
-                  onClick={handleBack}
-                  disabled={currentStep === 1}
-                >
-                  <ArrowLeft size={16} className="mr-2" />
-                  Back
-                </Button>
-
-                <Button
-                  type="button"
-                  className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium"
-                  onClick={handleNext}
+                  type="submit"
                   disabled={isSubmitting}
+                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-3 text-lg"
                 >
-                  {isSubmitting ? "Submitting..." : currentStep === totalSteps ? "Submit Application" : "Next"}
-                  {!isSubmitting && currentStep < totalSteps && <ArrowRight size={16} className="ml-2" />}
+                  {isSubmitting
+                    ? "Submitting..."
+                    : formData.urgency === "high"
+                      ? "🚨 Get Emergency Help Now"
+                      : formData.urgency === "medium"
+                        ? "⚡ Request Urgent Assistance"
+                        : "📊 Get Free Assessment"}
                 </Button>
-              </div>
+
+                <p className="text-xs text-slate-400 text-center">
+                  By submitting this form, you agree to be contacted by RoofFax regarding your roofing needs. We respect
+                  your privacy and will never share your information.
+                </p>
+              </form>
             </CardContent>
           </Card>
+
+          {/* Emergency Contact */}
+          <div className="mt-8 text-center">
+            <Card className="bg-red-500/10 border-red-500/30">
+              <CardContent className="pt-6">
+                <h3 className="text-lg font-semibold text-white mb-2">Can't wait? Call us now!</h3>
+                <div className="flex items-center justify-center space-x-2 text-yellow-400 text-xl font-bold">
+                  <Phone className="w-5 h-5" />
+                  <a href="tel:8508799172">(850) 879-9172</a>
+                </div>
+                <p className="text-slate-300 text-sm mt-2">Available 24/7 for emergencies</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-700 bg-slate-900/50 backdrop-blur-sm mt-12">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center text-slate-400">
+            <p className="mb-2">Powered by RoofFax™ | All rights reserved © 2025</p>
+            <div className="flex justify-center space-x-6 text-sm">
+              <Link href="/terms" className="hover:text-yellow-400">
+                Terms of Service
+              </Link>
+              <Link href="/privacy" className="hover:text-yellow-400">
+                Privacy Policy
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

@@ -1,65 +1,34 @@
 "use client"
 
 import type React from "react"
+
 import { useState } from "react"
-import { ArrowLeft, Shield, CheckCircle, Phone, Mail, Home, User, AlertCircle } from "lucide-react"
+import { ArrowLeft, Shield, CheckCircle, Phone, FileText, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 
 export default function GetStartedPage() {
-  const router = useRouter()
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
     address: "",
-    agreeToTerms: false,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState("")
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [submitted, setSubmitted] = useState(false)
+  const [reportId, setReportId] = useState("")
 
-  const validateForm = () => {
-    const errors: Record<string, string> = {}
-
-    if (!formData.firstName.trim()) errors.firstName = "First name is required"
-    if (!formData.lastName.trim()) errors.lastName = "Last name is required"
-
-    if (!formData.email.trim()) {
-      errors.email = "Email is required"
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = "Please enter a valid email address"
-    }
-
-    if (!formData.phone.trim()) {
-      errors.phone = "Phone number is required"
-    } else if (formData.phone.replace(/\D/g, "").length < 10) {
-      errors.phone = "Please enter a valid phone number"
-    }
-
-    if (!formData.address.trim()) errors.address = "Property address is required"
-    if (!formData.agreeToTerms) errors.terms = "You must agree to the terms to continue"
-
-    setFieldErrors(errors)
-    return Object.keys(errors).length === 0
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
-
-    if (!validateForm()) {
-      setError("Please fix the errors below")
-      return
-    }
-
     setIsSubmitting(true)
 
     try {
@@ -71,102 +40,171 @@ export default function GetStartedPage() {
         body: JSON.stringify(formData),
       })
 
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || "Something went wrong")
+      if (response.ok) {
+        const result = await response.json()
+        setReportId(result.reportId)
+        setSubmitted(true)
       }
-
-      // Redirect to success page with report ID
-      router.push(`/success?reportId=${result.data.reportId}&email=${encodeURIComponent(formData.email)}`)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
-    } finally {
-      setIsSubmitting(false)
+    } catch (error) {
+      console.error("Submission error:", error)
     }
+
+    setIsSubmitting(false)
   }
 
-  const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-    // Clear field error when user starts typing
-    if (fieldErrors[field]) {
-      setFieldErrors((prev) => ({ ...prev, [field]: "" }))
-    }
-  }
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#050714] to-[#0a1128] text-white">
+        <div className="container mx-auto px-4 py-12">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center max-w-3xl mx-auto"
+          >
+            <div className="bg-green-500/20 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="text-green-400" size={40} />
+            </div>
+            <h1 className="text-4xl font-bold mb-4">Welcome to RoofFax Protection!</h1>
+            <p className="text-xl text-gray-300 mb-6">
+              Your account has been created and our AI is analyzing your property. A RoofFax representative will contact
+              you within 24 hours to verify your information and activate your full protection.
+            </p>
 
-  const formatPhoneNumber = (value: string) => {
-    const phoneNumber = value.replace(/\D/g, "")
-    const phoneNumberLength = phoneNumber.length
-    if (phoneNumberLength < 4) return phoneNumber
-    if (phoneNumberLength < 7) {
-      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`
-    }
-    return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`
+            <Card className="bg-black/40 border border-green-500/30 backdrop-blur-sm mb-8">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-center gap-4 mb-4">
+                  <FileText className="text-green-400" size={24} />
+                  <span className="font-bold">Account ID: {reportId}</span>
+                </div>
+                <div className="space-y-3 text-left">
+                  <h3 className="font-bold text-center mb-4">What Happens Next:</h3>
+                  <div className="flex items-start gap-3">
+                    <div className="bg-yellow-500 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-black font-bold text-sm">
+                      1
+                    </div>
+                    <p className="text-gray-300">Our team will call you within 24 hours to verify your information</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="bg-yellow-500 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-black font-bold text-sm">
+                      2
+                    </div>
+                    <p className="text-gray-300">
+                      We'll activate your full RoofFax protection and contractor verification tools
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="bg-yellow-500 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-black font-bold text-sm">
+                      3
+                    </div>
+                    <p className="text-gray-300">
+                      You'll receive your comprehensive roof report and ongoing protection
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+              <Button className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium">
+                <Phone size={20} className="mr-2" />
+                Call Us: (850) 879-9172
+              </Button>
+              <Link href="/">
+                <Button variant="outline" className="border-gray-500 text-gray-300 hover:bg-gray-500/10 bg-transparent">
+                  Return Home
+                </Button>
+              </Link>
+            </div>
+
+            <div className="text-sm text-gray-400">
+              <p>Questions? Email us at landongill@gmail.com</p>
+              <p className="mt-2">Keep your phone nearby - we'll be calling soon!</p>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#050714] to-[#0a1128] text-white">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <header className="flex justify-between items-center mb-8">
+      {/* Header */}
+      <header className="px-4 py-6 border-b border-gray-800">
+        <div className="container mx-auto flex justify-between items-center">
+          <Link href="/" className="flex items-center text-blue-400 hover:text-blue-300">
+            <ArrowLeft size={20} className="mr-2" />
+            Back to Home
+          </Link>
           <div className="flex items-center">
-            <Link href="/" className="mr-4">
-              <Button variant="ghost" size="sm" className="text-white">
-                <ArrowLeft size={16} className="mr-2" />
-                Back
-              </Button>
-            </Link>
-            <div className="flex items-center">
-              <div className="bg-yellow-500 rounded-full w-10 h-10 flex items-center justify-center mr-2">
-                <span className="text-black font-bold text-xl">R</span>
-              </div>
-              <span className="text-xl font-bold">
-                Roof<span className="text-yellow-500">Fax</span>
-              </span>
+            <div className="bg-yellow-500 rounded-full w-8 h-8 flex items-center justify-center mr-2">
+              <span className="text-black font-bold">R</span>
             </div>
+            <span className="text-lg font-bold">
+              Roof<span className="text-yellow-500">Fax</span> Report
+            </span>
           </div>
-        </header>
+          <Link href="tel:8508799172">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-yellow-500 text-yellow-500 hover:bg-yellow-500/10 bg-transparent"
+            >
+              <Phone size={16} className="mr-2" />
+              (850) 879-9172
+            </Button>
+          </Link>
+        </div>
+      </header>
 
-        <div className="max-w-2xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-8"
-          >
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">Get Your Free RoofFax Report</h1>
-            <p className="text-gray-300 mb-6">
-              Start your protection today. We'll handle everything from here—no upfront costs, just your deductible if
-              approved.
-            </p>
-            <div className="flex items-center justify-center gap-6 text-sm text-gray-400">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="text-green-400" size={16} />
-                <span>Free Satellite Report</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="text-green-400" size={16} />
-                <span>AI Damage Detection</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="text-green-400" size={16} />
-                <span>Insurance Claim Prep</span>
-              </div>
-            </div>
-          </motion.div>
+      <div className="container mx-auto px-4 py-12">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 mb-4">🏠 Free Roof Report</Badge>
+          <h1 className="text-4xl md:text-5xl font-bold mb-6">
+            Get Your Free
+            <br />
+            <span className="text-blue-400">RoofFax Report</span>
+          </h1>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            Like CarFax for your roof. Our AI analyzes satellite imagery, storm data, and property records to give you a
+            comprehensive roof condition report in 24 hours.
+          </p>
+        </div>
 
-          {error && (
-            <Alert className="mb-6 border-red-500/30 bg-red-500/10">
-              <AlertCircle className="h-4 w-4 text-red-400" />
-              <AlertDescription className="text-red-400">{error}</AlertDescription>
-            </Alert>
-          )}
+        {/* Benefits */}
+        <div className="grid md:grid-cols-3 gap-6 mb-12">
+          <Card className="bg-black/40 border border-gray-800 backdrop-blur-sm">
+            <CardContent className="p-6 text-center">
+              <Shield className="text-blue-400 mx-auto mb-4" size={32} />
+              <h3 className="font-bold mb-2">Storm Damage Detection</h3>
+              <p className="text-gray-400 text-sm">AI identifies hidden damage from recent storms and weather events</p>
+            </CardContent>
+          </Card>
 
           <Card className="bg-black/40 border border-gray-800 backdrop-blur-sm">
+            <CardContent className="p-6 text-center">
+              <FileText className="text-green-400 mx-auto mb-4" size={32} />
+              <h3 className="font-bold mb-2">Insurance Claim Prep</h3>
+              <p className="text-gray-400 text-sm">Documentation and evidence to support your insurance claims</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-black/40 border border-gray-800 backdrop-blur-sm">
+            <CardContent className="p-6 text-center">
+              <CheckCircle className="text-yellow-400 mx-auto mb-4" size={32} />
+              <h3 className="font-bold mb-2">Contractor Matching</h3>
+              <p className="text-gray-400 text-sm">Connect with vetted, licensed contractors in your area</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sign Up Form */}
+        <div className="max-w-2xl mx-auto">
+          <Card className="bg-black/40 border border-blue-500/30 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="text-yellow-500" size={24} />
-                Your Information
+              <CardTitle className="flex items-center gap-2 text-blue-400">
+                <FileText size={24} />
+                Get Your Free RoofFax Report
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
@@ -174,157 +212,166 @@ export default function GetStartedPage() {
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">First Name *</label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                      <Input
-                        type="text"
-                        placeholder="John"
-                        className={`pl-10 bg-gray-900 border-gray-700 text-white ${
-                          fieldErrors.firstName ? "border-red-500" : ""
-                        }`}
-                        value={formData.firstName}
-                        onChange={(e) => handleInputChange("firstName", e.target.value)}
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                    {fieldErrors.firstName && <p className="text-red-400 text-sm mt-1">{fieldErrors.firstName}</p>}
+                    <Input
+                      type="text"
+                      required
+                      className="bg-gray-900 border-gray-700 text-white"
+                      value={formData.firstName}
+                      onChange={(e) => handleInputChange("firstName", e.target.value)}
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Last Name *</label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                      <Input
-                        type="text"
-                        placeholder="Doe"
-                        className={`pl-10 bg-gray-900 border-gray-700 text-white ${
-                          fieldErrors.lastName ? "border-red-500" : ""
-                        }`}
-                        value={formData.lastName}
-                        onChange={(e) => handleInputChange("lastName", e.target.value)}
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                    {fieldErrors.lastName && <p className="text-red-400 text-sm mt-1">{fieldErrors.lastName}</p>}
+                    <Input
+                      type="text"
+                      required
+                      className="bg-gray-900 border-gray-700 text-white"
+                      value={formData.lastName}
+                      onChange={(e) => handleInputChange("lastName", e.target.value)}
+                    />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Email Address *</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Email Address *</label>
                     <Input
                       type="email"
-                      placeholder="john@example.com"
-                      className={`pl-10 bg-gray-900 border-gray-700 text-white ${
-                        fieldErrors.email ? "border-red-500" : ""
-                      }`}
+                      required
+                      className="bg-gray-900 border-gray-700 text-white"
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
-                      disabled={isSubmitting}
                     />
                   </div>
-                  {fieldErrors.email && <p className="text-red-400 text-sm mt-1">{fieldErrors.email}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">Phone Number *</label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Phone Number *</label>
                     <Input
                       type="tel"
-                      placeholder="(555) 123-4567"
-                      className={`pl-10 bg-gray-900 border-gray-700 text-white ${
-                        fieldErrors.phone ? "border-red-500" : ""
-                      }`}
+                      required
+                      className="bg-gray-900 border-gray-700 text-white"
                       value={formData.phone}
-                      onChange={(e) => {
-                        const formatted = formatPhoneNumber(e.target.value)
-                        handleInputChange("phone", formatted)
-                      }}
-                      disabled={isSubmitting}
-                      maxLength={14}
+                      onChange={(e) => handleInputChange("phone", e.target.value)}
                     />
                   </div>
-                  {fieldErrors.phone && <p className="text-red-400 text-sm mt-1">{fieldErrors.phone}</p>}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium mb-2">Property Address *</label>
-                  <div className="relative">
-                    <Home className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                    <Input
-                      type="text"
-                      placeholder="123 Main Street, City, State, ZIP"
-                      className={`pl-10 bg-gray-900 border-gray-700 text-white ${
-                        fieldErrors.address ? "border-red-500" : ""
-                      }`}
-                      value={formData.address}
-                      onChange={(e) => handleInputChange("address", e.target.value)}
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  {fieldErrors.address && <p className="text-red-400 text-sm mt-1">{fieldErrors.address}</p>}
-                </div>
-
-                <div className="flex items-start space-x-2">
-                  <Checkbox
-                    id="terms"
-                    checked={formData.agreeToTerms}
-                    onCheckedChange={(checked) => handleInputChange("agreeToTerms", checked as boolean)}
-                    className="mt-1"
-                    disabled={isSubmitting}
+                  <Input
+                    type="text"
+                    required
+                    placeholder="123 Main St, City, State, ZIP"
+                    className="bg-gray-900 border-gray-700 text-white"
+                    value={formData.address}
+                    onChange={(e) => handleInputChange("address", e.target.value)}
                   />
-                  <label htmlFor="terms" className="text-sm text-gray-300 leading-relaxed">
-                    I agree to the{" "}
-                    <Button variant="link" className="text-yellow-500 p-0 h-auto underline">
-                      terms of service
-                    </Button>{" "}
-                    and{" "}
-                    <Button variant="link" className="text-yellow-500 p-0 h-auto underline">
-                      privacy policy
-                    </Button>
-                    . I authorize RoofFax to coordinate my roofing project and handle insurance communications on my
-                    behalf. *
-                  </label>
                 </div>
-                {fieldErrors.terms && <p className="text-red-400 text-sm">{fieldErrors.terms}</p>}
 
                 <Button
                   type="submit"
-                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-medium py-3 text-lg"
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-4 text-lg"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Processing..." : "Get My Free RoofFax Report"}
+                  {isSubmitting ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                        className="mr-2"
+                      >
+                        <Clock size={20} />
+                      </motion.div>
+                      Creating Your Account...
+                    </>
+                  ) : (
+                    <>
+                      <FileText size={20} className="mr-2" />
+                      Get My Free RoofFax Report
+                    </>
+                  )}
                 </Button>
               </form>
 
-              <div className="mt-6 p-4 bg-green-900/20 border border-green-800 rounded-md">
-                <h4 className="font-semibold text-green-400 mb-2">What Happens Next?</h4>
-                <ul className="text-sm text-gray-300 space-y-1">
-                  <li>• We'll generate your satellite roof report within 24 hours</li>
-                  <li>• Our team will review for potential storm damage</li>
-                  <li>• If damage is found, we'll coordinate with you about how to handle next steps</li>
-                  <li>• We'll match you with the perfect licensed contractor</li>
-                  <li>• You relax while we handle everything</li>
-                </ul>
+              <div className="mt-6 text-center text-sm text-gray-400">
+                <p>✓ No upfront costs • ✓ 24-hour delivery • ✓ AI-powered analysis</p>
               </div>
             </CardContent>
           </Card>
 
-          <div className="text-center mt-8">
-            <p className="text-sm text-gray-400 mb-4">
-              Questions? Call us directly at{" "}
-              <Button variant="link" className="text-yellow-500 p-0 h-auto">
-                (850) 879-9172
-              </Button>
-            </p>
-            <p className="text-xs text-gray-500">
-              RoofFax is a consulting service. We coordinate with licensed contractors and assist with insurance claims.
-              No upfront costs—you're only responsible for your deductible if your claim is approved.
-            </p>
-          </div>
+          {/* What You'll Receive */}
+          <Card className="bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/30 backdrop-blur-sm mt-8">
+            <CardContent className="p-8">
+              <h3 className="text-2xl font-bold text-center mb-6">What You'll Receive</h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="text-green-400 mt-1 flex-shrink-0" size={20} />
+                    <div>
+                      <h4 className="font-bold">Roof Condition Assessment</h4>
+                      <p className="text-gray-400 text-sm">Current condition, age estimates, and material analysis</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="text-green-400 mt-1 flex-shrink-0" size={20} />
+                    <div>
+                      <h4 className="font-bold">Storm Damage Analysis</h4>
+                      <p className="text-gray-400 text-sm">Historical weather impact and potential damage areas</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="text-green-400 mt-1 flex-shrink-0" size={20} />
+                    <div>
+                      <h4 className="font-bold">Insurance Claim Support</h4>
+                      <p className="text-gray-400 text-sm">Documentation and evidence for potential claims</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="text-green-400 mt-1 flex-shrink-0" size={20} />
+                    <div>
+                      <h4 className="font-bold">Maintenance Recommendations</h4>
+                      <p className="text-gray-400 text-sm">Preventive care schedule and priority repairs</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="text-green-400 mt-1 flex-shrink-0" size={20} />
+                    <div>
+                      <h4 className="font-bold">Vetted Contractor List</h4>
+                      <p className="text-gray-400 text-sm">
+                        Licensed professionals in your area with verified track records
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="text-green-400 mt-1 flex-shrink-0" size={20} />
+                    <div>
+                      <h4 className="font-bold">Cost Estimates</h4>
+                      <p className="text-gray-400 text-sm">Fair market pricing for any recommended work</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="mt-16 py-8 border-t border-gray-800">
+        <div className="container mx-auto px-4 text-center text-gray-400">
+          <p>Powered by RoofFax™ | All rights reserved © 2025</p>
+          <div className="flex justify-center space-x-4 mt-2">
+            <Link href="/terms" className="hover:text-yellow-500 transition-colors">
+              Terms of Service
+            </Link>
+            <span>|</span>
+            <Link href="/privacy" className="hover:text-yellow-500 transition-colors">
+              Privacy Policy
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

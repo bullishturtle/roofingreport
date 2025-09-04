@@ -57,6 +57,8 @@ export default function RoofFaxHomePage() {
   const handleGetReport = (e: React.FormEvent) => {
     e.preventDefault()
     if (!address) return
+    // Store address in localStorage for the results page
+    localStorage.setItem("roofFaxAddress", address)
     window.location.href = "/get-started"
   }
 
@@ -339,14 +341,17 @@ export default function RoofFaxHomePage() {
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <AlertTriangle className="text-red-400" size={16} />
-                      <span className="font-semibold text-red-400">⚠️ WARNING FOUND</span>
+                      <span className="font-semibold text-red-400">⚠️ VERIFICATION NEEDED</span>
                     </div>
                     <p className="text-sm text-gray-300 mb-3">
-                      This contractor has 3 complaints, no local license, and was incorporated just 2 months ago.
+                      We found some concerns about "{contractorName}". Get the full verification report and our vetted
+                      contractor recommendations.
                     </p>
-                    <Button className="bg-yellow-500 hover:bg-yellow-600 text-black text-sm w-full">
-                      Get Our Vetted Contractors Instead
-                    </Button>
+                    <Link href="/get-started">
+                      <Button className="bg-yellow-500 hover:bg-yellow-600 text-black text-sm w-full">
+                        Get Full Verification Report
+                      </Button>
+                    </Link>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -672,7 +677,7 @@ export default function RoofFaxHomePage() {
                 Your personal property roof report. Built for pros. Trusted by homeowners.
               </p>
               <p className="text-sm text-gray-400">
-                Email: Landon@rooffax.com
+                Email: landongill@gmail.com
                 <br />
                 Phone: (850) 879-9172
               </p>

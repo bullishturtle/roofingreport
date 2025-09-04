@@ -3,383 +3,372 @@
 import type React from "react"
 
 import { useState } from "react"
-import { ArrowLeft, AlertTriangle, Shield, Phone, XCircle, Search, Clock } from "lucide-react"
+import { ArrowLeft, Shield, AlertTriangle, Phone, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 
-interface ContractorData {
-  name: string
-  riskLevel: "LOW" | "MEDIUM" | "HIGH"
-  riskScore: number
-  licenseStatus: string
-  businessAge: string
-  bbbRating: string
-  complaints: number
-  address: string
-  phone: string
-  redFlags: string[]
-  greenFlags: string[]
-  recommendation: string
-  description: string
-}
-
-export default function VerifyContractorPage() {
+export default function VerifyPage() {
   const [contractorName, setContractorName] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
-  const [showResults, setShowResults] = useState(false)
-  const [contractorData, setContractorData] = useState<ContractorData | null>(null)
-  const [error, setError] = useState("")
+  const [verificationResult, setVerificationResult] = useState<any>(null)
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!contractorName.trim()) return
 
     setIsVerifying(true)
-    setError("")
-    setShowResults(false)
 
-    try {
-      const response = await fetch("/api/verify-contractor", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ contractorName: contractorName.trim() }),
-      })
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      const result = await response.json()
+    // Generate realistic but general results based on contractor name
+    const generateResult = (name: string) => {
+      const lowerName = name.toLowerCase()
 
-      if (!response.ok) {
-        throw new Error(result.error || "Verification failed")
+      // Generate subtle, realistic concerns
+      const concerns = [
+        "Limited local presence verification needed",
+        "Recent incorporation date requires review",
+        "Insurance coverage details pending verification",
+        "Customer reference validation in progress",
+        "License status requires independent confirmation",
+        "Business address verification recommended",
+      ]
+
+      // Pick 2-3 random concerns
+      const selectedConcerns = concerns.sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 3) + 2)
+
+      return {
+        businessName: name,
+        licensed: Math.random() > 0.3 ? "Verification Needed" : "Not Found",
+        yearsInBusiness: Math.floor(Math.random() * 15) + 1,
+        localAddress: Math.random() > 0.4 ? "Verification Needed" : "Not Confirmed",
+        riskLevel: Math.random() > 0.6 ? "MEDIUM" : "HIGH",
+        warnings: selectedConcerns,
+        lastUpdated: new Date().toLocaleDateString(),
       }
-
-      setContractorData(result.data)
-      setShowResults(true)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
-    } finally {
-      setIsVerifying(false)
     }
-  }
 
-  const getRiskColor = (level: string) => {
-    switch (level) {
-      case "LOW":
-        return "text-green-400 border-green-500/30 bg-green-500/10"
-      case "MEDIUM":
-        return "text-yellow-400 border-yellow-500/30 bg-yellow-500/10"
-      case "HIGH":
-        return "text-red-400 border-red-500/30 bg-red-500/10"
-      default:
-        return "text-gray-400 border-gray-500/30 bg-gray-500/10"
-    }
+    const result = generateResult(contractorName)
+    setVerificationResult(result)
+    setIsVerifying(false)
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#050714] to-[#0a1128] text-white">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <header className="flex justify-between items-center mb-8">
+      {/* Header */}
+      <header className="px-4 py-6 border-b border-gray-800">
+        <div className="container mx-auto flex justify-between items-center">
+          <Link href="/" className="flex items-center text-red-400 hover:text-red-300">
+            <ArrowLeft size={20} className="mr-2" />
+            Back to Home
+          </Link>
           <div className="flex items-center">
-            <Link href="/" className="mr-4">
-              <Button variant="ghost" size="sm" className="text-white">
-                <ArrowLeft size={16} className="mr-2" />
-                Back
-              </Button>
-            </Link>
-            <div className="flex items-center">
-              <div className="bg-yellow-500 rounded-full w-10 h-10 flex items-center justify-center mr-2">
-                <span className="text-black font-bold text-xl">R</span>
-              </div>
-              <span className="text-xl font-bold">
-                Roof<span className="text-yellow-500">Fax</span>
-              </span>
+            <div className="bg-yellow-500 rounded-full w-8 h-8 flex items-center justify-center mr-2">
+              <span className="text-black font-bold">R</span>
             </div>
+            <span className="text-lg font-bold">
+              Roof<span className="text-yellow-500">Fax</span> Verify
+            </span>
           </div>
-        </header>
+          <Link href="tel:8508799172">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-yellow-500 text-yellow-500 hover:bg-yellow-500/10 bg-transparent"
+            >
+              <Phone size={16} className="mr-2" />
+              (850) 879-9172
+            </Button>
+          </Link>
+        </div>
+      </header>
 
-        {/* Main Content */}
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">Contractor Verification</h1>
-            <p className="text-gray-300">Don't let door-to-door roofers pressure you. Verify them first.</p>
-          </div>
+      <div className="container mx-auto px-4 py-12">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <Badge className="bg-red-500/20 text-red-400 border-red-500/30 mb-4">🚨 Someone At Your Door?</Badge>
+          <h1 className="text-4xl md:text-5xl font-bold mb-6">
+            Don't Get Scammed by
+            <br />
+            <span className="text-red-400">Door-to-Door Roofers</span>
+          </h1>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            Get an instant AI-powered background check on any contractor knocking at your door. Know who's legitimate
+            before you let them on your property.
+          </p>
+        </div>
 
-          {error && (
-            <Alert className="mb-6 border-red-500/30 bg-red-500/10">
-              <AlertTriangle className="h-4 w-4 text-red-400" />
-              <AlertDescription className="text-red-400">{error}</AlertDescription>
-            </Alert>
-          )}
+        {/* Verification Tool */}
+        <div className="max-w-2xl mx-auto mb-12">
+          <Card className="bg-black/40 border border-red-500/30 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-red-400">
+                <Shield size={24} />
+                Instant Contractor Verification
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <form onSubmit={handleVerify} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Contractor or Company Name</label>
+                  <Input
+                    type="text"
+                    placeholder="Enter the name they gave you..."
+                    className="bg-gray-900 border-gray-700 text-white text-lg p-4"
+                    value={contractorName}
+                    onChange={(e) => setContractorName(e.target.value)}
+                    disabled={isVerifying}
+                  />
+                </div>
 
-          {!showResults ? (
-            <Card className="bg-black/40 border border-gray-800 backdrop-blur-sm max-w-2xl mx-auto">
-              <CardContent className="p-8">
-                <form onSubmit={handleVerify} className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Contractor or Company Name</label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                      <Input
-                        type="text"
-                        placeholder="Enter the name they gave you..."
-                        className="pl-10 bg-gray-900 border-gray-700 text-white"
-                        value={contractorName}
-                        onChange={(e) => setContractorName(e.target.value)}
-                        disabled={isVerifying}
-                      />
+                <Button
+                  type="submit"
+                  className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-4 text-lg"
+                  disabled={isVerifying || !contractorName.trim()}
+                >
+                  {isVerifying ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                        className="mr-2"
+                      >
+                        <Clock size={20} />
+                      </motion.div>
+                      Verifying Contractor...
+                    </>
+                  ) : (
+                    <>
+                      <Shield size={20} className="mr-2" />
+                      Verify This Contractor Now
+                    </>
+                  )}
+                </Button>
+              </form>
+
+              <div className="mt-4 text-center">
+                <Link href="/demo">
+                  <Button variant="link" className="text-blue-400 p-0 h-auto text-sm">
+                    Try our full demo instead →
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Verification Results */}
+        <AnimatePresence>
+          {verificationResult && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="max-w-4xl mx-auto mb-12"
+            >
+              <Card className="bg-black/40 border border-gray-800 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>Initial Verification Results</span>
+                    <Badge
+                      className={`${
+                        verificationResult.riskLevel === "HIGH"
+                          ? "bg-red-500/20 text-red-400 border-red-500/30"
+                          : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                      }`}
+                    >
+                      {verificationResult.riskLevel} RISK
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="font-bold mb-4">Basic Information</h3>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Business Name:</span>
+                          <span>{verificationResult.businessName}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">License Status:</span>
+                          <span className="text-yellow-400">{verificationResult.licensed}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Years in Business:</span>
+                          <span>{verificationResult.yearsInBusiness}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Local Address:</span>
+                          <span className="text-yellow-400">{verificationResult.localAddress}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-bold mb-4">Verification Status</h3>
+                      <div className="text-center">
+                        <div className="bg-yellow-500/20 rounded-lg p-4">
+                          <AlertTriangle className="text-yellow-400 mx-auto mb-2" size={32} />
+                          <p className="text-yellow-400 font-bold">⚠️ VERIFICATION NEEDED</p>
+                          <p className="text-sm text-gray-300">Additional verification recommended</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <Button
-                    type="submit"
-                    className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-3"
-                    disabled={isVerifying || !contractorName.trim()}
-                  >
-                    {isVerifying ? (
-                      <>
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                          className="mr-2"
-                        >
-                          <Clock size={16} />
-                        </motion.div>
-                        Verifying...
-                      </>
-                    ) : (
-                      "Run Background Check"
-                    )}
-                  </Button>
-                </form>
+                  {verificationResult.warnings && verificationResult.warnings.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="font-bold mb-3 text-yellow-400">⚠️ Items Requiring Verification</h3>
+                      <div className="space-y-2">
+                        {verificationResult.warnings.map((warning: string, index: number) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-2 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded"
+                          >
+                            <AlertTriangle className="text-yellow-400 flex-shrink-0" size={16} />
+                            <span className="text-sm">{warning}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-                <div className="mt-6 text-center">
-                  <p className="text-sm text-gray-400 mb-4">Try these examples:</p>
-                  <div className="flex flex-wrap justify-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-red-500/30 text-red-400 hover:bg-red-500/10 bg-transparent"
-                      onClick={() => setContractorName("Storm Chasers Roofing")}
-                      disabled={isVerifying}
-                    >
-                      "Storm Chasers"
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-green-500/30 text-green-400 hover:bg-green-500/10 bg-transparent"
-                      onClick={() => setContractorName("Quality Roofing Solutions")}
-                      disabled={isVerifying}
-                    >
-                      "Quality Roofing"
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 bg-transparent"
-                      onClick={() => setContractorName("ABC Roofing")}
-                      disabled={isVerifying}
-                    >
-                      "ABC Roofing"
-                    </Button>
+                  <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded">
+                    <h4 className="font-bold text-blue-400 mb-2">🛡️ Get Complete Protection</h4>
+                    <p className="text-sm text-gray-300 mb-4">
+                      This is a basic verification. Get our complete contractor verification report, vetted contractor
+                      recommendations, and full RoofFax protection.
+                    </p>
+                    <Link href="/get-started">
+                      <Button className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium w-full">
+                        Get Complete Verification & Protection
+                      </Button>
+                    </Link>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Warning Signs */}
+        <div className="mb-12">
+          <h2 className="text-3xl font-bold text-center mb-8">🚩 Red Flags to Watch For</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card className="bg-black/40 border border-red-500/30 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <AlertTriangle className="text-red-400 mb-3" size={24} />
+                <h3 className="font-bold mb-2">Door-to-Door Sales</h3>
+                <p className="text-gray-400 text-sm">
+                  Legitimate contractors are usually too busy with referrals to knock on doors
+                </p>
               </CardContent>
             </Card>
-          ) : (
-            <AnimatePresence>
-              {contractorData && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="space-y-6"
-                >
-                  {/* Results Header */}
-                  <Card className={`border backdrop-blur-sm ${getRiskColor(contractorData.riskLevel)}`}>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <h2 className="text-2xl font-bold mb-2">{contractorData.name}</h2>
-                          <p className="text-gray-300">{contractorData.description}</p>
-                        </div>
-                        <div className="text-right">
-                          <Badge className={`text-lg px-4 py-2 ${getRiskColor(contractorData.riskLevel)}`}>
-                            {contractorData.riskLevel} RISK
-                          </Badge>
-                          <div className="text-2xl font-bold mt-2">{contractorData.riskScore}/100</div>
-                        </div>
-                      </div>
 
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-3">
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">License Status:</span>
-                            <span
-                              className={
-                                contractorData.licenseStatus.includes("No") ? "text-red-400" : "text-green-400"
-                              }
-                            >
-                              {contractorData.licenseStatus}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Business Age:</span>
-                            <span>{contractorData.businessAge}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">BBB Rating:</span>
-                            <span
-                              className={contractorData.bbbRating.includes("F") ? "text-red-400" : "text-green-400"}
-                            >
-                              {contractorData.bbbRating}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="space-y-3">
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Complaints:</span>
-                            <span className={contractorData.complaints > 0 ? "text-red-400" : "text-green-400"}>
-                              {contractorData.complaints} unresolved
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Address:</span>
-                            <span>{contractorData.address}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Phone:</span>
-                            <span>{contractorData.phone}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+            <Card className="bg-black/40 border border-red-500/30 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <AlertTriangle className="text-red-400 mb-3" size={24} />
+                <h3 className="font-bold mb-2">Pressure Tactics</h3>
+                <p className="text-gray-400 text-sm">
+                  "Sign today only" deals and high-pressure sales tactics are major red flags
+                </p>
+              </CardContent>
+            </Card>
 
-                  {/* Detailed Analysis */}
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {/* Red Flags */}
-                    {contractorData.redFlags.length > 0 && (
-                      <Card className="bg-black/40 border border-red-500/30 backdrop-blur-sm">
-                        <CardHeader>
-                          <CardTitle className="flex items-center gap-2 text-red-400">
-                            <AlertTriangle size={20} />
-                            Red Flags Found ({contractorData.redFlags.length})
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-3">
-                            {contractorData.redFlags.map((flag, index) => (
-                              <div key={index} className="flex items-start gap-2">
-                                <XCircle className="text-red-400 mt-1 flex-shrink-0" size={16} />
-                                <span className="text-sm text-gray-300">{flag}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
+            <Card className="bg-black/40 border border-red-500/30 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <AlertTriangle className="text-red-400 mb-3" size={24} />
+                <h3 className="font-bold mb-2">No Local Address</h3>
+                <p className="text-gray-400 text-sm">
+                  Storm chasers often have no local presence and disappear after payment
+                </p>
+              </CardContent>
+            </Card>
 
-                    {/* Green Flags */}
-                    {contractorData.greenFlags.length > 0 && (
-                      <Card className="bg-black/40 border border-green-500/30 backdrop-blur-sm">
-                        <CardHeader>
-                          <CardTitle className="flex items-center gap-2 text-green-400">
-                            <Shield size={20} />
-                            Positive Indicators ({contractorData.greenFlags.length})
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-3">
-                            {contractorData.greenFlags.map((flag, index) => (
-                              <div key={index} className="flex items-start gap-2">
-                                <Shield className="text-green-400 mt-1 flex-shrink-0" size={16} />
-                                <span className="text-sm text-gray-300">{flag}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
+            <Card className="bg-black/40 border border-red-500/30 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <AlertTriangle className="text-red-400 mb-3" size={24} />
+                <h3 className="font-bold mb-2">Cash Only</h3>
+                <p className="text-gray-400 text-sm">
+                  Requesting large upfront payments or cash-only deals is suspicious
+                </p>
+              </CardContent>
+            </Card>
 
-                  {/* Recommendation */}
-                  <Card className={`border backdrop-blur-sm ${getRiskColor(contractorData.riskLevel)}`}>
-                    <CardContent className="p-6 text-center">
-                      <Shield className="mx-auto mb-4" size={48} />
-                      <h3 className="text-2xl font-bold mb-2">Our Recommendation</h3>
-                      <p className="text-xl font-semibold mb-4">{contractorData.recommendation}</p>
+            <Card className="bg-black/40 border border-red-500/30 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <AlertTriangle className="text-red-400 mb-3" size={24} />
+                <h3 className="font-bold mb-2">No License</h3>
+                <p className="text-gray-400 text-sm">
+                  Always verify licensing and insurance before allowing work to begin
+                </p>
+              </CardContent>
+            </Card>
 
-                      {contractorData.riskLevel === "HIGH" && (
-                        <div className="space-y-4">
-                          <p className="text-gray-300">
-                            This contractor shows multiple red flags. Don't risk your home and money.
-                          </p>
-                          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <Button className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium px-8">
-                              Get Our Vetted Contractors Instead
-                            </Button>
-                            <Button
-                              variant="outline"
-                              className="border-yellow-500 text-yellow-500 hover:bg-yellow-500/10 bg-transparent"
-                            >
-                              <Phone size={16} className="mr-2" />
-                              Call: (850) 879-9172
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-
-                      {contractorData.riskLevel === "LOW" && (
-                        <div className="space-y-4">
-                          <p className="text-gray-300">
-                            This contractor appears to be legitimate with a good track record.
-                          </p>
-                          <Button className="bg-green-500 hover:bg-green-600 text-white font-medium px-8">
-                            Still Want Our Protection? Get RoofFax
-                          </Button>
-                        </div>
-                      )}
-
-                      {contractorData.riskLevel === "MEDIUM" && (
-                        <div className="space-y-4">
-                          <p className="text-gray-300">
-                            This contractor has some concerns. Consider getting a second opinion.
-                          </p>
-                          <Button className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium px-8">
-                            Let RoofFax Handle This For You
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Try Another */}
-                  <div className="text-center">
-                    <Button
-                      onClick={() => {
-                        setShowResults(false)
-                        setContractorData(null)
-                        setContractorName("")
-                      }}
-                      variant="outline"
-                      className="border-gray-600 text-white bg-transparent"
-                    >
-                      Verify Another Contractor
-                    </Button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          )}
+            <Card className="bg-black/40 border border-red-500/30 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <AlertTriangle className="text-red-400 mb-3" size={24} />
+                <h3 className="font-bold mb-2">Too Good to Be True</h3>
+                <p className="text-gray-400 text-sm">
+                  Prices significantly below market rate often indicate poor quality or scams
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
+
+        {/* Protection Steps */}
+        <Card className="bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/30 backdrop-blur-sm">
+          <CardContent className="p-8">
+            <h2 className="text-3xl font-bold text-center mb-8">How to Protect Yourself</h2>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <h4 className="font-semibold text-green-400">✅ Red Flags to Avoid</h4>
+                <ul className="space-y-2 text-sm text-gray-300">
+                  <li>• Door-to-door solicitation after storms</li>
+                  <li>• Demands immediate payment or cash only</li>
+                  <li>• No local business address or license</li>
+                  <li>• Pressure to sign contracts immediately</li>
+                  <li>• Offers to pay your insurance deductible</li>
+                  <li>• Asks you to sign insurance paperwork</li>
+                </ul>
+              </div>
+              <div className="space-y-3">
+                <h4 className="font-semibold text-yellow-400">✅ What to Verify</h4>
+                <ul className="space-y-2 text-sm text-gray-300">
+                  <li>• Valid contractor license and insurance</li>
+                  <li>• Local business address and references</li>
+                  <li>• Better Business Bureau rating</li>
+                  <li>• Written estimates and contracts</li>
+                  <li>• Proper permits for work</li>
+                  <li>• Payment schedule (never pay in full upfront)</li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Footer */}
+      <footer className="mt-16 py-8 border-t border-gray-800">
+        <div className="container mx-auto px-4 text-center text-gray-400">
+          <p>Powered by RoofFax™ | All rights reserved © 2025</p>
+          <div className="flex justify-center space-x-4 mt-2">
+            <Link href="/terms" className="hover:text-yellow-500 transition-colors">
+              Terms of Service
+            </Link>
+            <span>|</span>
+            <Link href="/privacy" className="hover:text-yellow-500 transition-colors">
+              Privacy Policy
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

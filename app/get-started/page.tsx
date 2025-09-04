@@ -1,227 +1,382 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { CheckCircle, Shield, Star, Users, ArrowRight } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { CheckCircle, MapPin, Shield, Star, ArrowRight, Home, Zap, Clock, ArrowLeft } from "lucide-react"
+import Link from "next/link"
 
 export default function GetStartedPage() {
+  const [step, setStep] = useState(1)
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
     address: "",
+    roofType: "",
     roofAge: "",
-    issueType: "",
+    urgency: "",
+    services: [] as string[],
+    contactInfo: {
+      name: "",
+      email: "",
+      phone: "",
+    },
   })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    // Handle form submission
-    console.log("Form submitted:", formData)
+  const handleServiceToggle = (service: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      services: prev.services.includes(service)
+        ? prev.services.filter((s) => s !== service)
+        : [...prev.services, service],
+    }))
+  }
+
+  const nextStep = () => {
+    if (step < 3) setStep(step + 1)
+  }
+
+  const prevStep = () => {
+    if (step > 1) setStep(step - 1)
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Get Started with RoofFax</h1>
-            <p className="text-xl text-gray-600">Connect with verified roofing professionals in your area</p>
+      {/* Mobile-friendly header */}
+      <header className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
+                <span className="text-black font-bold text-sm">R</span>
+              </div>
+              <span className="text-lg font-bold text-gray-900">
+                <span className="text-yellow-500">Roof</span>Fax
+              </span>
+            </Link>
+            <Link href="/">
+              <Button variant="outline" size="sm" className="bg-transparent">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Back to Home</span>
+                <span className="sm:hidden">Back</span>
+              </Button>
+            </Link>
           </div>
+        </div>
+      </header>
 
-          <div className="grid lg:grid-cols-2 gap-8">
-            {/* Form */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Tell Us About Your Project</CardTitle>
-                <CardDescription>We'll match you with the best verified pros in your area</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Full Name *</label>
-                      <Input
-                        placeholder="Your name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Email *</label>
-                      <Input
-                        type="email"
-                        placeholder="your@email.com"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
+      <div className="container mx-auto px-4 py-6 sm:py-8">
+        {/* Mobile-optimized header */}
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 px-2">
+            Get Started with Pro Matching
+          </h1>
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto px-4">
+            Tell us about your roofing needs and we'll connect you with verified, licensed pros in your area.
+          </p>
+        </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Phone *</label>
-                      <Input
-                        type="tel"
-                        placeholder="(555) 123-4567"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Roof Age</label>
-                      <select
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        value={formData.roofAge}
-                        onChange={(e) => setFormData({ ...formData, roofAge: e.target.value })}
-                      >
-                        <option value="">Select age</option>
-                        <option value="0-5">0-5 years</option>
-                        <option value="6-10">6-10 years</option>
-                        <option value="11-15">11-15 years</option>
-                        <option value="16-20">16-20 years</option>
-                        <option value="20+">20+ years</option>
-                      </select>
-                    </div>
-                  </div>
+        {/* Mobile-optimized progress indicator */}
+        <div className="max-w-2xl mx-auto mb-6 sm:mb-8">
+          <div className="flex items-center justify-between px-4">
+            {[1, 2, 3].map((stepNum) => (
+              <div key={stepNum} className="flex items-center">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                    step >= stepNum ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
+                  }`}
+                >
+                  {step > stepNum ? <CheckCircle className="h-5 w-5" /> : stepNum}
+                </div>
+                {stepNum < 3 && (
+                  <div className={`w-8 sm:w-16 h-1 mx-1 sm:mx-2 ${step > stepNum ? "bg-blue-600" : "bg-gray-200"}`} />
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between mt-2 text-xs sm:text-sm text-gray-600 px-2">
+            <span>Property</span>
+            <span>Services</span>
+            <span>Contact</span>
+          </div>
+        </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Property Address *</label>
-                    <Input
-                      placeholder="123 Main St, City, State"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      required
+        {/* Step 1: Property Information */}
+        {step === 1 && (
+          <Card className="max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <Home className="h-5 w-5" />
+                Property Information
+              </CardTitle>
+              <CardDescription className="text-sm sm:text-base">
+                Help us understand your property to match you with the right pros
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 sm:space-y-6">
+              <div>
+                <label className="block text-sm font-medium mb-2">Property Address</label>
+                <Input
+                  placeholder="Enter your full address..."
+                  value={formData.address}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
+                  className="text-base" // Prevent zoom on iOS
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Roof Type</label>
+                  <Select
+                    value={formData.roofType}
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, roofType: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select roof type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="asphalt-shingle">Asphalt Shingle</SelectItem>
+                      <SelectItem value="metal">Metal</SelectItem>
+                      <SelectItem value="tile">Tile</SelectItem>
+                      <SelectItem value="slate">Slate</SelectItem>
+                      <SelectItem value="flat">Flat/Low Slope</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Roof Age</label>
+                  <Select
+                    value={formData.roofAge}
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, roofAge: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select age range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0-5">0-5 years</SelectItem>
+                      <SelectItem value="6-10">6-10 years</SelectItem>
+                      <SelectItem value="11-15">11-15 years</SelectItem>
+                      <SelectItem value="16-20">16-20 years</SelectItem>
+                      <SelectItem value="20+">20+ years</SelectItem>
+                      <SelectItem value="unknown">Not sure</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Project Urgency</label>
+                <Select
+                  value={formData.urgency}
+                  onValueChange={(value) => setFormData((prev) => ({ ...prev, urgency: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="How urgent is your project?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="emergency">Emergency (Active leak/damage)</SelectItem>
+                    <SelectItem value="urgent">Urgent (Within 1-2 weeks)</SelectItem>
+                    <SelectItem value="soon">Soon (Within 1 month)</SelectItem>
+                    <SelectItem value="planning">Planning (2-3 months)</SelectItem>
+                    <SelectItem value="research">Just researching</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button onClick={nextStep} className="w-full" disabled={!formData.address}>
+                Continue to Service Selection
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 2: Service Selection */}
+        {step === 2 && (
+          <Card className="max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <Zap className="h-5 w-5" />
+                What Services Do You Need?
+              </CardTitle>
+              <CardDescription className="text-sm sm:text-base">
+                Select all services you're interested in (you can change this later)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                {[
+                  "Roof Inspection",
+                  "Roof Repair",
+                  "Roof Replacement",
+                  "Storm Damage Assessment",
+                  "Gutter Installation/Repair",
+                  "Skylight Installation",
+                  "Ventilation Improvement",
+                  "Insulation Upgrade",
+                  "Emergency Tarping",
+                  "Maintenance Program",
+                ].map((service) => (
+                  <div key={service} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
+                    <Checkbox
+                      id={service}
+                      checked={formData.services.includes(service)}
+                      onCheckedChange={() => handleServiceToggle(service)}
                     />
+                    <label htmlFor={service} className="text-sm font-medium cursor-pointer flex-1">
+                      {service}
+                    </label>
                   </div>
+                ))}
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2">What do you need?</label>
-                    <select
-                      className="w-full p-2 border border-gray-300 rounded-md"
-                      value={formData.issueType}
-                      onChange={(e) => setFormData({ ...formData, issueType: e.target.value })}
-                    >
-                      <option value="">Select service</option>
-                      <option value="inspection">Roof Inspection</option>
-                      <option value="repair">Roof Repair</option>
-                      <option value="replacement">Roof Replacement</option>
-                      <option value="maintenance">Maintenance</option>
-                      <option value="emergency">Emergency Repair</option>
-                      <option value="insurance">Insurance Claim</option>
-                    </select>
-                  </div>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
+                <Button variant="outline" onClick={prevStep} className="flex-1 bg-transparent">
+                  Back
+                </Button>
+                <Button onClick={nextStep} className="flex-1" disabled={formData.services.length === 0}>
+                  Continue to Contact Info
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-                    Get Matched with Verified Pros
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+        {/* Step 3: Contact Information */}
+        {step === 3 && (
+          <Card className="max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <Clock className="h-5 w-5" />
+                Contact Information
+              </CardTitle>
+              <CardDescription className="text-sm sm:text-base">How should verified pros contact you?</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Full Name</label>
+                  <Input
+                    placeholder="Enter your name..."
+                    value={formData.contactInfo.name}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        contactInfo: { ...prev.contactInfo, name: e.target.value },
+                      }))
+                    }
+                    className="text-base"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Phone Number</label>
+                  <Input
+                    placeholder="(555) 123-4567"
+                    value={formData.contactInfo.phone}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        contactInfo: { ...prev.contactInfo, phone: e.target.value },
+                      }))
+                    }
+                    className="text-base"
+                  />
+                </div>
+              </div>
 
-            {/* Benefits */}
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5 text-blue-600" />
-                    Pro Matching Process
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="bg-blue-100 rounded-full p-1 mt-1">
-                      <CheckCircle className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">Instant Verification</h4>
-                      <p className="text-sm text-gray-600">
-                        We verify licenses, insurance, and credentials in real-time
-                      </p>
-                    </div>
-                  </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Email Address</label>
+                <Input
+                  type="email"
+                  placeholder="your.email@example.com"
+                  value={formData.contactInfo.email}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      contactInfo: { ...prev.contactInfo, email: e.target.value },
+                    }))
+                  }
+                  className="text-base"
+                />
+              </div>
 
-                  <div className="flex items-start gap-3">
-                    <div className="bg-blue-100 rounded-full p-1 mt-1">
-                      <Users className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">Vetted Pro List</h4>
-                      <p className="text-sm text-gray-600">Only pre-screened professionals with proven track records</p>
-                    </div>
-                  </div>
+              {/* Mobile-optimized summary */}
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <h3 className="font-semibold mb-2 text-sm sm:text-base">Your Request Summary:</h3>
+                <div className="text-xs sm:text-sm space-y-1">
+                  <p>
+                    <strong>Address:</strong> {formData.address}
+                  </p>
+                  <p>
+                    <strong>Roof:</strong> {formData.roofType} ({formData.roofAge})
+                  </p>
+                  <p>
+                    <strong>Urgency:</strong> {formData.urgency}
+                  </p>
+                  <p>
+                    <strong>Services:</strong> {formData.services.slice(0, 3).join(", ")}
+                    {formData.services.length > 3 && ` +${formData.services.length - 3} more`}
+                  </p>
+                </div>
+              </div>
 
-                  <div className="flex items-start gap-3">
-                    <div className="bg-blue-100 rounded-full p-1 mt-1">
-                      <Star className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">Quality Guarantee</h4>
-                      <p className="text-sm text-gray-600">All matched pros meet our strict quality standards</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <Button variant="outline" onClick={prevStep} className="flex-1 bg-transparent">
+                  Back
+                </Button>
+                <Button
+                  className="flex-1"
+                  disabled={!formData.contactInfo.name || !formData.contactInfo.email || !formData.contactInfo.phone}
+                >
+                  Get My Vetted Pro List
+                  <CheckCircle className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-              <Card className="bg-green-50 border-green-200">
-                <CardContent className="p-6">
-                  <div className="text-center">
-                    <h3 className="text-lg font-semibold text-green-800 mb-2">100% Free Service</h3>
-                    <p className="text-green-700 text-sm">
-                      No hidden fees. No obligations. Just verified professionals ready to help.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+        {/* Mobile-optimized benefits section */}
+        <div className="mt-12 sm:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
+          <Card>
+            <CardHeader className="text-center">
+              <Shield className="h-8 w-8 text-blue-600 mb-2 mx-auto" />
+              <CardTitle className="text-lg sm:text-xl">Verified Pros Only</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <p className="text-gray-600 text-sm sm:text-base">
+                Every pro in our network is licensed, insured, and background-checked for your peace of mind.
+              </p>
+            </CardContent>
+          </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">What Happens Next?</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant="outline"
-                        className="w-6 h-6 rounded-full p-0 flex items-center justify-center text-xs"
-                      >
-                        1
-                      </Badge>
-                      <span>We match you with 3-5 verified pros in your area</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant="outline"
-                        className="w-6 h-6 rounded-full p-0 flex items-center justify-center text-xs"
-                      >
-                        2
-                      </Badge>
-                      <span>Pros contact you within 24 hours</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant="outline"
-                        className="w-6 h-6 rounded-full p-0 flex items-center justify-center text-xs"
-                      >
-                        3
-                      </Badge>
-                      <span>Compare quotes and choose the best fit</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+          <Card>
+            <CardHeader className="text-center">
+              <Star className="h-8 w-8 text-yellow-500 mb-2 mx-auto" />
+              <CardTitle className="text-lg sm:text-xl">Quality Guaranteed</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <p className="text-gray-600 text-sm sm:text-base">
+                All pros maintain high ratings and are backed by our satisfaction guarantee and dispute resolution.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="sm:col-span-2 lg:col-span-1">
+            <CardHeader className="text-center">
+              <MapPin className="h-8 w-8 text-green-600 mb-2 mx-auto" />
+              <CardTitle className="text-lg sm:text-xl">Local Experts</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <p className="text-gray-600 text-sm sm:text-base">
+                We connect you with pros who know your area's building codes, weather patterns, and permit requirements.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

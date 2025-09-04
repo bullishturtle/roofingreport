@@ -35,7 +35,7 @@ export default function HotLeadPage() {
     "Storm Damage Assessment",
     "Leak Repair",
     "Gutter Repair/Replacement",
-    "Contractor Verification",
+    "Pro Verification",
     "Free Roof Inspection",
   ]
 
@@ -328,7 +328,7 @@ export default function HotLeadPage() {
                       className="border-slate-600 data-[state=checked]:bg-yellow-400 data-[state=checked]:border-yellow-400"
                     />
                     <Label htmlFor="contractorContact" className="text-slate-300">
-                      A contractor has already contacted me about this damage
+                      A pro has already contacted me about this damage
                     </Label>
                   </div>
                 </div>

@@ -89,7 +89,7 @@ export default function GetStartedPage() {
                       2
                     </div>
                     <p className="text-gray-300">
-                      We'll activate your full RoofFax protection and contractor verification tools
+                      We'll activate your full RoofFax protection and pro verification tools
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
@@ -192,8 +192,8 @@ export default function GetStartedPage() {
           <Card className="bg-black/40 border border-gray-800 backdrop-blur-sm">
             <CardContent className="p-6 text-center">
               <CheckCircle className="text-yellow-400 mx-auto mb-4" size={32} />
-              <h3 className="font-bold mb-2">Contractor Matching</h3>
-              <p className="text-gray-400 text-sm">Connect with vetted, licensed contractors in your area</p>
+              <h3 className="font-bold mb-2">Pro Matching</h3>
+              <p className="text-gray-400 text-sm">Connect with vetted, licensed pros in your area</p>
             </CardContent>
           </Card>
         </div>
@@ -337,16 +337,14 @@ export default function GetStartedPage() {
                   <div className="flex items-start gap-3">
                     <CheckCircle className="text-green-400 mt-1 flex-shrink-0" size={20} />
                     <div>
-                      <h4 className="font-bold">Vetted Contractor List</h4>
-                      <p className="text-gray-400 text-sm">
-                        Licensed professionals in your area with verified track records
-                      </p>
+                      <h4 className="font-bold">Vetted Pro List</h4>
+                      <p className="text-gray-400 text-sm">Licensed pros in your area with verified track records</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <CheckCircle className="text-green-400 mt-1 flex-shrink-0" size={20} />
                     <div>
-                      <h4 className="font-bold">Cost Estimates</h4>
+                      <h4 className="font-bold">Pro Verification</h4>
                       <p className="text-gray-400 text-sm">Fair market pricing for any recommended work</p>
                     </div>
                   </div>

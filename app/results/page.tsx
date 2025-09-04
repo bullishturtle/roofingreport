@@ -91,7 +91,7 @@ export default function ResultsPage() {
           "We'll contact you within 24 hours to discuss findings",
           "Professional inspection can be scheduled at your convenience",
           "We'll help coordinate with your insurance company if needed",
-          "Vetted contractor recommendations available upon request",
+          "Vetted pro recommendations available upon request",
         ],
       }
       setReport(mockReport)
@@ -334,7 +334,7 @@ export default function ResultsPage() {
               <h3 className="text-2xl font-bold mb-4">Need Professional Help?</h3>
               <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
                 Based on your report findings, we recommend speaking with our team about next steps. We can help
-                coordinate inspections, insurance claims, and connect you with vetted contractors.
+                coordinate inspections, insurance claims, and connect you with vetted pros.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -29,7 +29,7 @@ interface HotLead {
   interested_in: string[]
   damage_description: string
   insurance_claim: boolean
-  contractor_contact: boolean
+  pro_contact: boolean
   lead_id: string
   status: string
   created_at: string
@@ -288,7 +288,7 @@ export default function AdminPage() {
                       <div className="text-xs text-slate-500">
                         ID: {lead.lead_id} | Urgency: {lead.urgency}
                         {lead.insurance_claim && " | Insurance Claim"}
-                        {lead.contractor_contact && " | Contractor Contact"}
+                        {lead.pro_contact && " | Pro Contact"}
                       </div>
                     </div>
                   ))
